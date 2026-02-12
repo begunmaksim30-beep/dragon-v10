@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DRAGON ULTIMATE | CLOUD & REVIEWS</title>
-
+    <title>DRAGON MARKET | EF97F</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, query, orderBy, where, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getDatabase, ref, set, onValue, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // ТВОЯ КОНФИГУРАЦИЯ (ВНЕДРЕНО)
         const firebaseConfig = {
             apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
             authDomain: "dragonmarket-ef97f.firebaseapp.com",
@@ -17,302 +18,598 @@
             storageBucket: "dragonmarket-ef97f.firebasestorage.app",
             messagingSenderId: "733816628492",
             appId: "1:733816628492:web:58816f9330e9f5475d1529",
-            measurementId: "G-82SSHP6H11"
+            measurementId: "G-82SSHP6H11",
+            // Автоматически сгенерированная ссылка на БД
+            databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com" 
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
-
-        // --- GLOBAL STATE ---
-        window.state = {
-            user: JSON.parse(localStorage.getItem('dg_user')) || null,
-            db, storage
-        };
-
-        // --- CORE FUNCTIONS ---
-        const upload = async (file, path) => {
-            const sRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
-            await uploadBytes(sRef, file);
-            return await getDownloadURL(sRef);
-        };
-
-        window.processAuth = async () => {
-            const nick = document.getElementById('auth-nick').value.trim();
-            const pass = document.getElementById('auth-pass').value;
-            const isReg = !document.getElementById('reg-box').classList.contains('hidden');
-
-            if (nick === 'system' && pass === '1337') {
-                saveUser({ nick: 'Admin', balance: 999999, isAdmin: true, id: 777 });
-                return;
-            }
-
-            const uRef = doc(db, "users", nick);
-            const snap = await getDoc(uRef);
-
-            if (isReg) {
-                if(snap.exists()) return alert("Ник занят!");
-                const newUser = { 
-                    nick, pass, balance: 5000, lvl: 1, 
-                    rating: 5.0, reviews: [], notifications: [],
-                    avatar: '', type: 'image', verified: false 
-                };
-                await setDoc(uRef, newUser);
-                saveUser(newUser);
-            } else {
-                if(snap.exists() && snap.data().pass === pass) saveUser(snap.data());
-                else alert("Ошибка доступа");
-            }
-        };
-
-        function saveUser(data) {
-            window.state.user = data;
-            localStorage.setItem('dg_user', JSON.stringify(data));
-            location.reload();
-        }
-
-        window.updateAvatar = async () => {
-            const file = document.getElementById('avatar-input').files[0];
-            if(!file) return;
-            const url = await upload(file, "avatars");
-            const type = file.type.startsWith('video') ? 'video' : 'image';
-            await updateDoc(doc(db, "users", window.state.user.nick), { avatar: url, type: type });
-            location.reload();
-        };
-
-        // --- MARKET & REVIEWS ---
-        window.loadMarket = () => {
-            onSnapshot(collection(db, "products"), (snap) => {
-                const grid = document.getElementById('market-grid');
-                grid.innerHTML = '';
-                snap.forEach(d => {
-                    const p = d.data(); const id = d.id;
-                    const isVerified = p.sellerRating > 4.5 && (p.reviewCount || 0) > 10;
-                    grid.innerHTML += `
-                        <div class="glass p-4 rounded-[32px] group hover:border-amber-500/50 transition-all">
-                            <div class="h-48 rounded-2xl overflow-hidden mb-4 relative">
-                                ${p.type === 'video' ? `<video src="${p.media}" autoplay loop muted class="w-full h-full object-cover"></video>` : `<img src="${p.media}" class="w-full h-full object-cover">`}
-                                <div class="absolute top-3 left-3 bg-black/60 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold">★ ${p.sellerRating.toFixed(1)}</div>
-                            </div>
-                            <h3 class="font-black uppercase italic truncate">${p.name}</h3>
-                            <div class="flex justify-between items-center my-2">
-                                <span class="text-amber-500 font-black text-lg">${p.price} $</span>
-                                <div class="flex items-center gap-1 cursor-pointer" onclick="openReviews('${p.seller}')">
-                                    <span class="text-[10px] opacity-50 font-bold">${p.seller}</span>
-                                    ${isVerified ? '<i class="fa fa-check-circle text-blue-400 text-[10px]"></i>' : ''}
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="buy('${id}', ${p.price}, '${p.seller}')" class="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] hover:bg-amber-400">КУПИТЬ</button>
-                                <button onclick="openReviews('${p.seller}')" class="bg-white/5 px-4 rounded-xl hover:bg-white/10"><i class="fa fa-star text-amber-500"></i></button>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        };
-
-        window.openReviews = async (sellerNick) => {
-            window.activeSeller = sellerNick;
-            document.getElementById('rev-modal-title').innerText = `Продавец: ${sellerNick}`;
-            const snap = await getDoc(doc(db, "users", sellerNick));
-            const data = snap.data();
-            const list = document.getElementById('rev-list');
-            list.innerHTML = (data.reviews || []).map(r => `
-                <div class="bg-white/5 p-4 rounded-2xl border border-white/5 mb-3">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-amber-500 font-bold text-xs">${r.from}</span>
-                        <span class="text-xs">${'★'.repeat(r.stars)}</span>
-                    </div>
-                    <p class="text-sm opacity-80 italic">"${r.text}"</p>
-                </div>
-            `).reverse().join('') || '<p class="opacity-20 text-center py-10">Отзывов пока нет. Будьте первым!</p>';
-            openModal('modal-reviews');
-        };
-
-        window.postReview = async () => {
-            const text = document.getElementById('rev-input').value;
-            const stars = parseInt(document.getElementById('rev-stars').value);
-            if(!text) return;
-            
-            const sRef = doc(db, "users", window.activeSeller);
-            const snap = await getDoc(sRef);
-            const currentReviews = snap.data().reviews || [];
-            const newReviews = [...currentReviews, { from: window.state.user.nick, text, stars, date: Date.now() }];
-            
-            // Расчет нового рейтинга
-            const avg = newReviews.reduce((acc, r) => acc + r.stars, 0) / newReviews.length;
-            
-            await updateDoc(sRef, { reviews: newReviews, rating: avg });
-            alert("Отзыв успешно добавлен!");
-            closeModal('modal-reviews');
-        };
-
-        window.createListing = async () => {
-            const name = document.getElementById('p-name').value;
-            const price = Number(document.getElementById('p-price').value);
-            const file = document.getElementById('p-file').files[0];
-            if(!name || !price || !file) return alert("Заполни всё!");
-
-            const btn = document.getElementById('p-submit');
-            btn.innerText = "ЗАГРУЗКА В ОБЛАКО...";
-            btn.disabled = true;
-
-            const url = await upload(file, "products");
-            await addDoc(collection(db, "products"), {
-                name, price, media: url, 
-                type: file.type.startsWith('video') ? 'video' : 'image',
-                seller: window.state.user.nick, 
-                sellerRating: window.state.user.rating || 5.0,
-                reviewCount: (window.state.user.reviews || []).length
-            });
-            location.reload();
-        };
-
-        // --- NOTIFICATIONS ---
-        window.checkNotifs = () => {
-            onSnapshot(doc(db, "users", window.state.user.nick), (snap) => {
-                const count = (snap.data().notifications || []).length;
-                const dot = document.getElementById('notif-dot');
-                if(count > 0) dot.classList.remove('hidden');
-                else dot.classList.add('hidden');
-            });
-        };
-
-        window.onload = () => {
-            if(window.state.user) {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('u-name').innerText = window.state.user.nick;
-                document.getElementById('u-bal').innerText = window.state.user.balance + " $";
-                
-                const avBox = document.getElementById('u-avatar');
-                if(window.state.user.avatar) {
-                    avBox.innerHTML = window.state.user.type === 'video' 
-                        ? `<video src="${window.state.user.avatar}" autoplay loop muted class="w-full h-full object-cover"></video>`
-                        : `<img src="${window.state.user.avatar}" class="w-full h-full object-cover">`;
-                }
-                
-                window.loadMarket();
-                window.checkNotifs();
-            }
-        };
-
-        // --- UI UTILS ---
-        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-        window.nav = (tab) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-        };
-        window.logout = () => { localStorage.clear(); location.reload(); };
+        const appFB = initializeApp(firebaseConfig);
+        const db = getDatabase(appFB);
+        window.fb = { db, ref, set, onValue, push, update, remove, get };
     </script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;900&display=swap');
-        body { background: #080a0f; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .font-title { font-family: 'Syncopate', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        input, select, textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; padding: 15px; border-radius: 18px; outline: none; width: 100%; transition: 0.3s; }
-        input:focus { border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        :root { --p: #d946ef; --bg: #050505; --c: #121212; --b: #1e1e1e; --t: #fff; --s: #22c55e; --err: #ef4444; }
+        
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Courier New', monospace; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--t); height: 100vh; overflow: hidden; background-size: cover; background-position: center; transition: 0.5s; }
+        
+        /* Level Frames & Animations */
+        .lvl-1 { border: 2px solid #888; }
+        .lvl-5 { border: 2px solid var(--s); box-shadow: 0 0 10px var(--s); }
+        .lvl-10 { border: 2px solid var(--p); box-shadow: 0 0 15px var(--p); }
+        .lvl-50 { border: 3px solid #ffd700; box-shadow: 0 0 20px #ffd700; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .screen { display:none; padding: 80px 10px 100px; height: 100vh; overflow-y: auto; }
+        .active { display:block; }
+
+        .card { background: var(--c); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 10px; position: relative; }
+        
+        .btn { background: var(--p); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; text-transform: uppercase; margin-top: 5px; display:flex; align-items:center; justify-content:center; gap:10px; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-sec { background: var(--b); border: 1px solid #444; }
+        .btn-dang { background: var(--err); }
+
+        input, textarea, select { background: #000; border: 1px solid #444; color: var(--t); padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; outline: none; }
+        
+        /* Auth Screen */
+        #scr-auth { position:fixed; inset:0; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center; }
+        
+        /* Media & Avatars */
+        .media-cont { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 10px; display:flex; align-items:center; justify-content:center; }
+        .media-cont img, .media-cont video { width: 100%; height: 100%; object-fit: cover; }
+        
+        .ava-box { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; background: #000; position: relative; }
+        .ava-box img, .ava-box video { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+
+        /* UI Elements */
+        header { position:fixed; top:0; width:100%; height:70px; background: rgba(0,0,0,0.9); border-bottom: 1px solid #333; display:flex; justify-content:space-between; align-items:center; padding:0 15px; z-index:100; }
+        nav { position:fixed; bottom:0; width:100%; height:70px; background: #080808; border-top: 1px solid #333; display:flex; justify-content:space-around; align-items:center; z-index:100; }
+        .nav-i { font-size: 22px; color: #555; padding: 10px; transition: 0.3s; }
+        .nav-i.act { color: var(--p); transform: translateY(-5px); text-shadow: 0 0 10px var(--p); }
+
+        /* Chat Styles */
+        .msg-bubble { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 13px; margin-bottom: 5px; word-break: break-word; }
+        .msg-me { background: var(--p); align-self: flex-end; margin-left: auto; }
+        .msg-them { background: var(--b); align-self: flex-start; }
+        .chat-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #222; cursor: pointer; }
+        .chat-row:hover { background: #1a1a1a; }
     </style>
 </head>
-<body class="pb-32">
+<body>
 
-    <div id="auth-screen" class="fixed inset-0 z-[200] bg-[#080a0f] flex items-center justify-center p-6">
-        <div class="glass p-10 rounded-[50px] w-full max-w-md text-center">
-            <h1 class="text-4xl font-title italic mb-2 text-amber-500 tracking-tighter">DRAGON</h1>
-            <p class="text-[9px] uppercase tracking-[0.5em] mb-12 opacity-40">Ultimate Marketplace</p>
-            <div class="space-y-4">
-                <input type="text" id="auth-nick" placeholder="Username">
-                <input type="password" id="auth-pass" placeholder="Password">
-                <div id="reg-box" class="hidden text-amber-500 text-[10px] font-black uppercase tracking-widest">New Account Mode</div>
-                <button onclick="processAuth()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase hover:bg-amber-500 transition-all">Execute</button>
-                <button onclick="document.getElementById('reg-box').classList.toggle('hidden')" class="text-[10px] opacity-30 font-bold uppercase">Toggle Register</button>
-            </div>
+    <div id="scr-auth">
+        <div class="card" style="width: 320px; border: 2px solid var(--p);">
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--p);">DRAGON V31</h2>
+            <div id="auth-err" style="color: var(--err); font-size: 12px; text-align: center; margin-bottom: 10px;"></div>
+            
+            <input id="in-nick" placeholder="NICKNAME">
+            <input id="in-pass" type="password" placeholder="PASSWORD">
+            <input id="in-pass2" type="password" placeholder="CONFIRM PASSWORD" style="display:none;">
+            
+            <button class="btn" id="btn-login" onclick="sys.login()">LOGIN</button>
+            <button class="btn btn-sec" id="btn-reg-mode" onclick="sys.toggleReg()">REGISTER</button>
         </div>
     </div>
 
-    <header class="p-6 sticky top-0 z-50 glass flex justify-between items-center border-b border-white/5">
-        <div class="flex items-center gap-4">
-            <div id="u-avatar" class="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-500 bg-white/5"></div>
+    <header id="ui-head" style="display:none;">
+        <div style="display:flex; align-items:center; gap:10px;" onclick="sys.show('prof')">
+            <div class="ava-box" id="h-ava"></div>
             <div>
-                <h2 id="u-name" class="font-black italic text-xl uppercase tracking-tighter">...</h2>
-                <p id="u-bal" class="text-xs text-emerald-400 font-bold tracking-widest">0 $</p>
+                <div id="h-nick" style="font-weight:bold;"></div>
+                <div id="h-bal" style="color:var(--s); font-size:12px;"></div>
             </div>
         </div>
-        <div class="flex gap-3">
-            <button onclick="openModal('modal-add')" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-amber-500/20">Sell</button>
-            <div class="relative">
-                <button class="bg-white/5 w-12 h-12 rounded-2xl"><i class="fa fa-bell"></i></button>
-                <div id="notif-dot" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#080a0f]"></div>
-            </div>
+        <div style="text-align:right;">
+            <div style="font-size:10px; color:#555;">UID: <span id="h-uid"></span></div>
+            <div style="font-size:10px; color:var(--s);">● SYNCED</div>
         </div>
     </header>
 
-    <main class="p-4 max-w-7xl mx-auto mt-6">
-        <div id="tab-market" class="tab-content">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="text-3xl font-title italic uppercase">Marketplace</h2>
-                <span class="text-[10px] opacity-30 font-bold uppercase tracking-[0.3em]">Live Cloud Feed</span>
-            </div>
-            <div id="market-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-        </div>
-
-        <div id="tab-settings" class="tab-content hidden">
-            <div class="glass p-10 rounded-[40px] max-w-2xl mx-auto space-y-8">
-                <h2 class="text-3xl font-title italic uppercase">Profile</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="text-[10px] font-black opacity-30 uppercase ml-2">Update Avatar (WebP/Video)</label>
-                        <input type="file" id="avatar-input" accept="image/webp,image/*,video/*" onchange="updateAvatar()" class="mt-2">
-                    </div>
-                    <button onclick="logout()" class="w-full bg-red-500/10 text-red-500 py-5 rounded-2xl font-black uppercase text-xs border border-red-500/20">Sign Out</button>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <nav class="fixed bottom-8 left-1/2 -translate-x-1/2 glass px-12 py-5 flex gap-20 rounded-[40px] z-[100] border border-white/10">
-        <button onclick="nav('market')" class="text-amber-500 hover:scale-125 transition-all"><i class="fa fa-fire-bolt text-2xl"></i></button>
-        <button onclick="nav('settings')" class="opacity-30 hover:opacity-100 hover:scale-125 transition-all"><i class="fa fa-user-ninja text-2xl"></i></button>
+    <nav id="ui-nav" style="display:none;">
+        <i class="fa fa-shopping-cart nav-i act" onclick="sys.show('market')"></i>
+        <i class="fa fa-users nav-i" onclick="sys.show('cartel')"></i>
+        <i class="fa fa-comments nav-i" onclick="sys.show('chat')"></i>
+        <i class="fa fa-robot nav-i" onclick="sys.show('ai')"></i>
+        <i class="fa fa-user-cog nav-i" onclick="sys.show('prof')"></i>
     </nav>
 
-    <div id="modal-add" class="fixed inset-0 z-[150] bg-black/95 hidden items-center justify-center p-6">
-        <div class="glass p-10 rounded-[50px] w-full max-w-md space-y-5 relative">
-            <button onclick="closeModal('modal-add')" class="absolute top-8 right-8 opacity-20 text-2xl">&times;</button>
-            <h2 class="text-2xl font-title italic uppercase">New Listing</h2>
-            <input type="text" id="p-name" placeholder="Listing Title">
-            <input type="number" id="p-price" placeholder="Price (USD)">
-            <input type="file" id="p-file" accept="image/webp,image/*,video/*">
-            <button id="p-submit" onclick="createListing()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase mt-4">Publish Now</button>
+    <div id="scr-market" class="screen active">
+        <div style="display:flex; gap:5px; margin-bottom:15px;">
+            <button class="btn" onclick="document.getElementById('mod-sell').style.display='flex'">+ SELL ITEM</button>
+        </div>
+        <div id="list-market"></div>
+    </div>
+
+    <div id="scr-chat" class="screen">
+        <h3>PRIVATE MESSAGES</h3>
+        <div id="chat-list" style="margin-top:15px;"></div>
+    </div>
+
+    <div id="scr-room" class="screen" style="z-index: 200; background: var(--bg);">
+        <div style="display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid #333;">
+            <button class="btn btn-sec" style="width:40px;" onclick="sys.show('chat')"><</button>
+            <h3 id="room-name">USER</h3>
+        </div>
+        <div id="room-msgs" style="height: calc(100vh - 220px); overflow-y: auto; display:flex; flex-direction:column; padding:10px 0;"></div>
+        <div style="position:fixed; bottom:80px; left:10px; right:10px; display:flex; gap:10px;">
+            <label class="btn btn-sec" style="width:50px;"><i class="fa fa-paperclip"></i><input type="file" hidden id="msg-file"></label>
+            <input id="msg-text" placeholder="Type message..." style="margin:0;">
+            <button class="btn" style="width:50px;" onclick="chat.send()"><i class="fa fa-paper-plane"></i></button>
         </div>
     </div>
 
-    <div id="modal-reviews" class="fixed inset-0 z-[150] bg-black/95 hidden items-center justify-center p-6">
-        <div class="glass p-8 rounded-[50px] w-full max-w-xl max-h-[85vh] flex flex-col space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 id="rev-modal-title" class="text-xl font-title italic uppercase tracking-tighter">Reviews</h2>
-                <button onclick="closeModal('modal-reviews')" class="text-2xl opacity-20">&times;</button>
+    <div id="scr-cartel" class="screen">
+        <div id="ct-none">
+            <div class="card" style="text-align:center; padding:30px;">
+                <i class="fa fa-shield-cat" style="font-size:50px; margin-bottom:20px; color:var(--p);"></i>
+                <h3>NO CARTEL</h3>
+                <p>Create organization for 500 $</p>
+                <input id="ct-new-name" placeholder="Cartel Name">
+                <button class="btn" onclick="cartel.create()">CREATE</button>
             </div>
-            <div id="rev-list" class="flex-1 overflow-y-auto no-scrollbar pr-2 border-y border-white/5 py-6"></div>
-            <div class="pt-4 space-y-4">
-                <textarea id="rev-input" placeholder="Ваш отзыв..." class="h-24 resize-none"></textarea>
-                <div class="flex gap-4 items-center">
-                    <select id="rev-stars" class="flex-1">
-                        <option value="5">★★★★★ (5/5)</option>
-                        <option value="4">★★★★☆ (4/5)</option>
-                        <option value="3">★★★☆☆ (3/5)</option>
-                        <option value="2">★★☆☆☆ (2/5)</option>
-                        <option value="1">★☆☆☆☆ (1/5)</option>
-                    </select>
-                    <button onclick="postReview()" class="bg-amber-500 text-black px-8 py-4 rounded-2xl font-black uppercase text-[10px]">Отправить</button>
+        </div>
+        <div id="ct-exist" style="display:none;">
+            <div class="card" style="border-top: 3px solid var(--p);">
+                <h2 id="ct-head">NAME</h2>
+                <div style="font-size:12px; color:#666;">OWNER: <span id="ct-owner"></span></div>
+                <button id="btn-del-ct" class="btn btn-dang" style="margin-top:10px;" onclick="cartel.dissolve()">DISSOLVE</button>
+            </div>
+            
+            <div class="card">
+                <h4>MEMBERS</h4>
+                <div id="ct-mems"></div>
+                <div id="ct-admin" style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+                    <div style="display:flex; gap:5px;">
+                        <input id="add-mem-nick" placeholder="Nickname">
+                        <input id="add-mem-rank" placeholder="Rank">
+                    </div>
+                    <button class="btn btn-sec" onclick="cartel.add()">ADD MEMBER</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="scr-prof" class="screen">
+        <div class="card" style="text-align:center;">
+            <div class="ava-box" id="p-ava" style="width:100px; height:100px; margin:0 auto; border: 2px solid var(--p);"></div>
+            <h2 id="p-nick" style="margin-top:10px;"></h2>
+            <div id="p-lvl" style="color:var(--gold); margin:5px 0;">LEVEL 1</div>
+            
+            <label class="btn btn-sec" style="margin-top:15px;">
+                <i class="fa fa-camera"></i> CHANGE AVATAR
+                <input type="file" hidden onchange="sys.uploadAva(this)">
+            </label>
+            
+            <label class="btn btn-sec">
+                <i class="fa fa-image"></i> SET BACKGROUND
+                <input type="file" hidden onchange="sys.uploadBG(this)">
+            </label>
+        </div>
+
+        <div class="card">
+            <h4>SETTINGS</h4>
+            <select onchange="document.body.style.setProperty('--p', this.value)">
+                <option value="#d946ef">Neon Purple</option>
+                <option value="#ef4444">Blood Red</option>
+                <option value="#22c55e">Hacker Green</option>
+                <option value="#eab308">Gold Executive</option>
+            </select>
+            <button class="btn btn-dang" onclick="sys.logout()">LOGOUT</button>
+        </div>
+    </div>
+
+    <div id="scr-ai" class="screen">
+        <h3>AI SUPPORT</h3>
+        <div id="ai-hist" style="height:300px; overflow-y:auto; border:1px solid #333; padding:10px; margin-bottom:10px; border-radius:10px;">
+            <div class="msg-bubble msg-them">System online. How can I assist you?</div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <input id="ai-in" placeholder="Query...">
+            <button class="btn" style="width:50px;" onclick="sys.askAI()"><i class="fa fa-terminal"></i></button>
+        </div>
+    </div>
+
+    <div id="mod-sell" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:500; display:none; align-items:center; justify-content:center;">
+        <div class="card" style="width:90%;">
+            <h3>NEW LISTING</h3>
+            <input id="s-name" placeholder="Item Name">
+            <div style="display:flex; gap:5px;">
+                <input id="s-price" type="number" placeholder="Price">
+                <input id="s-stock" type="number" placeholder="Qty">
+            </div>
+            <textarea id="s-desc" placeholder="Description"></textarea>
+            <label class="btn btn-sec"><i class="fa fa-upload"></i> PHOTO/VIDEO <input type="file" hidden id="s-file"></label>
+            <div style="display:flex; gap:5px; margin-top:10px;">
+                <button class="btn" onclick="market.sell()">PUBLISH</button>
+                <button class="btn btn-dang" onclick="document.getElementById('mod-sell').style.display='none'">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CORE SYSTEM LOGIC ---
+        const sys = {
+            u: null,
+            regMode: false,
+            
+            init() {
+                // Auto-login check
+                const sess = localStorage.getItem('dr_sess_v31');
+                if(sess) {
+                    window.fb.get(window.fb.ref(window.fb.db, 'users/' + sess)).then(snap => {
+                        if(snap.exists()) { this.u = snap.val(); this.boot(); }
+                        else { document.getElementById('scr-auth').style.display='flex'; }
+                    }).catch(e => {
+                        console.error(e);
+                        alert("Database Error. Check Console.");
+                        document.getElementById('scr-auth').style.display='flex';
+                    });
+                } else {
+                    document.getElementById('scr-auth').style.display='flex';
+                }
+            },
+
+            boot() {
+                document.getElementById('scr-auth').style.display='none';
+                document.getElementById('ui-head').style.display='flex';
+                document.getElementById('ui-nav').style.display='flex';
+                if(this.u.bg) document.body.style.backgroundImage = `url(${this.u.bg})`;
+                this.updUI();
+                market.listen();
+                cartel.listen();
+                chat.listenList();
+            },
+
+            updUI() {
+                const n = this.u.nick;
+                document.getElementById('h-nick').innerText = n.toUpperCase();
+                document.getElementById('p-nick').innerText = n.toUpperCase();
+                document.getElementById('h-bal').innerText = this.u.bal + ' $';
+                document.getElementById('h-uid').innerText = this.u.uid;
+                
+                // Avatar logic (Video vs Img)
+                const renderAva = (url, elId) => {
+                    const el = document.getElementById(elId);
+                    el.className = `ava-box lvl-${this.calcLvl(this.u.xp)}`;
+                    if(!url) url = 'https://api.dicebear.com/7.x/identicon/svg?seed='+n;
+                    
+                    // Support for video avatars
+                    if(url.includes('data:video') || url.includes('.mp4') || url.includes('.mov') || url.includes('.webm')) {
+                        el.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`;
+                    } else {
+                        el.innerHTML = `<img src="${url}">`;
+                    }
+                };
+                renderAva(this.u.ava, 'h-ava');
+                renderAva(this.u.ava, 'p-ava');
+                
+                // Level
+                const lvl = this.calcLvl(this.u.xp);
+                document.getElementById('p-lvl').innerText = 'LEVEL ' + lvl + ' | XP: ' + (this.u.xp||0);
+            },
+
+            calcLvl(xp) { return Math.floor(((xp||0)/10)) + 1; },
+
+            toggleReg() {
+                this.regMode = !this.regMode;
+                document.getElementById('in-pass2').style.display = this.regMode ? 'block' : 'none';
+                document.getElementById('btn-login').innerText = this.regMode ? 'CREATE ACCOUNT' : 'LOGIN';
+                document.getElementById('btn-reg-mode').innerText = this.regMode ? 'BACK TO LOGIN' : 'REGISTER';
+            },
+
+            async login() {
+                const n = document.getElementById('in-nick').value.toLowerCase().trim().replace('.', '_'); // Firebase keys can't have .
+                const p = document.getElementById('in-pass').value;
+                const err = document.getElementById('auth-err');
+                
+                if(!n || !p) return err.innerText = "FILL ALL FIELDS";
+
+                const ref = window.fb.ref(window.fb.db, 'users/' + n);
+                
+                try {
+                    const snap = await window.fb.get(ref);
+
+                    if (this.regMode) {
+                        if (snap.exists()) return err.innerText = "NICKNAME TAKEN";
+                        const p2 = document.getElementById('in-pass2').value;
+                        if (p !== p2) return err.innerText = "PASSWORDS DO NOT MATCH";
+                        
+                        const newUser = {
+                            nick: n, pass: p, bal: (n==='admin'?25000:5000), 
+                            uid: Math.floor(10000+Math.random()*90000), 
+                            xp: 0, ava: '', bg: '', created: Date.now()
+                        };
+                        await window.fb.set(ref, newUser);
+                        this.u = newUser;
+                        alert("ACCOUNT CREATED");
+                    } else {
+                        if (!snap.exists()) return err.innerText = "ACCOUNT NOT FOUND";
+                        if (snap.val().pass !== p) return err.innerText = "WRONG PASSWORD";
+                        this.u = snap.val();
+                    }
+                    
+                    localStorage.setItem('dr_sess_v31', this.u.nick);
+                    this.boot();
+                } catch (e) {
+                    console.error(e);
+                    err.innerText = "CONNECTION ERROR (CHECK DB RULES)";
+                }
+            },
+
+            logout() { localStorage.removeItem('dr_sess_v31'); location.reload(); },
+
+            show(id) {
+                document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+                document.getElementById('scr-'+id).classList.add('active');
+                
+                document.querySelectorAll('.nav-i').forEach(i=>i.classList.remove('act'));
+                const map = {market:0, cartel:1, chat:2, ai:3, prof:4};
+                if(map[id]!==undefined) document.querySelectorAll('.nav-i')[map[id]].classList.add('act');
+            },
+
+            askAI() {
+                const q = document.getElementById('ai-in').value.toLowerCase();
+                const h = document.getElementById('ai-hist');
+                h.innerHTML += `<div class="msg-bubble msg-me">${q}</div>`;
+                document.getElementById('ai-in').value = "";
+                
+                let ans = "Processing request...";
+                if(q.includes('привет')) ans = "Greetings, user " + this.u.nick;
+                if(q.includes('деньги') || q.includes('bal')) ans = "Your balance: " + this.u.bal + " $.";
+                if(q.includes('купить')) ans = "Go to the Market tab to purchase items.";
+                
+                setTimeout(() => {
+                    h.innerHTML += `<div class="msg-bubble msg-them">${ans}</div>`;
+                    h.scrollTop = h.scrollHeight;
+                }, 500);
+            },
+
+            fileToBase64(file, cb) {
+                if(file.size > 5000000) return alert("FILE TOO BIG (MAX 5MB)");
+                const r = new FileReader();
+                r.onload = e => cb(e.target.result);
+                r.readAsDataURL(file);
+            },
+
+            uploadAva(inp) {
+                if(inp.files[0]) this.fileToBase64(inp.files[0], res => {
+                    this.u.ava = res;
+                    this.sync();
+                    this.updUI();
+                });
+            },
+            
+            uploadBG(inp) {
+                if(inp.files[0]) this.fileToBase64(inp.files[0], res => {
+                    this.u.bg = res;
+                    this.sync();
+                    document.body.style.backgroundImage = `url(${res})`;
+                });
+            },
+
+            sync() { window.fb.update(window.fb.ref(window.fb.db, 'users/'+this.u.nick), this.u); }
+        };
+
+        // --- MARKET LOGIC ---
+        const market = {
+            sell() {
+                const n = document.getElementById('s-name').value;
+                const p = Number(document.getElementById('s-price').value);
+                const s = Number(document.getElementById('s-stock').value);
+                const d = document.getElementById('s-desc').value;
+                const f = document.getElementById('s-file').files[0];
+
+                if(!n || !p || !s) return alert("FILL INFO");
+
+                const publish = (url) => {
+                    const k = window.fb.push(window.fb.ref(window.fb.db, 'market')).key;
+                    window.fb.set(window.fb.ref(window.fb.db, 'market/'+k), {
+                        id: k, name: n, price: p, stock: s, desc: d, media: url||'', seller: sys.u.nick
+                    });
+                    document.getElementById('mod-sell').style.display='none';
+                    sys.u.xp = (sys.u.xp||0) + 1; sys.sync();
+                };
+
+                if(f) sys.fileToBase64(f, publish);
+                else publish('');
+            },
+
+            listen() {
+                window.fb.onValue(window.fb.ref(window.fb.db, 'market'), snap => {
+                    const l = document.getElementById('list-market');
+                    l.innerHTML = '';
+                    if(!snap.exists()) return l.innerHTML = '<div style="text-align:center; opacity:0.5;">MARKET EMPTY</div>';
+                    
+                    const data = snap.val();
+                    Object.values(data).forEach(it => {
+                        let mediaHtml = '';
+                        if(it.media) {
+                            if(it.media.includes('data:video') || it.media.includes('mp4') || it.media.includes('webm')) 
+                                mediaHtml = `<div class="media-cont"><video src="${it.media}" controls></video></div>`;
+                            else 
+                                mediaHtml = `<div class="media-cont"><img src="${it.media}"></div>`;
+                        }
+
+                        const el = document.createElement('div'); el.className = 'card';
+                        el.innerHTML = `
+                            ${mediaHtml}
+                            <h3>${it.name}</h3>
+                            <div style="display:flex; justify-content:space-between; margin:10px 0;">
+                                <b style="color:var(--s);">${it.price} $</b>
+                                <span style="font-size:12px;">STOCK: ${it.stock}</span>
+                            </div>
+                            <p style="font-size:12px; color:#888; margin-bottom:10px;">${it.desc}</p>
+                            <div style="font-size:11px; margin-bottom:10px;">SELLER: ${it.seller}</div>
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn" onclick="market.buy('${it.id}')">BUY</button>
+                                <button class="btn btn-sec" onclick="chat.start('${it.seller}')"><i class="fa fa-comment"></i></button>
+                                ${sys.u.nick === 'admin' || sys.u.nick === it.seller ? `<button class="btn btn-dang" style="width:40px;" onclick="market.del('${it.id}')">X</button>` : ''}
+                            </div>
+                        `;
+                        l.appendChild(el);
+                    });
+                });
+            },
+
+            async buy(id) {
+                const s = await window.fb.get(window.fb.ref(window.fb.db, 'market/'+id));
+                const it = s.val();
+                if(it.stock < 1) return alert("OUT OF STOCK");
+                if(sys.u.bal < it.price) return alert("NO MONEY");
+                if(it.seller === sys.u.nick) return alert("SELF BUY ERROR");
+
+                if(confirm(`Buy ${it.name} for ${it.price}$?`)) {
+                    sys.u.bal -= it.price;
+                    sys.u.xp = (sys.u.xp||0) + 1;
+                    sys.sync();
+                    
+                    window.fb.update(window.fb.ref(window.fb.db, 'market/'+id), { stock: it.stock - 1 });
+                    alert("BOUGHT!");
+                    chat.sendSys(it.seller, `User ${sys.u.nick} bought ${it.name}!`);
+                }
+            },
+            
+            del(id) { window.fb.remove(window.fb.ref(window.fb.db, 'market/'+id)); }
+        };
+
+        // --- CHAT LOGIC ---
+        const chat = {
+            curr: null,
+            
+            start(user) {
+                if(user === sys.u.nick) return;
+                this.curr = [sys.u.nick, user].sort().join('_');
+                this.openRoom(user);
+            },
+
+            openRoom(name) {
+                document.getElementById('scr-chat').classList.remove('active');
+                document.getElementById('scr-room').classList.add('active');
+                document.getElementById('room-name').innerText = name.toUpperCase();
+                this.listenRoom();
+            },
+
+            listenList() {
+                window.fb.onValue(window.fb.ref(window.fb.db, 'chats'), snap => {
+                    const l = document.getElementById('chat-list'); l.innerHTML = '';
+                    if(!snap.exists()) return;
+                    
+                    Object.keys(snap.val()).forEach(k => {
+                        if(k.includes(sys.u.nick)) {
+                            const other = k.replace(sys.u.nick, '').replace('_', '');
+                            const d = document.createElement('div'); d.className = 'chat-row';
+                            d.innerHTML = `<div class="ava-box"><img src="https://api.dicebear.com/7.x/identicon/svg?seed=${other}"></div><b>${other.toUpperCase()}</b>`;
+                            d.onclick = () => { chat.curr = k; chat.openRoom(other); };
+                            l.appendChild(d);
+                        }
+                    });
+                });
+            },
+
+            listenRoom() {
+                if(!this.curr) return;
+                window.fb.onValue(window.fb.ref(window.fb.db, 'chats/'+this.curr), snap => {
+                    const c = document.getElementById('room-msgs'); c.innerHTML = '';
+                    if(snap.exists()) {
+                        Object.values(snap.val()).forEach(m => {
+                            let content = m.txt;
+                            if(m.media) content = `<img src="${m.media}" style="width:100%; border-radius:10px;">` + content;
+                            c.innerHTML += `<div class="msg-bubble ${m.from===sys.u.nick?'msg-me':'msg-them'}">${content}</div>`;
+                        });
+                        c.scrollTop = c.scrollHeight;
+                    }
+                });
+            },
+
+            send() {
+                const t = document.getElementById('msg-text').value;
+                const f = document.getElementById('msg-file').files[0];
+                if(!t && !f) return;
+
+                const pushMsg = (url) => {
+                    window.fb.push(window.fb.ref(window.fb.db, 'chats/'+this.curr), {
+                        from: sys.u.nick, txt: t, media: url||'', ts: Date.now()
+                    });
+                    document.getElementById('msg-text').value = '';
+                };
+
+                if(f) sys.fileToBase64(f, pushMsg);
+                else pushMsg('');
+            },
+
+            sendSys(to, txt) {
+                const id = [sys.u.nick, to].sort().join('_');
+                window.fb.push(window.fb.ref(window.fb.db, 'chats/'+id), { from: 'SYSTEM', txt: txt, ts: Date.now() });
+            }
+        };
+
+        // --- CARTEL LOGIC ---
+        const cartel = {
+            listen() {
+                window.fb.onValue(window.fb.ref(window.fb.db, 'cartels'), snap => {
+                    const cts = snap.val() ? Object.values(snap.val()) : [];
+                    const my = cts.find(c => c.mems && c.mems.some(m => m.nick === sys.u.nick));
+                    
+                    if(my) {
+                        document.getElementById('ct-none').style.display = 'none';
+                        document.getElementById('ct-exist').style.display = 'block';
+                        document.getElementById('ct-head').innerText = my.name;
+                        document.getElementById('ct-owner').innerText = my.owner;
+                        document.getElementById('ct-mems').innerHTML = my.mems.map(m => `
+                            <div class="card" style="padding:10px; margin-bottom:5px; display:flex; justify-content:space-between;">
+                                <span>${m.nick}</span> <span style="color:var(--p)">${m.rank}</span>
+                            </div>
+                        `).join('');
+                        
+                        const isOwner = my.owner === sys.u.nick;
+                        document.getElementById('ct-admin').style.display = isOwner ? 'block' : 'none';
+                        document.getElementById('btn-del-ct').style.display = isOwner ? 'block' : 'none';
+                    } else {
+                        document.getElementById('ct-none').style.display = 'block';
+                        document.getElementById('ct-exist').style.display = 'none';
+                    }
+                });
+            },
+
+            create() {
+                const n = document.getElementById('ct-new-name').value;
+                if(!n) return;
+                if(sys.u.bal < 500) return alert("NEED 500 $");
+                sys.u.bal -= 500; sys.sync();
+                
+                const k = window.fb.push(window.fb.ref(window.fb.db, 'cartels')).key;
+                window.fb.set(window.fb.ref(window.fb.db, 'cartels/'+k), {
+                    id: k, name: n, owner: sys.u.nick, mems: [{nick: sys.u.nick, rank: 'BOSS'}]
+                });
+            },
+
+            add() {
+                const n = document.getElementById('add-mem-nick').value.toLowerCase();
+                const r = document.getElementById('add-mem-rank').value || 'Soldier';
+                
+                window.fb.get(window.fb.ref(window.fb.db, 'cartels')).then(snap => {
+                    const cts = Object.values(snap.val());
+                    const my = cts.find(c => c.owner === sys.u.nick);
+                    if(my) {
+                        my.mems.push({nick: n, rank: r});
+                        window.fb.update(window.fb.ref(window.fb.db, 'cartels/'+my.id), { mems: my.mems });
+                        alert("MEMBER ADDED");
+                    }
+                });
+            },
+
+            dissolve() {
+                window.fb.get(window.fb.ref(window.fb.db, 'cartels')).then(snap => {
+                    const cts = Object.values(snap.val());
+                    const my = cts.find(c => c.owner === sys.u.nick);
+                    if(my && confirm("DELETE CARTEL?")) window.fb.remove(window.fb.ref(window.fb.db, 'cartels/'+my.id));
+                });
+            }
+        };
+
+        window.onload = () => sys.init();
+    </script>
 </body>
 </html>
