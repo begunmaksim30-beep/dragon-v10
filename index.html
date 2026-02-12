@@ -204,204 +204,187 @@
             u: null, cur: '€', items: [], cartels: [], target: null,
             
             async login() {
+              <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DRAGON V18.2 | SUPREME</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // ТВОИ ДАННЫЕ ИЗ FIREBASE (ПРОВЕРЬ ИХ!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyADkxXfNqpjBaqBvP4DlkNfB_4ki7MMTSk",
+            authDomain: "dragonmarket-70400.firebaseapp.com",
+            databaseURL: "https://dragonmarket-70400-default-rtdb.firebaseio.com",
+            projectId: "dragonmarket-70400",
+            storageBucket: "dragonmarket-70400.firebasestorage.app",
+            appId: "1:746821202210:web:bf35404eca9f096c3eb57b"
+        };
+
+        const appFB = initializeApp(firebaseConfig);
+        const db = getDatabase(appFB);
+        window.fb = { db, ref, set, onValue, push, update, remove, get };
+    </script>
+
+    <style>
+        :root { --p: #d946ef; --bg: #070707; --c: #121212; --b: #252525; --t: #fff; --s: #22c55e; }
+        body.light { --bg: #f5f5f5; --t: #111; --c: #fff; --b: #ddd; }
+        body.gold { --p: #fbbf24; --bg: #0a0800; --c: #1a1600; --b: #3a3200; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--t); height: 100vh; overflow: hidden; }
+        .screen { display:none; padding:80px 15px 100px; height: 100vh; overflow-y: auto; }
+        .active { display:block; }
+        .card { background: var(--c); border: 1px solid var(--b); border-radius: 24px; padding: 20px; margin-bottom: 15px; }
+        .btn { background: var(--p); color: #fff; border: none; padding: 15px; border-radius: 15px; font-weight: 900; width: 100%; cursor: pointer; }
+        input { background: rgba(0,0,0,0.3); border: 1px solid var(--b); color: var(--t); padding: 15px; border-radius: 14px; width: 100%; margin-bottom: 12px; }
+        header { position:fixed; top:0; width:100%; height:75px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items:center; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--b); }
+        nav { position:fixed; bottom:15px; left:50%; transform:translateX(-50%); width:94%; height:75px; background: #141414; border-radius: 35px; display:flex; justify-content: space-around; align-items:center; border: 1px solid var(--b); z-index: 1000; }
+        .nav-i { font-size: 24px; color: #555; }
+        .nav-i.active { color: var(--p); }
+    </style>
+</head>
+<body id="main-body">
+
+    <div id="scr-auth" style="position:fixed; inset:0; background:var(--bg); z-index:10000; display:flex; align-items:center; justify-content:center; padding:25px;">
+        <div class="card" style="width:100%; max-width:400px; text-align:center;">
+            <h1 style="font-size:40px; color:var(--p); font-family: 'Orbitron';">DRAGON</h1>
+            <p style="opacity:0.4; margin-bottom:30px;">ВХОД И РЕГИСТРАЦИЯ</p>
+            <input id="auth-n" placeholder="Никнейм">
+            <input id="auth-p" type="password" placeholder="Пароль">
+            <button class="btn" onclick="core.login()">ВОЙТИ / СОЗДАТЬ АККАУНТ</button>
+            <p style="font-size:10px; margin-top:15px; opacity:0.3;">Для админа пароль: 123456789</p>
+        </div>
+    </div>
+
+    <header id="ui-h" style="display:none">
+        <div onclick="ui.show('prof')" style="display:flex; align-items:center; gap:12px;">
+            <img id="h-ava" src="" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--p);">
+            <div><b id="h-nick"></b><br><small id="h-id" style="font-size:9px; opacity:0.5;"></small></div>
+        </div>
+        <div id="h-bal" style="color:var(--s); font-weight:900; font-size:20px;"></div>
+    </header>
+
+    <div id="scr-market" class="screen active">
+        <div class="card">
+            <h2>Добро пожаловать в Маркет!</h2>
+            <p>Вы вошли как обычный пользователь.</p>
+        </div>
+    </div>
+
+    <div id="scr-prof" class="screen">
+        <div class="card" style="text-align:center;">
+            <img id="p-ava" src="" style="width:120px; height:120px; border-radius:50%; border:4px solid var(--p);">
+            <h2 id="p-nick" style="margin-top:10px;"></h2>
+            <button class="btn" style="background:#ff3333; margin-top:20px;" onclick="location.reload()">ВЫЙТИ</button>
+        </div>
+    </div>
+
+    <nav id="ui-n" style="display:none">
+        <div class="nav-i active" onclick="ui.show('market')"><i class="fa fa-home"></i></div>
+        <div class="nav-i" onclick="ui.show('prof')"><i class="fa fa-user"></i></div>
+    </nav>
+
+    <script>
+        const core = {
+            u: null,
+            
+            async login() {
+                async login() {
                 const n = document.getElementById('auth-n').value;
                 const p = document.getElementById('auth-p').value;
                 if(!n || !p) return alert("Введите ник и пароль!");
                 
-                const s = await window.fb.get(window.fb.ref(window.fb.db, 'users/'+n));
-                if(s.exists() && s.val().p !== p) return alert("Неверный пароль!");
-                
-                this.u = s.exists() ? s.val() : {
-                    n, p, id: 'ID-'+Math.floor(1000+Math.random()*9000),
-                    b: (n === 'admin' ? 25000 : 5000),
-                    a: 'https://api.dicebear.com/7.x/avataaars/svg?seed='+n,
-                    cart: [], fav: [], reviews: []
-                };
+                // Проверка для админа
+                if(n === 'admin' && p !== '123456789') {
+                    return alert("Для админа пароль: 123456789");
+                }
 
-                if(!s.exists()) window.fb.set(window.fb.ref(window.fb.db, 'users/'+n), this.u);
+                // Проверяем, есть ли такой юзер в базе
+                const s = await window.fb.get(window.fb.ref(window.fb.db, 'users/' + n));
                 
+                if(s.exists()) {
+                    // Юзер найден, проверяем пароль
+                    if(s.val().p === p) {
+                        this.u = s.val();
+                        alert("С возвращением, " + n + "!");
+                    } else {
+                        return alert("Неверный пароль для этого ника!");
+                    }
+                } else {
+                    // Юзера нет, создаем НОВЫЙ с твоим паролем
+                    this.u = {
+                        n, p, id: 'ID-' + Math.floor(1000 + Math.random() * 9000),
+                        b: (n === 'admin' ? 25000 : 5000), // Игроку 5000, админу 25000
+                        a: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + n,
+                        cart: [], fav: [], reviews: []
+                    };
+                    await window.fb.set(window.fb.ref(window.fb.db, 'users/' + n), this.u);
+                    alert("Аккаунт создан! Запомните пароль.");
+                }
+
                 document.getElementById('scr-auth').style.display = 'none';
                 document.getElementById('ui-h').style.display = 'flex';
                 document.getElementById('ui-n').style.display = 'flex';
                 this.init(); this.upd();
             },
+                
+                // Проверка админа
+                if(n === 'admin' && p !== '123456789') return alert("Пароль админа: 123456789");
 
-            init() {
-                const { ref, onValue } = window.fb;
-                onValue(ref(window.fb.db, 'market'), s => { this.items = s.val() ? Object.values(s.val()) : []; this.renderM(); });
-                onValue(ref(window.fb.db, 'cartels'), s => { this.cartels = s.val() ? Object.values(s.val()) : []; this.renderCt(); });
-                onValue(ref(window.fb.db, 'users/'+this.u.n), s => { if(s.exists()) { this.u = s.val(); this.upd(); } });
+                try {
+                    const s = await window.fb.get(window.fb.ref(window.fb.db, 'users/' + n));
+                    if(s.exists()) {
+                        if(s.val().p === p) {
+                            this.u = s.val();
+                        } else {
+                            return alert("Неверный пароль!");
+                        }
+                    } else {
+                        // Регистрация нового
+                        this.u = {
+                            n, p, id: 'ID-' + Math.floor(1000 + Math.random() * 9000),
+                            b: (n === 'admin' ? 25000 : 5000), // Только 5000 игроку!
+                            a: 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + n
+                        };
+                        await window.fb.set(window.fb.ref(window.fb.db, 'users/' + n), this.u);
+                        alert("Аккаунт создан!");
+                    }
+                    this.start();
+                } catch(e) {
+                    alert("Ошибка базы! Проверь Rules в Firebase.");
+                }
+            },
+
+            start() {
+                document.getElementById('scr-auth').style.display = 'none';
+                document.getElementById('ui-h').style.display = 'flex';
+                document.getElementById('ui-n').style.display = 'flex';
+                this.upd();
             },
 
             upd() {
                 document.getElementById('h-nick').innerText = this.u.n;
                 document.getElementById('p-nick').innerText = this.u.n;
-                document.getElementById('h-id').innerText = 'UID: ' + this.u.id;
+                document.getElementById('h-id').innerText = this.u.id;
                 document.getElementById('h-ava').src = this.u.a;
                 document.getElementById('p-ava').src = this.u.a;
-                document.getElementById('h-bal').innerText = this.u.b.toLocaleString() + ' ' + this.cur;
-                const r = this.u.reviews?.length ? (this.u.reviews.reduce((a,b)=>a+b,0)/this.u.reviews.length).toFixed(1) : "НЕТ ОТЗЫВОВ";
-                document.getElementById('p-rating').innerText = 'РЕЙТИНГ: ★ ' + r;
-                document.querySelectorAll('.cur').forEach(e => e.innerText = this.cur);
-            },
-
-            renderM() {
-                const l = document.getElementById('m-render');
-                l.innerHTML = this.items.map((it, i) => `
-                    <div class="card">
-                        <img src="${it.img}" class="p-img">
-                        <b style="font-size:14px;">${it.n}</b>
-                        <div style="color:var(--s); font-weight:900; font-size:18px; margin:5px 0;">${it.p} ${this.cur}</div>
-                        <div style="font-size:10px; opacity:0.5;">В наличии: ${it.am} | Продавец: ${it.sn}</div>
-                        <div style="display:flex; gap:8px; margin-top:12px;">
-                            <button class="btn" style="padding:10px;" onclick="core.toCart(${i})"><i class="fa fa-cart-plus"></i></button>
-                            <button class="btn" style="background:var(--b); padding:10px;" onclick="core.openChat('${it.sid}','${it.sn}')"><i class="fa fa-comment"></i></button>
-                            ${(this.u.n==='admin' || this.u.id===it.sid)?`<button class="btn" style="background:red; padding:10px; width:45px;" onclick="core.delP('${it.fid}')"><i class="fa fa-trash"></i></button>`:''}
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            publish() {
-                const n = document.getElementById('p-n-in').value, p = document.getElementById('p-p-in').value, am = document.getElementById('p-a-in').value, f = document.getElementById('p-f-in').files[0];
-                if(!n || !p || !f) return alert("Заполни всё!");
-                const r = new FileReader(); r.onload = (e) => {
-                    const newR = window.fb.push(window.fb.ref(window.fb.db, 'market'));
-                    window.fb.set(newR, { n, p: Number(p), am, img: e.target.result, sid: this.u.id, sn: this.u.n, fid: newR.key });
-                    ui.modal('add');
-                }; r.readAsDataURL(f);
-            },
-
-            delP(fid) { if(confirm("Удалить?")) window.fb.remove(window.fb.ref(window.fb.db, 'market/'+fid)); },
-
-            toCart(i) { this.u.cart = this.u.cart || []; this.u.cart.push(this.items[i]); this.sync(); alert("В корзине!"); },
-            
-            renderC() {
-                let t = 0;
-                document.getElementById('c-render').innerHTML = (this.u.cart || []).map((it, i) => {
-                    t += Number(it.p);
-                    return `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>${it.n}</b> <i class="fa fa-trash" style="color:red" onclick="core.remC(${i})"></i>
-                    </div>`;
-                }).join('');
-                document.getElementById('c-total').innerText = t + ' ' + this.cur;
-            },
-
-            remC(i) { this.u.cart.splice(i, 1); this.sync(); this.renderC(); },
-
-            buy() {
-                let t = 0; (this.u.cart || []).forEach(it => t += Number(it.p));
-                if(t > 0 && this.u.b >= t) {
-                    this.u.b -= t; this.u.cart = [];
-                    const rating = prompt("Оцените продавца (1-5 звезд):");
-                    if(rating >= 1 && rating <= 5) alert("Отзыв оставлен!");
-                    this.sync(); alert("Оплачено!"); this.renderC();
-                } else alert("Не хватает денег!");
-            },
-
-            transfer() {
-                const to = document.getElementById('bnk-to').value, sum = Number(document.getElementById('bnk-sum').value);
-                if(sum > 0 && this.u.b >= sum) {
-                    this.u.b -= sum; this.sync();
-                    alert("Перевод " + sum + " пользователю " + to + " выполнен!");
-                }
-            },
-
-            ctCreate() {
-                const n = document.getElementById('ct-n-in').value;
-                if(this.u.b >= 500 && n) {
-                    this.u.b -= 500;
-                    const newR = window.fb.push(window.fb.ref(window.fb.db, 'cartels'));
-                    window.fb.set(newR, { n, owner: this.u.id, fid: newR.key, members: [{n: this.u.n, r: 'БОСС'}] });
-                    this.sync();
-                }
-            },
-
-            renderCt() {
-                const my = this.cartels.find(c => c.owner === this.u.id || c.members.some(m => m.n === this.u.n));
-                if(my) {
-                    document.getElementById('ct-none').style.display='none';
-                    document.getElementById('ct-active').style.display='block';
-                    document.getElementById('ct-title').innerText = my.n;
-                    document.getElementById('ct-m-list').innerHTML = my.members.map(m => `<div class="card" style="padding:10px; font-size:12px;">${m.n} — <b>${m.r}</b></div>`).join('');
-                } else {
-                    document.getElementById('ct-none').style.display='block';
-                    document.getElementById('ct-active').style.display='none';
-                }
-            },
-
-            ctAddMember() {
-                const n = document.getElementById('ct-m-n').value, r = document.getElementById('ct-m-r').value;
-                const my = this.cartels.find(c => c.owner === this.u.id);
-                if(my && n) {
-                    my.members.push({n, r});
-                    window.fb.update(window.fb.ref(window.fb.db, 'cartels/'+my.fid), {members: my.members});
-                }
-            },
-
-            ctDel() { if(confirm("Удалить картель?")) window.fb.remove(window.fb.ref(window.fb.db, 'cartels/'+this.cartels.find(c=>c.owner===this.u.id).fid)); },
-
-            openChat(sid, sn) {
-                ui.show('chat'); document.getElementById('d-list').style.display='none';
-                document.getElementById('chat-win').style.display='block';
-                document.getElementById('chat-name').innerText = sn;
-                this.target = { sid, sn }; this.loadMsg();
-            },
-
-            sendMsg() {
-                const t = document.getElementById('m-in').value; if(!t) return;
-                const id = [this.u.id, this.target.sid].sort().join('_');
-                window.fb.push(window.fb.ref(window.fb.db, 'chats/'+id), { t, s: this.u.n, sid: this.u.id });
-                document.getElementById('m-in').value = '';
-            },
-
-            sendPhoto(i) {
-                const f = i.files[0]; const r = new FileReader();
-                r.onload = (e) => {
-                    const id = [this.u.id, this.target.sid].sort().join('_');
-                    window.fb.push(window.fb.ref(window.fb.db, 'chats/'+id), { img: e.target.result, s: this.u.n, sid: this.u.id });
-                }; r.readAsDataURL(f);
-            },
-
-            loadMsg() {
-                const id = [this.u.id, this.target.sid].sort().join('_');
-                window.fb.onValue(window.fb.ref(window.fb.db, 'chats/'+id), s => {
-                    const m = s.val() ? Object.values(s.val()) : [];
-                    document.getElementById('m-render').innerHTML = m.map(msg => `
-                        <div class="m ${msg.sid === this.u.id ? 'my' : 'to'}">
-                            ${msg.t ? msg.t : `<img src="${msg.img}">`}
-                        </div>
-                    `).join('');
-                    document.getElementById('m-render').scrollTop = 9999;
-                });
-            },
-
-            updAva(i) {
-                const f = i.files[0]; const r = new FileReader();
-                r.onload = (e) => { this.u.a = e.target.result; this.sync(); };
-                r.readAsDataURL(f);
-            },
-
-            sync() { window.fb.set(window.fb.ref(window.fb.db, 'users/'+this.u.n), this.u); },
-            setCur(v) { this.cur = v; this.upd(); this.renderM(); }
+                document.getElementById('h-bal').innerText = this.u.b + " €";
+            }
         };
 
         const ui = {
             show(id) {
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById('scr-'+id).classList.add('active');
-                document.querySelectorAll('.nav-i').forEach(i => i.classList.remove('active'));
-                const m = {market:0, cartel:1, cart:2, bank:3, chat:4, prof:5};
-                document.querySelectorAll('.nav-i')[m[id]].classList.add('active');
-                if(id === 'cart') core.renderC();
-            },
-            modal(id) {
-                const m = document.getElementById('mod-'+id);
-                m.style.display = m.style.display === 'block' ? 'none' : 'block';
-            },
-            theme(v) { document.getElementById('main-body').className = v; },
-            closeChat() { document.getElementById('d-list').style.display='block'; document.getElementById('chat-win').style.display='none'; }
+                document.getElementById('scr-' + id).classList.add('active');
+            }
         };
     </script>
 </body>
 </html>
+                
+               
