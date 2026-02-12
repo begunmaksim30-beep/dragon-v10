@@ -2,595 +2,317 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRAGON MARKET | ULTIMATE EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DRAGON ULTIMATE | CLOUD & REVIEWS</title>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot, addDoc, query, orderBy, where, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
+            authDomain: "dragonmarket-ef97f.firebaseapp.com",
+            projectId: "dragonmarket-ef97f",
+            storageBucket: "dragonmarket-ef97f.firebasestorage.app",
+            messagingSenderId: "733816628492",
+            appId: "1:733816628492:web:58816f9330e9f5475d1529",
+            measurementId: "G-82SSHP6H11"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // --- GLOBAL STATE ---
+        window.state = {
+            user: JSON.parse(localStorage.getItem('dg_user')) || null,
+            db, storage
+        };
+
+        // --- CORE FUNCTIONS ---
+        const upload = async (file, path) => {
+            const sRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
+            await uploadBytes(sRef, file);
+            return await getDownloadURL(sRef);
+        };
+
+        window.processAuth = async () => {
+            const nick = document.getElementById('auth-nick').value.trim();
+            const pass = document.getElementById('auth-pass').value;
+            const isReg = !document.getElementById('reg-box').classList.contains('hidden');
+
+            if (nick === 'system' && pass === '1337') {
+                saveUser({ nick: 'Admin', balance: 999999, isAdmin: true, id: 777 });
+                return;
+            }
+
+            const uRef = doc(db, "users", nick);
+            const snap = await getDoc(uRef);
+
+            if (isReg) {
+                if(snap.exists()) return alert("Ник занят!");
+                const newUser = { 
+                    nick, pass, balance: 5000, lvl: 1, 
+                    rating: 5.0, reviews: [], notifications: [],
+                    avatar: '', type: 'image', verified: false 
+                };
+                await setDoc(uRef, newUser);
+                saveUser(newUser);
+            } else {
+                if(snap.exists() && snap.data().pass === pass) saveUser(snap.data());
+                else alert("Ошибка доступа");
+            }
+        };
+
+        function saveUser(data) {
+            window.state.user = data;
+            localStorage.setItem('dg_user', JSON.stringify(data));
+            location.reload();
+        }
+
+        window.updateAvatar = async () => {
+            const file = document.getElementById('avatar-input').files[0];
+            if(!file) return;
+            const url = await upload(file, "avatars");
+            const type = file.type.startsWith('video') ? 'video' : 'image';
+            await updateDoc(doc(db, "users", window.state.user.nick), { avatar: url, type: type });
+            location.reload();
+        };
+
+        // --- MARKET & REVIEWS ---
+        window.loadMarket = () => {
+            onSnapshot(collection(db, "products"), (snap) => {
+                const grid = document.getElementById('market-grid');
+                grid.innerHTML = '';
+                snap.forEach(d => {
+                    const p = d.data(); const id = d.id;
+                    const isVerified = p.sellerRating > 4.5 && (p.reviewCount || 0) > 10;
+                    grid.innerHTML += `
+                        <div class="glass p-4 rounded-[32px] group hover:border-amber-500/50 transition-all">
+                            <div class="h-48 rounded-2xl overflow-hidden mb-4 relative">
+                                ${p.type === 'video' ? `<video src="${p.media}" autoplay loop muted class="w-full h-full object-cover"></video>` : `<img src="${p.media}" class="w-full h-full object-cover">`}
+                                <div class="absolute top-3 left-3 bg-black/60 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold">★ ${p.sellerRating.toFixed(1)}</div>
+                            </div>
+                            <h3 class="font-black uppercase italic truncate">${p.name}</h3>
+                            <div class="flex justify-between items-center my-2">
+                                <span class="text-amber-500 font-black text-lg">${p.price} $</span>
+                                <div class="flex items-center gap-1 cursor-pointer" onclick="openReviews('${p.seller}')">
+                                    <span class="text-[10px] opacity-50 font-bold">${p.seller}</span>
+                                    ${isVerified ? '<i class="fa fa-check-circle text-blue-400 text-[10px]"></i>' : ''}
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="buy('${id}', ${p.price}, '${p.seller}')" class="flex-1 bg-white text-black py-3 rounded-xl font-black text-[10px] hover:bg-amber-400">КУПИТЬ</button>
+                                <button onclick="openReviews('${p.seller}')" class="bg-white/5 px-4 rounded-xl hover:bg-white/10"><i class="fa fa-star text-amber-500"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        };
+
+        window.openReviews = async (sellerNick) => {
+            window.activeSeller = sellerNick;
+            document.getElementById('rev-modal-title').innerText = `Продавец: ${sellerNick}`;
+            const snap = await getDoc(doc(db, "users", sellerNick));
+            const data = snap.data();
+            const list = document.getElementById('rev-list');
+            list.innerHTML = (data.reviews || []).map(r => `
+                <div class="bg-white/5 p-4 rounded-2xl border border-white/5 mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-amber-500 font-bold text-xs">${r.from}</span>
+                        <span class="text-xs">${'★'.repeat(r.stars)}</span>
+                    </div>
+                    <p class="text-sm opacity-80 italic">"${r.text}"</p>
+                </div>
+            `).reverse().join('') || '<p class="opacity-20 text-center py-10">Отзывов пока нет. Будьте первым!</p>';
+            openModal('modal-reviews');
+        };
+
+        window.postReview = async () => {
+            const text = document.getElementById('rev-input').value;
+            const stars = parseInt(document.getElementById('rev-stars').value);
+            if(!text) return;
+            
+            const sRef = doc(db, "users", window.activeSeller);
+            const snap = await getDoc(sRef);
+            const currentReviews = snap.data().reviews || [];
+            const newReviews = [...currentReviews, { from: window.state.user.nick, text, stars, date: Date.now() }];
+            
+            // Расчет нового рейтинга
+            const avg = newReviews.reduce((acc, r) => acc + r.stars, 0) / newReviews.length;
+            
+            await updateDoc(sRef, { reviews: newReviews, rating: avg });
+            alert("Отзыв успешно добавлен!");
+            closeModal('modal-reviews');
+        };
+
+        window.createListing = async () => {
+            const name = document.getElementById('p-name').value;
+            const price = Number(document.getElementById('p-price').value);
+            const file = document.getElementById('p-file').files[0];
+            if(!name || !price || !file) return alert("Заполни всё!");
+
+            const btn = document.getElementById('p-submit');
+            btn.innerText = "ЗАГРУЗКА В ОБЛАКО...";
+            btn.disabled = true;
+
+            const url = await upload(file, "products");
+            await addDoc(collection(db, "products"), {
+                name, price, media: url, 
+                type: file.type.startsWith('video') ? 'video' : 'image',
+                seller: window.state.user.nick, 
+                sellerRating: window.state.user.rating || 5.0,
+                reviewCount: (window.state.user.reviews || []).length
+            });
+            location.reload();
+        };
+
+        // --- NOTIFICATIONS ---
+        window.checkNotifs = () => {
+            onSnapshot(doc(db, "users", window.state.user.nick), (snap) => {
+                const count = (snap.data().notifications || []).length;
+                const dot = document.getElementById('notif-dot');
+                if(count > 0) dot.classList.remove('hidden');
+                else dot.classList.add('hidden');
+            });
+        };
+
+        window.onload = () => {
+            if(window.state.user) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('u-name').innerText = window.state.user.nick;
+                document.getElementById('u-bal').innerText = window.state.user.balance + " $";
+                
+                const avBox = document.getElementById('u-avatar');
+                if(window.state.user.avatar) {
+                    avBox.innerHTML = window.state.user.type === 'video' 
+                        ? `<video src="${window.state.user.avatar}" autoplay loop muted class="w-full h-full object-cover"></video>`
+                        : `<img src="${window.state.user.avatar}" class="w-full h-full object-cover">`;
+                }
+                
+                window.loadMarket();
+                window.checkNotifs();
+            }
+        };
+
+        // --- UI UTILS ---
+        window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+        window.nav = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+        };
+        window.logout = () => { localStorage.clear(); location.reload(); };
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --accent: #f59e0b; --bg: #0b0f1a; --glass: rgba(255, 255, 255, 0.05); }
-        body { 
-            background: var(--bg); 
-            color: #e2e8f0; 
-            font-family: 'Inter', sans-serif; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background-size: cover;
-            background-attachment: fixed;
-        }
-        .glass { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
-        
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .gold-theme { --accent: #fbbf24; --bg: #1a1608; }
-        .red-theme { --accent: #ef4444; --bg: #1a0808; }
-        .green-theme { --accent: #10b981; --bg: #081a12; }
-        
-        .product-card img, .product-card video { height: 180px; width: 100%; object-fit: cover; }
-        .avatar-frame { border: 3px solid var(--accent); position: relative; }
-        .lvl-tag { position: absolute; bottom: -5px; right: -5px; background: var(--accent); color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
-        
-        /* Скрытие скроллбара */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;900&display=swap');
+        body { background: #080a0f; color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .font-title { font-family: 'Syncopate', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        input, select, textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; padding: 15px; border-radius: 18px; outline: none; width: 100%; transition: 0.3s; }
+        input:focus { border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="pb-32">
 
-    <div id="auth-screen" class="fixed inset-0 z-[100] bg-[#0b0f1a] flex items-center justify-center p-4">
-        <div class="glass p-8 rounded-3xl w-full max-w-md shadow-2xl">
-            <div class="text-center mb-8">
-                <i class="fa-solid fa-dragon text-5xl text-amber-500 mb-2"></i>
-                <h1 class="text-3xl font-black tracking-tighter">DRAGON <span class="text-amber-500">MARKET</span></h1>
-            </div>
-            
-            <div id="auth-form" class="space-y-4">
-                <div class="relative">
-                    <i class="fa fa-user absolute left-4 top-4 text-gray-500"></i>
-                    <input type="text" id="auth-nick" placeholder="Никнейм" class="w-full bg-white/5 p-4 pl-12 rounded-2xl outline-none focus:ring-2 ring-amber-500/50 transition">
-                </div>
-                <div class="relative">
-                    <i class="fa fa-lock absolute left-4 top-4 text-gray-500"></i>
-                    <input type="password" id="auth-pass" placeholder="Пароль (1-9 для теста)" class="w-full bg-white/5 p-4 pl-12 rounded-2xl outline-none focus:ring-2 ring-amber-500/50 transition">
-                </div>
-                <div id="reg-extra" class="hidden space-y-4">
-                    <div class="relative">
-                        <i class="fa fa-shield absolute left-4 top-4 text-gray-500"></i>
-                        <input type="password" id="auth-pass-confirm" placeholder="Повторите пароль" class="w-full bg-white/5 p-4 pl-12 rounded-2xl outline-none">
-                    </div>
-                </div>
-                <button onclick="processAuth()" class="w-full bg-amber-500 p-4 rounded-2xl font-black text-black hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-amber-500/20">
-                    <span id="btn-text">ВОЙТИ</span>
-                </button>
-                <p onclick="toggleAuthMode()" class="text-center text-sm text-gray-500 cursor-pointer hover:text-white transition">Нет аккаунта? <span class="text-amber-500">Создать сейчас</span></p>
+    <div id="auth-screen" class="fixed inset-0 z-[200] bg-[#080a0f] flex items-center justify-center p-6">
+        <div class="glass p-10 rounded-[50px] w-full max-w-md text-center">
+            <h1 class="text-4xl font-title italic mb-2 text-amber-500 tracking-tighter">DRAGON</h1>
+            <p class="text-[9px] uppercase tracking-[0.5em] mb-12 opacity-40">Ultimate Marketplace</p>
+            <div class="space-y-4">
+                <input type="text" id="auth-nick" placeholder="Username">
+                <input type="password" id="auth-pass" placeholder="Password">
+                <div id="reg-box" class="hidden text-amber-500 text-[10px] font-black uppercase tracking-widest">New Account Mode</div>
+                <button onclick="processAuth()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase hover:bg-amber-500 transition-all">Execute</button>
+                <button onclick="document.getElementById('reg-box').classList.toggle('hidden')" class="text-[10px] opacity-30 font-bold uppercase">Toggle Register</button>
             </div>
         </div>
     </div>
 
-    <header class="p-4 glass sticky top-0 z-50 flex justify-between items-center px-6">
+    <header class="p-6 sticky top-0 z-50 glass flex justify-between items-center border-b border-white/5">
         <div class="flex items-center gap-4">
-            <div class="avatar-frame rounded-full w-12 h-12 overflow-hidden shadow-lg shadow-amber-500/10">
-                <img id="u-avatar" src="" class="w-full h-full object-cover">
-                <span id="u-lvl" class="lvl-tag">1</span>
-            </div>
+            <div id="u-avatar" class="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-500 bg-white/5"></div>
             <div>
-                <p id="u-name" class="font-black text-lg leading-tight text-white">Guest</p>
-                <p id="u-id-tag" class="text-[10px] text-amber-500 font-bold tracking-widest uppercase">ID: 00000</p>
+                <h2 id="u-name" class="font-black italic text-xl uppercase tracking-tighter">...</h2>
+                <p id="u-bal" class="text-xs text-emerald-400 font-bold tracking-widest">0 $</p>
             </div>
         </div>
-        <div class="text-right">
-            <p id="u-balance" class="text-2xl font-black text-emerald-400">0.00 $</p>
-            <div class="flex items-center justify-end gap-2 opacity-60">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[10px] uppercase font-bold">Online: <span id="online-val">2,841</span></span>
+        <div class="flex gap-3">
+            <button onclick="openModal('modal-add')" class="bg-amber-500 text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-amber-500/20">Sell</button>
+            <div class="relative">
+                <button class="bg-white/5 w-12 h-12 rounded-2xl"><i class="fa fa-bell"></i></button>
+                <div id="notif-dot" class="hidden absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#080a0f]"></div>
             </div>
         </div>
     </header>
 
-    <main class="p-4 max-w-5xl mx-auto pb-24">
-        
-        <div id="tab-market" class="tab-content active">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black italic uppercase tracking-tighter">Площадка</h2>
-                <div class="flex gap-2">
-                    <button onclick="openSellModal()" class="bg-amber-500 text-black px-6 py-2.5 rounded-xl font-black text-sm shadow-lg shadow-amber-500/20 active:scale-90 transition">+ ПРОДАТЬ</button>
-                </div>
+    <main class="p-4 max-w-7xl mx-auto mt-6">
+        <div id="tab-market" class="tab-content">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-title italic uppercase">Marketplace</h2>
+                <span class="text-[10px] opacity-30 font-bold uppercase tracking-[0.3em]">Live Cloud Feed</span>
             </div>
-            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                </div>
+            <div id="market-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
         </div>
 
-        <div id="tab-cartel" class="tab-content">
-            <h2 class="text-2xl font-black text-red-500 mb-6 uppercase italic">Управление Картелем</h2>
-            <div id="cartel-engine"></div>
-        </div>
-
-        <div id="tab-chat" class="tab-content">
-            <h2 class="text-2xl font-black text-blue-500 mb-6 uppercase italic">Мессенджер</h2>
-            <div class="glass rounded-3xl flex flex-col h-[65vh] shadow-2xl border-blue-500/20">
-                <div id="chat-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-                <div class="p-3 border-t border-white/5 flex gap-2 items-center">
-                    <label class="p-3 bg-white/5 rounded-2xl cursor-pointer hover:bg-white/10 transition">
-                        <i class="fa fa-image text-blue-500"></i>
-                        <input type="file" id="chat-img" class="hidden" onchange="sendImg()">
-                    </label>
-                    <input type="text" id="chat-input" placeholder="Напишите @ID или сообщение..." class="flex-1 bg-white/5 p-4 rounded-2xl outline-none border border-transparent focus:border-blue-500/50">
-                    <button onclick="sendMsg()" class="bg-blue-500 p-4 rounded-2xl text-white shadow-lg shadow-blue-500/30"><i class="fa fa-paper-plane"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-ai" class="tab-content">
-            <h2 class="text-2xl font-black text-purple-500 mb-6 uppercase italic">AI Ассистент</h2>
-            <div class="glass p-6 rounded-3xl border-purple-500/20">
-                <div id="ai-logs" class="h-80 overflow-y-auto mb-4 space-y-3 pr-2 text-sm">
-                    <div class="bg-purple-500/10 p-4 rounded-2xl border border-purple-500/20">
-                        <p class="font-bold text-purple-400 mb-1">Dragon AI:</p>
-                        Привет! Я анализирую рынок в реальном времени. Подозрительных активностей нет. Чем могу помочь?
+        <div id="tab-settings" class="tab-content hidden">
+            <div class="glass p-10 rounded-[40px] max-w-2xl mx-auto space-y-8">
+                <h2 class="text-3xl font-title italic uppercase">Profile</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black opacity-30 uppercase ml-2">Update Avatar (WebP/Video)</label>
+                        <input type="file" id="avatar-input" accept="image/webp,image/*,video/*" onchange="updateAvatar()" class="mt-2">
                     </div>
-                </div>
-                <div class="flex gap-3">
-                    <input type="text" id="ai-q" class="flex-1 bg-white/5 p-4 rounded-2xl outline-none" placeholder="Задай вопрос поддержке...">
-                    <button onclick="askAI()" class="bg-purple-600 px-6 rounded-2xl"><i class="fa fa-robot"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-settings" class="tab-content">
-            <h2 class="text-2xl font-black mb-6 uppercase italic">Настройки</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="glass p-6 rounded-3xl">
-                    <h3 class="font-black text-amber-500 mb-4">Внешний вид</h3>
-                    <div class="space-y-3">
-                        <button onclick="triggerFile('inp-avatar')" class="w-full bg-white/5 p-4 rounded-2xl text-left flex justify-between items-center">
-                            Сменить аватар (MP4/JPG) <i class="fa fa-upload opacity-50"></i>
-                        </button>
-                        <button onclick="triggerFile('inp-bg')" class="w-full bg-white/5 p-4 rounded-2xl text-left flex justify-between items-center">
-                            Сменить фон сайта <i class="fa fa-image opacity-50"></i>
-                        </button>
-                        <div class="grid grid-cols-4 gap-2 mt-4">
-                            <div onclick="setTheme('default')" class="h-10 bg-slate-800 rounded-lg cursor-pointer border-2 border-white/10"></div>
-                            <div onclick="setTheme('gold')" class="h-10 bg-amber-600 rounded-lg cursor-pointer"></div>
-                            <div onclick="setTheme('red')" class="h-10 bg-red-600 rounded-lg cursor-pointer"></div>
-                            <div onclick="setTheme('green')" class="h-10 bg-emerald-600 rounded-lg cursor-pointer"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="glass p-6 rounded-3xl">
-                    <h3 class="font-black text-blue-500 mb-4">Система</h3>
-                    <div class="space-y-4">
-                        <select id="lang" class="w-full bg-white/5 p-4 rounded-2xl outline-none">
-                            <option>Русский (RU)</option>
-                            <option>English (US)</option>
-                            <option>Español (ES)</option>
-                            <option>Português (PT)</option>
-                        </select>
-                        <button onclick="logout()" class="w-full bg-red-500/10 text-red-500 p-4 rounded-2xl font-black border border-red-500/20">ВЫЙТИ ИЗ АККАУНТА</button>
-                    </div>
+                    <button onclick="logout()" class="w-full bg-red-500/10 text-red-500 py-5 rounded-2xl font-black uppercase text-xs border border-red-500/20">Sign Out</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 glass px-6 py-4 flex justify-between items-center z-[80] rounded-t-3xl border-t border-white/10 shadow-2xl">
-        <button onclick="switchTab('market', this)" class="nav-btn text-amber-500"><i class="fa-solid fa-store text-2xl"></i></button>
-        <button onclick="switchTab('cartel', this)" class="nav-btn"><i class="fa-solid fa-shield-halved text-2xl"></i></button>
-        <button onclick="switchTab('chat', this)" class="nav-btn relative"><i class="fa-solid fa-comment-dots text-2xl"></i><span id="msg-dot" class="hidden absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span></button>
-        <button onclick="switchTab('ai', this)" class="nav-btn"><i class="fa-solid fa-brain text-2xl"></i></button>
-        <button onclick="switchTab('settings', this)" class="nav-btn"><i class="fa-solid fa-sliders text-2xl"></i></button>
+    <nav class="fixed bottom-8 left-1/2 -translate-x-1/2 glass px-12 py-5 flex gap-20 rounded-[40px] z-[100] border border-white/10">
+        <button onclick="nav('market')" class="text-amber-500 hover:scale-125 transition-all"><i class="fa fa-fire-bolt text-2xl"></i></button>
+        <button onclick="nav('settings')" class="opacity-30 hover:opacity-100 hover:scale-125 transition-all"><i class="fa fa-user-ninja text-2xl"></i></button>
     </nav>
 
-    <div id="modal-sell" class="fixed inset-0 z-[110] bg-black/90 hidden items-center justify-center p-4">
-        <div class="glass p-6 rounded-3xl w-full max-w-lg">
-            <h3 class="text-xl font-black mb-6">НОВЫЙ ЛОТ</h3>
-            <div class="space-y-4">
-                <input type="text" id="p-title" placeholder="Название товара" class="w-full bg-white/5 p-4 rounded-2xl outline-none border border-white/10">
-                <textarea id="p-desc" placeholder="Описание" class="w-full bg-white/5 p-4 rounded-2xl outline-none border border-white/10 h-24"></textarea>
-                <div class="flex gap-4">
-                    <input type="number" id="p-price" placeholder="Цена ($)" class="w-1/2 bg-white/5 p-4 rounded-2xl outline-none border border-white/10">
-                    <input type="number" id="p-stock" placeholder="Кол-во" class="w-1/2 bg-white/5 p-4 rounded-2xl outline-none border border-white/10">
-                </div>
-                <div class="p-4 border-2 border-dashed border-white/10 rounded-2xl text-center cursor-pointer" onclick="triggerFile('p-file')">
-                    <i class="fa fa-upload text-2xl mb-2 opacity-30"></i>
-                    <p class="text-xs text-gray-500">Загрузить фото или MP4/MOV видео</p>
-                    <input type="file" id="p-file" class="hidden">
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="publish()" class="flex-1 bg-amber-500 text-black p-4 rounded-2xl font-black shadow-lg shadow-amber-500/20">ВЫСТАВИТЬ</button>
-                    <button onclick="closeSellModal()" class="flex-1 bg-white/5 p-4 rounded-2xl font-bold">ОТМЕНА</button>
+    <div id="modal-add" class="fixed inset-0 z-[150] bg-black/95 hidden items-center justify-center p-6">
+        <div class="glass p-10 rounded-[50px] w-full max-w-md space-y-5 relative">
+            <button onclick="closeModal('modal-add')" class="absolute top-8 right-8 opacity-20 text-2xl">&times;</button>
+            <h2 class="text-2xl font-title italic uppercase">New Listing</h2>
+            <input type="text" id="p-name" placeholder="Listing Title">
+            <input type="number" id="p-price" placeholder="Price (USD)">
+            <input type="file" id="p-file" accept="image/webp,image/*,video/*">
+            <button id="p-submit" onclick="createListing()" class="w-full bg-white text-black py-5 rounded-2xl font-black uppercase mt-4">Publish Now</button>
+        </div>
+    </div>
+
+    <div id="modal-reviews" class="fixed inset-0 z-[150] bg-black/95 hidden items-center justify-center p-6">
+        <div class="glass p-8 rounded-[50px] w-full max-w-xl max-h-[85vh] flex flex-col space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 id="rev-modal-title" class="text-xl font-title italic uppercase tracking-tighter">Reviews</h2>
+                <button onclick="closeModal('modal-reviews')" class="text-2xl opacity-20">&times;</button>
+            </div>
+            <div id="rev-list" class="flex-1 overflow-y-auto no-scrollbar pr-2 border-y border-white/5 py-6"></div>
+            <div class="pt-4 space-y-4">
+                <textarea id="rev-input" placeholder="Ваш отзыв..." class="h-24 resize-none"></textarea>
+                <div class="flex gap-4 items-center">
+                    <select id="rev-stars" class="flex-1">
+                        <option value="5">★★★★★ (5/5)</option>
+                        <option value="4">★★★★☆ (4/5)</option>
+                        <option value="3">★★★☆☆ (3/5)</option>
+                        <option value="2">★★☆☆☆ (2/5)</option>
+                        <option value="1">★☆☆☆☆ (1/5)</option>
+                    </select>
+                    <button onclick="postReview()" class="bg-amber-500 text-black px-8 py-4 rounded-2xl font-black uppercase text-[10px]">Отправить</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <input type="file" id="inp-avatar" class="hidden" onchange="updateProfile('avatar')">
-    <input type="file" id="inp-bg" class="hidden" onchange="updateProfile('bg')">
-
-    <script>
-        // --- БАЗА ДАННЫХ (LOCALSTORAGE) ---
-        let state = {
-            currentUser: JSON.parse(localStorage.getItem('dr_user')) || null,
-            users: JSON.parse(localStorage.getItem('dr_users_db')) || [],
-            products: JSON.parse(localStorage.getItem('dr_prods')) || [],
-            messages: JSON.parse(localStorage.getItem('dr_msgs')) || [],
-            cartels: JSON.parse(localStorage.getItem('dr_clans')) || [],
-            escrow: JSON.parse(localStorage.getItem('dr_escrow_db')) || []
-        };
-
-        // --- ИНИЦИАЛИЗАЦИЯ ---
-        window.onload = () => {
-            if (state.currentUser) {
-                document.getElementById('auth-screen').style.display = 'none';
-                syncUI();
-            }
-            renderMarket();
-        };
-
-        function save() {
-            localStorage.setItem('dr_user', JSON.stringify(state.currentUser));
-            localStorage.setItem('dr_users_db', JSON.stringify(state.users));
-            localStorage.setItem('dr_prods', JSON.stringify(state.products));
-            localStorage.setItem('dr_msgs', JSON.stringify(state.messages));
-            localStorage.setItem('dr_clans', JSON.stringify(state.cartels));
-            localStorage.setItem('dr_escrow_db', JSON.stringify(state.escrow));
-        }
-
-        // --- АУТЕНТИФИКАЦИЯ ---
-        let isReg = false;
-        function toggleAuthMode() {
-            isReg = !isReg;
-            document.getElementById('reg-extra').classList.toggle('hidden');
-            document.getElementById('btn-text').innerText = isReg ? "ЗАРЕГИСТРИРОВАТЬСЯ" : "ВОЙТИ";
-        }
-
-        function processAuth() {
-            const nick = document.getElementById('auth-nick').value.trim();
-            const pass = document.getElementById('auth-pass').value;
-            
-            if (nick === 'system' && pass === '1337') {
-                alert("Система авторизована. Права Супер-Администратора подтверждены.");
-                loginUser({ nick: 'Admin', id: '1337', balance: 25000, isAdmin: true, avatar: 'https://i.pravatar.cc/150?u=admin', level: 99, favorites: [] });
-                return;
-            }
-
-            if (isReg) {
-                const conf = document.getElementById('auth-pass-confirm').value;
-                if (pass !== conf) return alert("Пароли не совпадают!");
-                if (state.users.find(u => u.nick === nick)) return alert("Ник уже занят!");
-                
-                const newUser = {
-                    nick, pass, 
-                    id: Math.floor(10000 + Math.random() * 90000),
-                    balance: 5000,
-                    avatar: 'https://i.pravatar.cc/150?u=' + nick,
-                    level: 1,
-                    favorites: [],
-                    isFrozen: false
-                };
-                state.users.push(newUser);
-                loginUser(newUser);
-            } else {
-                const user = state.users.find(u => u.nick === nick && u.pass === pass);
-                if (!user) return alert("Ошибка доступа: Неверные данные или аккаунт не существует.");
-                loginUser(user);
-            }
-        }
-
-        function loginUser(user) {
-            state.currentUser = user;
-            save();
-            document.getElementById('auth-screen').style.display = 'none';
-            syncUI();
-            location.reload(); // Перезагрузка для чистоты состояния
-        }
-
-        function logout() {
-            state.currentUser = null;
-            save();
-            location.reload();
-        }
-
-        // --- ИНТЕРФЕЙС ---
-        function syncUI() {
-            const u = state.currentUser;
-            document.getElementById('u-name').innerText = u.nick;
-            document.getElementById('u-id-tag').innerText = `ID: ${u.id}`;
-            document.getElementById('u-balance').innerText = `${u.balance.toLocaleString()} $`;
-            document.getElementById('u-avatar').src = u.avatar;
-            document.getElementById('u-lvl').innerText = u.level;
-            
-            if (u.bg) document.body.style.backgroundImage = `url(${u.bg})`;
-            renderCartels();
-            renderChat();
-        }
-
-        function switchTab(tab, btn) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-amber-500'));
-            btn.classList.add('text-amber-500');
-        }
-
-        // --- МАРКЕТПЛЕЙС ---
-        function renderMarket() {
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = state.products.map(p => {
-                const isFav = state.currentUser?.favorites.includes(p.id);
-                const isVideo = p.file && (p.file.includes('video') || p.file.includes('.mp4') || p.file.includes('.mov'));
-                
-                return `
-                <div class="glass rounded-3xl overflow-hidden product-card hover:translate-y-[-5px] transition-all group">
-                    <div class="relative">
-                        ${isVideo ? `<video src="${p.file}" autoplay loop muted playsinline></video>` : `<img src="${p.file || 'https://via.placeholder.com/300'}" alt="">`}
-                        <button onclick="toggleFav(${p.id})" class="absolute top-3 right-3 w-10 h-10 rounded-full glass flex items-center justify-center ${isFav ? 'text-red-500' : 'text-white'}">
-                            <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-1">
-                            <h4 class="font-black text-sm uppercase truncate w-32">${p.title}</h4>
-                            <span class="text-emerald-400 font-black text-sm">${p.price} $</span>
-                        </div>
-                        <p class="text-[10px] text-gray-500 mb-3 h-8 line-clamp-2">${p.desc}</p>
-                        <div class="flex items-center gap-2 mb-3 text-[10px] font-bold">
-                            <img src="${p.sellerAvatar}" class="w-4 h-4 rounded-full">
-                            <span class="text-amber-500">${p.seller}</span>
-                            <span class="ml-auto opacity-40">Stock: ${p.stock}</span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button onclick="buyProd(${p.id})" class="flex-1 bg-white text-black py-2 rounded-xl font-black text-[10px] hover:bg-amber-500 transition">КУПИТЬ</button>
-                            <button onclick="openChatWith('${p.seller}', ${p.sellerId})" class="w-10 bg-white/5 rounded-xl"><i class="fa fa-comment text-xs"></i></button>
-                        </div>
-                        ${(state.currentUser?.isAdmin || state.currentUser?.nick === p.seller) ? `
-                            <button onclick="delProd(${p.id})" class="w-full mt-2 text-[8px] text-red-500 uppercase font-black opacity-30 hover:opacity-100">Удалить лот</button>
-                        ` : ''}
-                    </div>
-                </div>
-                `;
-            }).join('');
-        }
-
-        // --- ЛОГИКА СДЕЛОК (ESCROW) ---
-        function buyProd(id) {
-            if (!state.currentUser) return alert("Сначала войдите!");
-            const p = state.products.find(x => x.id === id);
-            
-            if (p.seller === state.currentUser.nick) return alert("Нельзя купить свой товар!");
-            if (state.currentUser.balance < p.price) return alert("Недостаточно средств!");
-
-            state.currentUser.balance -= p.price;
-            p.stock--;
-            
-            const deal = {
-                id: Date.now(),
-                prodId: p.id,
-                title: p.title,
-                amount: p.price,
-                buyer: state.currentUser.nick,
-                seller: p.seller,
-                status: 'pending',
-                date: new Date().getTime()
-            };
-            
-            state.escrow.push(deal);
-            save();
-            renderMarket();
-            syncUI();
-            alert(`Успешно! ${p.price}$ заморожены. Подтвердите получение в сообщениях, чтобы продавец получил деньги.`);
-            
-            // Отправка системного сообщения
-            sendSystemMsg(p.seller, `У вас купили "${p.title}"! Деньги в системе.`);
-        }
-
-        function confirmDeal(dealId) {
-            const deal = state.escrow.find(d => d.id === dealId);
-            if (!deal || deal.status !== 'pending') return;
-
-            const seller = state.users.find(u => u.nick === deal.seller);
-            if (seller) {
-                seller.balance += deal.amount;
-                seller.level += 1;
-            }
-            deal.status = 'completed';
-            save();
-            syncUI();
-            alert("Сделка завершена! Продавец получил деньги.");
-        }
-
-        // --- КАРТЕЛИ ---
-        function createCartel() {
-            const name = document.getElementById('ct-name-in').value;
-            if (state.currentUser.balance < 500) return alert("Нужно 500$!");
-            
-            state.currentUser.balance -= 500;
-            const newClan = {
-                id: Date.now(),
-                name: name,
-                owner: state.currentUser.nick,
-                members: [{ nick: state.currentUser.nick, rank: 'Boss', id: state.currentUser.id }]
-            };
-            state.cartels.push(newClan);
-            save();
-            syncUI();
-            renderCartels();
-        }
-
-        function renderCartels() {
-            const container = document.getElementById('cartel-engine');
-            const myClan = state.cartels.find(c => c.members.some(m => m.nick === state.currentUser.nick));
-
-            if (!myClan) {
-                container.innerHTML = `
-                <div class="glass p-10 rounded-3xl text-center">
-                    <i class="fa fa-shield-halved text-6xl text-red-500 mb-4 opacity-20"></i>
-                    <h3 class="text-xl font-black mb-2 uppercase">Нет картеля</h3>
-                    <p class="text-sm text-gray-500 mb-6">Создайте свою группировку за 500$</p>
-                    <div class="max-w-xs mx-auto space-y-3">
-                        <input type="text" id="ct-name-in" placeholder="Название..." class="w-full bg-white/5 p-4 rounded-2xl outline-none border border-white/10">
-                        <button onclick="createCartel()" class="w-full bg-red-600 p-4 rounded-2xl font-black italic">ОСНОВАТЬ</button>
-                    </div>
-                </div>
-                `;
-            } else {
-                const isOwner = myClan.owner === state.currentUser.nick;
-                container.innerHTML = `
-                <div class="glass p-6 rounded-3xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-black text-red-500 italic underline">${myClan.name}</h3>
-                        ${isOwner ? `<button onclick="dissolveClan(${myClan.id})" class="text-[10px] text-red-800 font-black">РАСПУСТИТЬ</button>` : ''}
-                    </div>
-                    <div class="space-y-2">
-                        ${myClan.members.map(m => `
-                            <div class="flex items-center justify-between bg-white/5 p-4 rounded-2xl">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                                    <span class="font-bold">${m.nick}</span>
-                                    <span class="text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded-lg font-black uppercase">${m.rank}</span>
-                                </div>
-                                ${isOwner && m.nick !== state.currentUser.nick ? `
-                                    <button onclick="kickMember(${myClan.id}, '${m.nick}')" class="text-red-500"><i class="fa fa-xmark"></i></button>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                    ${isOwner ? `
-                        <div class="mt-6 pt-6 border-t border-white/5 flex gap-2">
-                            <input type="text" id="inv-nick" placeholder="Ник игрока..." class="flex-1 bg-white/5 p-4 rounded-2xl outline-none">
-                            <button onclick="addMember(${myClan.id})" class="bg-emerald-600 px-6 rounded-2xl"><i class="fa fa-plus"></i></button>
-                        </div>
-                    ` : ''}
-                </div>
-                `;
-            }
-        }
-
-        // --- СООБЩЕНИЯ ---
-        function renderChat() {
-            const list = document.getElementById('chat-list');
-            list.innerHTML = state.messages.filter(m => m.to === state.currentUser.nick || m.from === state.currentUser.nick).map(m => `
-                <div class="flex ${m.from === state.currentUser.nick ? 'justify-end' : 'justify-start'}">
-                    <div class="max-w-[80%] ${m.from === state.currentUser.nick ? 'bg-blue-600 text-white' : 'glass'} p-4 rounded-3xl shadow-xl">
-                        <p class="text-[9px] font-black uppercase opacity-50 mb-1">${m.from} • ID:${m.fromId}</p>
-                        ${m.img ? `<img src="${m.img}" class="rounded-xl mb-2 max-h-40">` : ''}
-                        <p class="text-sm">${m.text}</p>
-                        ${m.type === 'deal' && m.status === 'pending' && m.from !== state.currentUser.nick ? `
-                            <button onclick="confirmDeal(${m.dealId})" class="mt-3 w-full bg-emerald-500 text-black font-black py-2 rounded-xl text-[10px]">ПОДТВЕРДИТЬ ПОЛУЧЕНИЕ</button>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-            list.scrollTop = list.scrollHeight;
-        }
-
-        function sendMsg() {
-            const input = document.getElementById('chat-input');
-            let text = input.value.trim();
-            if (!text) return;
-
-            let targetNick = "Admin"; // По умолчанию
-            if (text.startsWith('@')) {
-                const parts = text.split(' ');
-                targetNick = parts[0].substring(1);
-                text = parts.slice(1).join(' ');
-            }
-
-            const msg = {
-                from: state.currentUser.nick,
-                fromId: state.currentUser.id,
-                to: targetNick,
-                text: text,
-                date: Date.now()
-            };
-
-            state.messages.push(msg);
-            input.value = '';
-            save();
-            renderChat();
-        }
-
-        // --- ВСПОМОГАТЕЛЬНОЕ ---
-        function triggerFile(id) { document.getElementById(id).click(); }
-
-        function openSellModal() { document.getElementById('modal-sell').style.display = 'flex'; }
-        function closeSellModal() { document.getElementById('modal-sell').style.display = 'none'; }
-
-        function publish() {
-            const title = document.getElementById('p-title').value;
-            const price = parseInt(document.getElementById('p-price').value);
-            const stock = parseInt(document.getElementById('p-stock').value);
-            const desc = document.getElementById('p-desc').value;
-            const fileInp = document.getElementById('p-file');
-
-            if (!title || !price || !fileInp.files[0]) return alert("Заполни все поля и добавь фото/видео!");
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                state.products.push({
-                    id: Date.now(),
-                    title, price, stock, desc,
-                    file: e.target.result,
-                    seller: state.currentUser.nick,
-                    sellerId: state.currentUser.id,
-                    sellerAvatar: state.currentUser.avatar
-                });
-                save();
-                closeSellModal();
-                renderMarket();
-            };
-            reader.readAsDataURL(fileInp.files[0]);
-        }
-
-        function setTheme(t) {
-            document.body.className = "min-h-screen pb-24 " + (t === 'default' ? '' : t + '-theme');
-        }
-
-        function updateProfile(type) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (type === 'avatar') state.currentUser.avatar = e.target.result;
-                if (type === 'bg') state.currentUser.bg = e.target.result;
-                save();
-                syncUI();
-                renderMarket(); // Обновить аватарки в товарах
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function toggleFav(id) {
-            const idx = state.currentUser.favorites.indexOf(id);
-            if (idx === -1) state.currentUser.favorites.push(id);
-            else state.currentUser.favorites.splice(idx, 1);
-            save();
-            renderMarket();
-        }
-
-        function delProd(id) {
-            state.products = state.products.filter(p => p.id !== id);
-            save();
-            renderMarket();
-        }
-
-        function askAI() {
-            const q = document.getElementById('ai-q').value;
-            if (!q) return;
-            const logs = document.getElementById('ai-logs');
-            logs.innerHTML += `<div class="bg-white/5 p-3 rounded-xl text-right ml-10">Пользователь: ${q}</div>`;
-            
-            setTimeout(() => {
-                logs.innerHTML += `<div class="bg-purple-500/10 p-4 rounded-2xl border border-purple-500/20">
-                    <p class="font-bold text-purple-400 mb-1">Dragon AI:</p>
-                    Запрос обработан. Статус системы: СТАБИЛЬНО. Рекомендую проверять отзывы продавцов перед покупкой.
-                </div>`;
-                logs.scrollTop = logs.scrollHeight;
-            }, 600);
-            document.getElementById('ai-q').value = '';
-        }
-
-        function sendSystemMsg(to, text) {
-            state.messages.push({ from: 'SYSTEM', fromId: '000', to, text, date: Date.now() });
-            save();
-        }
-    </script>
 </body>
 </html>
