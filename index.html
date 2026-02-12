@@ -3,815 +3,856 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DRAGON MARKET | ULTIMATE</title>
+    <title>DRAGON MARKET v3.0 | ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Настройки темы */
-        :root { --hue: 210; --sat: 100%; --lig: 50%; }
-        .theme-gold { --hue: 45; --sat: 100%; --lig: 50%; }
-        .theme-red { --hue: 0; --sat: 100%; --lig: 40%; }
-        .theme-green { --hue: 120; --sat: 100%; --lig: 40%; }
+        :root {
+            --primary: #f59e0b; /* Amber-500 */
+            --bg-overlay: rgba(0, 0, 0, 0.7);
+            --glass: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ТЕМЫ */
+        body.theme-default { background: #0f172a; color: white; }
+        body.theme-gold { --primary: #ffd700; background: #1a1a00; color: #fffbea; }
+        body.theme-red { --primary: #ff0000; background: #1a0000; color: #ffecec; }
+        body.theme-green { --primary: #00ff00; background: #001a00; color: #eaffea; }
         
         body {
-            background-color: #0f172a;
-            color: white;
             font-family: 'Segoe UI', sans-serif;
+            transition: background 0.5s ease;
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            transition: background 0.5s;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* Эффект стекла */
         .glass {
-            background: rgba(15, 23, 42, 0.6);
+            background: var(--glass);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
         }
 
-        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .tab-content.active { display: block; opacity: 1; }
+
+        /* Анимации */
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .anim-up { animation: slideUp 0.4s ease forwards; }
+
+        input, textarea, select {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            transition: all 0.3s;
+        }
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: rgba(0,0,0,0.5);
+        }
 
         /* Скроллбар */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: hsl(var(--hue), var(--sat), var(--lig)); border-radius: 5px; }
-
-        .accent-text { color: hsl(var(--hue), var(--sat), var(--lig)); }
-        .accent-bg { background-color: hsl(var(--hue), var(--sat), var(--lig)); }
-        .accent-border { border-color: hsl(var(--hue), var(--sat), var(--lig)); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+        
+        .msg-bubble { max-width: 80%; padding: 10px; border-radius: 12px; margin-bottom: 8px; word-wrap: break-word; }
+        .msg-me { background: var(--primary); color: black; align-self: flex-end; margin-left: auto; }
+        .msg-other { background: rgba(255,255,255,0.1); align-self: flex-start; }
     </style>
 </head>
-<body class="min-h-screen pb-24 text-sm md:text-base">
+<body class="theme-default pb-24">
 
-    <div id="auth-screen" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4">
-        <div class="glass p-8 rounded-3xl w-full max-w-md text-center border-t-4 accent-border" style="border-top-color: #f59e0b;">
-            <div class="mb-6">
-                <i class="fa-solid fa-dragon text-5xl text-amber-500 mb-2"></i>
-                <h1 class="text-3xl font-bold tracking-widest">DRAGON</h1>
+    <div id="auth-screen" class="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 bg-opacity-95">
+        <div class="glass p-8 rounded-2xl w-full max-w-md relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+            <h1 class="text-4xl font-black text-center mb-2 tracking-tighter"><span class="text-amber-500">DRAGON</span> MARKET</h1>
+            <p class="text-center text-gray-400 mb-8 text-sm">SECURE UNDERGROUND SYSTEM</p>
+
+            <div id="login-form" class="space-y-4">
+                <input type="text" id="l-nick" placeholder="Логин / Login" class="w-full p-4 rounded-xl">
+                <input type="password" id="l-pass" placeholder="Пароль / Password" class="w-full p-4 rounded-xl">
+                <button onclick="Auth.login()" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold p-4 rounded-xl transition shadow-[0_0_15px_rgba(245,158,11,0.4)]">ВОЙТИ</button>
+                <p onclick="Auth.toggle('reg')" class="text-center text-sm text-gray-400 cursor-pointer hover:text-white mt-4">Создать аккаунт</p>
             </div>
-            
-            <div class="space-y-4">
-                <input type="text" id="auth-login" placeholder="Логин / Nickname" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-amber-500 transition">
-                <input type="password" id="auth-pass" placeholder="Пароль" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-amber-500 transition">
-                <div id="register-fields" class="hidden space-y-4">
-                    <input type="password" id="auth-pass-conf" placeholder="Повторите пароль" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-amber-500 transition">
-                </div>
-                
-                <button onclick="handleAuth()" id="btn-auth-action" class="w-full bg-amber-500 text-black font-black p-4 rounded-xl hover:scale-105 transition transform shadow-lg shadow-amber-500/20">ВОЙТИ</button>
-                
-                <p onclick="toggleAuthMode()" id="auth-switch-text" class="text-gray-400 cursor-pointer hover:text-white mt-4">Нет аккаунта? <span class="text-amber-500">Создать</span></p>
+
+            <div id="reg-form" class="space-y-4 hidden">
+                <input type="text" id="r-nick" placeholder="Придумайте Логин" class="w-full p-4 rounded-xl">
+                <input type="password" id="r-pass1" placeholder="Пароль" class="w-full p-4 rounded-xl">
+                <input type="password" id="r-pass2" placeholder="Повторите Пароль" class="w-full p-4 rounded-xl">
+                <button onclick="Auth.register()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold p-4 rounded-xl transition">СОЗДАТЬ АККАУНТ</button>
+                <p onclick="Auth.toggle('login')" class="text-center text-sm text-gray-400 cursor-pointer hover:text-white mt-4">Вернуться ко входу</p>
             </div>
         </div>
     </div>
 
-    <header class="fixed top-0 w-full glass z-40 px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center gap-3" onclick="switchTab('settings')">
+    <header class="glass sticky top-0 z-40 px-4 py-3 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3" onclick="Nav.to('settings')">
             <div class="relative">
-                <img id="header-avatar" src="" class="w-10 h-10 rounded-full object-cover border-2 accent-border">
+                <img id="head-avatar" src="" class="w-10 h-10 rounded-full border-2 border-amber-500 object-cover">
                 <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border border-black"></div>
             </div>
             <div>
-                <h2 id="header-nick" class="font-bold leading-none">Guest</h2>
-                <p id="header-id" class="text-[10px] text-gray-400">ID: 00000</p>
+                <p id="head-nick" class="font-bold text-sm leading-tight">Loading...</p>
+                <p id="head-id" class="text-[10px] text-gray-400 font-mono">ID: ...</p>
             </div>
         </div>
         <div class="text-right">
-            <div class="text-xs text-gray-400">Баланс</div>
-            <div id="header-balance" class="font-black text-lg text-green-400 tracking-wide">$ 0</div>
+            <div class="flex items-center gap-2 justify-end">
+                <i class="fa fa-wallet text-amber-500"></i>
+                <span id="head-balance" class="font-black text-lg">0 $</span>
+            </div>
         </div>
     </header>
 
-    <main class="pt-20 px-4 max-w-2xl mx-auto">
+    <main class="p-4 max-w-2xl mx-auto">
         
-        <div id="tab-market" class="tab-content active">
+        <div id="tab-market" class="tab-content active anim-up">
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-2xl font-bold">Рынок</h1>
-                <div class="flex gap-2">
-                    <button onclick="toggleFilter('my')" class="bg-white/5 px-3 py-1 rounded-lg text-xs">Мои товары</button>
-                    <button onclick="openModal('modal-sell')" class="accent-bg text-black px-4 py-2 rounded-xl font-bold shadow-lg text-xs"><i class="fa fa-plus"></i> Продать</button>
-                </div>
+                <h2 class="text-2xl font-bold" data-lang="market_title">Рынок</h2>
+                <button onclick="Modal.open('sell')" class="bg-amber-500 text-black px-4 py-2 rounded-lg font-bold text-sm shadow-lg transform hover:scale-105 transition">
+                    <i class="fa fa-plus"></i> <span data-lang="btn_sell">Продать</span>
+                </button>
             </div>
             
-            <div id="products-grid" class="grid grid-cols-2 gap-3 pb-20"></div>
+            <div class="mb-4 flex gap-2">
+                <input type="text" id="market-search" placeholder="Поиск товара..." class="flex-1 p-2 rounded-lg bg-white/5 text-sm" oninput="Market.render()">
+            </div>
+
+            <div id="market-grid" class="grid grid-cols-1 gap-4">
+                </div>
         </div>
 
-        <div id="tab-cartel" class="tab-content">
+        <div id="tab-cartel" class="tab-content anim-up">
             <div id="cartel-view"></div>
         </div>
 
-        <div id="tab-orders" class="tab-content">
-            <h1 class="text-2xl font-bold mb-4">Активные сделки</h1>
-            <div class="bg-blue-500/10 border border-blue-500/30 p-3 rounded-xl mb-4 text-xs text-blue-200">
-                <i class="fa fa-info-circle"></i> Деньги хранятся в системе до подтверждения получения товара.
+        <div id="tab-chat" class="tab-content anim-up">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold" data-lang="chat_title">Сообщения</h2>
+                <button onclick="Modal.open('new-chat')" class="bg-blue-600 px-3 py-1 rounded text-sm"><i class="fa fa-pen"></i></button>
             </div>
-            <div id="orders-list" class="space-y-3"></div>
-        </div>
-
-        <div id="tab-messages" class="tab-content">
-            <h1 class="text-2xl font-bold mb-4">Мессенджер</h1>
-            <div id="chat-list" class="space-y-2 mb-4"></div>
+            <div id="chat-list" class="space-y-2"></div>
             
-            <div id="chat-conversation" class="fixed inset-0 bg-[#0f172a] z-50 flex flex-col hidden">
+            <div id="chat-conversation" class="fixed inset-0 bg-gray-900 z-50 flex flex-col hidden">
                 <div class="glass p-4 flex items-center gap-3">
-                    <button onclick="closeChat()" class="text-gray-400"><i class="fa fa-arrow-left"></i></button>
-                    <img id="chat-partner-avatar" class="w-8 h-8 rounded-full">
-                    <span id="chat-partner-name" class="font-bold">Chat</span>
+                    <button onclick="Chat.close()" class="text-gray-400"><i class="fa fa-arrow-left text-xl"></i></button>
+                    <img id="chat-header-img" src="" class="w-8 h-8 rounded-full">
+                    <span id="chat-header-name" class="font-bold">Chat</span>
                 </div>
-                <div id="chat-messages-area" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
-                <div class="p-3 glass flex gap-2 items-center">
-                    <label class="cursor-pointer text-gray-400 hover:text-white">
-                        <i class="fa fa-image text-xl"></i>
-                        <input type="file" id="chat-img-input" class="hidden" onchange="sendChatImage()">
-                    </label>
-                    <input type="text" id="chat-input" placeholder="Сообщение..." class="flex-1 bg-white/10 p-3 rounded-xl outline-none">
-                    <button onclick="sendChatMessage()" class="accent-bg text-black p-3 rounded-xl"><i class="fa fa-paper-plane"></i></button>
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2 bg-black/50"></div>
+                <div class="p-2 glass flex gap-2 items-center">
+                    <label class="cursor-pointer p-2 text-gray-400"><i class="fa fa-image text-xl"></i><input type="file" id="chat-file" class="hidden" onchange="Chat.sendImg()"></label>
+                    <input type="text" id="chat-input" class="flex-1 p-2 rounded-full bg-white/10" placeholder="Сообщение...">
+                    <button onclick="Chat.send()" class="bg-amber-500 w-10 h-10 rounded-full text-black"><i class="fa fa-paper-plane"></i></button>
                 </div>
             </div>
         </div>
 
-        <div id="tab-settings" class="tab-content">
-            <h1 class="text-2xl font-bold mb-4">Профиль</h1>
-            
-            <div class="glass p-5 rounded-2xl mb-4 text-center relative overflow-hidden">
-                <input type="file" id="avatar-upload" class="hidden" onchange="uploadAvatar()">
-                <div onclick="document.getElementById('avatar-upload').click()" class="w-24 h-24 mx-auto rounded-full bg-gray-700 relative cursor-pointer overflow-hidden border-4 accent-border mb-3">
-                    <img id="profile-avatar" src="" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition"><i class="fa fa-camera"></i></div>
-                </div>
-                <h2 id="profile-nick" class="text-xl font-bold">Nick</h2>
-                <div class="flex justify-center gap-2 mt-2">
-                    <div class="text-xs bg-white/10 px-2 py-1 rounded">Рейтинг: <span id="profile-rating" class="text-yellow-400">5.0</span></div>
-                    <div class="text-xs bg-white/10 px-2 py-1 rounded">Сделок: <span id="profile-deals">0</span></div>
-                </div>
-            </div>
-
-            <div class="glass p-4 rounded-2xl mb-4">
-                <h3 class="font-bold mb-2 text-purple-400"><i class="fa fa-robot"></i> System AI</h3>
-                <div id="ai-chat-log" class="h-32 overflow-y-auto text-xs space-y-2 mb-2 bg-black/20 p-2 rounded">
-                    <div class="text-gray-400">Система: Приветствую. Введите запрос.</div>
-                </div>
-                <div class="flex gap-2">
-                    <input id="ai-input" type="text" placeholder="Вопрос поддержке..." class="w-full bg-white/5 p-2 rounded-lg text-xs outline-none">
-                    <button onclick="askAI()" class="bg-purple-600 px-3 rounded-lg"><i class="fa fa-arrow-right"></i></button>
-                </div>
-            </div>
-
-            <div class="glass p-4 rounded-2xl mb-4">
-                <h3 class="font-bold mb-3">Кастомизация</h3>
-                <div class="space-y-3">
-                    <button onclick="document.getElementById('bg-upload').click()" class="w-full bg-white/5 p-3 rounded-xl text-left text-sm flex justify-between">
-                        <span>Сменить фон сайта</span> <i class="fa fa-image"></i>
-                    </button>
-                    <input type="file" id="bg-upload" class="hidden" onchange="uploadBackground()">
-                    
-                    <div class="grid grid-cols-4 gap-2">
-                        <button onclick="setTheme('default')" class="h-10 rounded-lg bg-blue-500"></button>
-                        <button onclick="setTheme('gold')" class="h-10 rounded-lg bg-amber-500"></button>
-                        <button onclick="setTheme('red')" class="h-10 rounded-lg bg-red-600"></button>
-                        <button onclick="setTheme('green')" class="h-10 rounded-lg bg-green-600"></button>
+        <div id="tab-ai" class="tab-content anim-up">
+            <h2 class="text-2xl font-bold mb-4 text-purple-400">Dragon AI</h2>
+            <div class="glass rounded-xl h-[70vh] flex flex-col">
+                <div id="ai-logs" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div class="bg-purple-500/20 p-3 rounded-lg text-sm border border-purple-500/30">
+                        <i class="fa fa-robot mr-2"></i> Привет! Я ИИ системы. Если нужна помощь, спрашивай. Для админов есть спецкоманды.
                     </div>
                 </div>
+                <div class="p-3 border-t border-white/10 flex gap-2">
+                    <input type="text" id="ai-input" class="flex-1 bg-black/30 p-2 rounded-lg" placeholder="Запрос системе...">
+                    <button onclick="AI.ask()" class="text-purple-400 p-2"><i class="fa fa-arrow-up"></i></button>
+                </div>
             </div>
-
-            <button onclick="logout()" class="w-full bg-red-500/10 text-red-500 border border-red-500/50 p-3 rounded-xl font-bold">Выйти</button>
         </div>
 
+        <div id="tab-settings" class="tab-content anim-up">
+            <h2 class="text-2xl font-bold mb-4">Настройки</h2>
+            
+            <div class="glass p-4 rounded-xl mb-4 text-center">
+                <div class="relative inline-block">
+                    <img id="prof-avatar" src="" class="w-24 h-24 rounded-full object-cover border-4 border-amber-500 mb-2">
+                    <label class="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full cursor-pointer border border-white/20">
+                        <i class="fa fa-camera text-sm"></i>
+                        <input type="file" class="hidden" onchange="Settings.changeAvatar(this)">
+                    </label>
+                </div>
+                <h3 id="prof-nick" class="text-xl font-bold">Nick</h3>
+                <p id="prof-status" class="text-xs text-green-400">Status: Active</p>
+            </div>
+
+            <div class="glass p-4 rounded-xl space-y-4">
+                <div>
+                    <p class="text-sm text-gray-400 mb-2">Язык / Language</p>
+                    <select id="lang-picker" onchange="Settings.setLang(this.value)" class="w-full p-2 rounded-lg">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="pt">Português</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-400 mb-2">Тема оформления</p>
+                    <div class="flex gap-2">
+                        <div onclick="Settings.setTheme('default')" class="w-8 h-8 rounded-full bg-slate-800 border-2 border-white cursor-pointer"></div>
+                        <div onclick="Settings.setTheme('gold')" class="w-8 h-8 rounded-full bg-yellow-600 border-2 border-transparent cursor-pointer"></div>
+                        <div onclick="Settings.setTheme('red')" class="w-8 h-8 rounded-full bg-red-900 border-2 border-transparent cursor-pointer"></div>
+                        <div onclick="Settings.setTheme('green')" class="w-8 h-8 rounded-full bg-green-900 border-2 border-transparent cursor-pointer"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-sm text-gray-400 mb-2">Фон сайта</p>
+                    <label class="w-full block bg-white/5 p-3 rounded-lg text-center cursor-pointer border border-dashed border-gray-500 hover:border-amber-500 transition">
+                        <i class="fa fa-image mr-2"></i> Выбрать из галереи
+                        <input type="file" class="hidden" onchange="Settings.setBg(this)">
+                    </label>
+                    <button onclick="Settings.resetBg()" class="mt-2 text-xs text-red-400">Сбросить фон</button>
+                </div>
+
+                <button onclick="Auth.logout()" class="w-full bg-red-500/10 text-red-500 border border-red-500/50 p-3 rounded-xl font-bold mt-4">ВЫЙТИ ИЗ АККАУНТА</button>
+            </div>
+        </div>
     </main>
 
-    <nav class="fixed bottom-4 left-4 right-4 glass rounded-2xl p-3 flex justify-between items-center z-40 max-w-2xl mx-auto shadow-2xl">
-        <button onclick="switchTab('market')" class="nav-btn text-2xl w-12 h-12 flex items-center justify-center rounded-xl accent-text"><i class="fa fa-store"></i></button>
-        <button onclick="switchTab('orders')" class="nav-btn text-2xl w-12 h-12 flex items-center justify-center rounded-xl text-gray-500 relative">
-            <i class="fa fa-box"></i>
-            <span id="nav-orders-badge" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+    <nav class="fixed bottom-0 w-full glass flex justify-around p-4 z-40 pb-6 border-t border-white/5">
+        <button onclick="Nav.to('market')" class="nav-btn text-amber-500"><i class="fa fa-store text-xl"></i></button>
+        <button onclick="Nav.to('cartel')" class="nav-btn text-gray-400"><i class="fa fa-users text-xl"></i></button>
+        <button onclick="Nav.to('chat')" class="nav-btn text-gray-400 relative">
+            <i class="fa fa-comment text-xl"></i>
+            <div id="nav-msg-badge" class="hidden absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
         </button>
-        <button onclick="switchTab('cartel')" class="nav-btn text-2xl w-12 h-12 flex items-center justify-center rounded-xl text-gray-500"><i class="fa fa-users"></i></button>
-        <button onclick="switchTab('messages')" class="nav-btn text-2xl w-12 h-12 flex items-center justify-center rounded-xl text-gray-500"><i class="fa fa-comment-dots"></i></button>
-        <button onclick="switchTab('settings')" class="nav-btn text-2xl w-12 h-12 flex items-center justify-center rounded-xl text-gray-500"><i class="fa fa-user-circle"></i></button>
+        <button onclick="Nav.to('ai')" class="nav-btn text-gray-400"><i class="fa fa-robot text-xl"></i></button>
+        <button onclick="Nav.to('settings')" class="nav-btn text-gray-400"><i class="fa fa-cog text-xl"></i></button>
     </nav>
 
-    <div id="modal-sell" class="fixed inset-0 bg-black/80 z-[60] hidden items-center justify-center p-4">
-        <div class="glass p-6 rounded-2xl w-full max-w-sm">
-            <h3 class="text-xl font-bold mb-4">Новый товар</h3>
+    <div id="modal-sell" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4">
+        <div class="glass p-6 rounded-2xl w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Выставить лот</h3>
             <div class="space-y-3">
-                <input id="sell-name" type="text" placeholder="Название" class="w-full bg-white/10 p-3 rounded-xl outline-none">
-                <textarea id="sell-desc" placeholder="Описание" class="w-full bg-white/10 p-3 rounded-xl outline-none h-20"></textarea>
+                <input type="text" id="sell-name" placeholder="Название товара" class="w-full p-3 rounded-lg">
+                <textarea id="sell-desc" placeholder="Описание" class="w-full p-3 rounded-lg h-20"></textarea>
                 <div class="flex gap-2">
-                    <input id="sell-price" type="number" placeholder="Цена $" class="w-1/2 bg-white/10 p-3 rounded-xl outline-none">
-                    <input id="sell-count" type="number" placeholder="Шт." class="w-1/2 bg-white/10 p-3 rounded-xl outline-none">
+                    <input type="number" id="sell-price" placeholder="Цена $" class="w-1/2 p-3 rounded-lg">
+                    <input type="number" id="sell-count" placeholder="Шт." class="w-1/2 p-3 rounded-lg">
                 </div>
-                <label class="block bg-white/5 p-3 rounded-xl text-center cursor-pointer border border-dashed border-gray-600">
-                    <span class="text-gray-400 text-sm">Фото товара (нажми)</span>
-                    <input type="file" id="sell-img" class="hidden">
+                <label class="block w-full p-3 bg-white/10 rounded-lg text-center cursor-pointer">
+                    <span id="sell-file-text">Добавить фото</span>
+                    <input type="file" id="sell-img" class="hidden" onchange="document.getElementById('sell-file-text').innerText = 'Фото выбрано'">
                 </label>
                 <div class="flex gap-2 mt-4">
-                    <button onclick="createProduct()" class="flex-1 accent-bg text-black font-bold p-3 rounded-xl">Выставить</button>
-                    <button onclick="closeModal('modal-sell')" class="flex-1 bg-white/10 p-3 rounded-xl">Отмена</button>
+                    <button onclick="Market.publish()" class="flex-1 bg-amber-500 text-black font-bold p-3 rounded-lg">Создать</button>
+                    <button onclick="Modal.close('sell')" class="flex-1 bg-gray-700 p-3 rounded-lg">Отмена</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="modal-review" class="fixed inset-0 bg-black/80 z-[60] hidden items-center justify-center p-4">
-        <div class="glass p-6 rounded-2xl w-full max-w-sm text-center">
-            <h3 class="text-xl font-bold mb-2">Оцените продавца</h3>
-            <p class="text-gray-400 text-xs mb-4">Сделка завершена</p>
-            <div class="flex justify-center gap-2 text-3xl mb-4 text-gray-600" id="star-container">
-                <i class="fa fa-star cursor-pointer" onclick="setRating(1)"></i>
-                <i class="fa fa-star cursor-pointer" onclick="setRating(2)"></i>
-                <i class="fa fa-star cursor-pointer" onclick="setRating(3)"></i>
-                <i class="fa fa-star cursor-pointer" onclick="setRating(4)"></i>
-                <i class="fa fa-star cursor-pointer" onclick="setRating(5)"></i>
+    <div id="modal-new-chat" class="fixed inset-0 bg-black/80 z-[60] hidden flex items-center justify-center p-4">
+        <div class="glass p-6 rounded-2xl w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Написать сообщение</h3>
+            <p class="text-sm text-gray-400 mb-2">Введите точный ник получателя:</p>
+            <input type="text" id="new-chat-nick" placeholder="Ник игрока" class="w-full p-3 rounded-lg mb-4">
+            <div class="flex gap-2">
+                <button onclick="Chat.startNew()" class="flex-1 bg-blue-600 font-bold p-3 rounded-lg">Начать чат</button>
+                <button onclick="Modal.close('new-chat')" class="flex-1 bg-gray-700 p-3 rounded-lg">Отмена</button>
             </div>
-            <textarea id="review-text" placeholder="Ваш отзыв..." class="w-full bg-white/10 p-3 rounded-xl outline-none h-20 mb-4"></textarea>
-            <button onclick="submitReview()" class="w-full accent-bg text-black font-bold p-3 rounded-xl">Отправить</button>
         </div>
     </div>
 
     <script>
-        /* --- СИСТЕМА ДАННЫХ --- */
+        // --- DATABASE & STATE ---
         const DB = {
-            users: JSON.parse(localStorage.getItem('dm_users')) || [],
-            products: JSON.parse(localStorage.getItem('dm_products')) || [],
-            cartels: JSON.parse(localStorage.getItem('dm_cartels')) || [],
-            orders: JSON.parse(localStorage.getItem('dm_orders')) || [],
-            messages: JSON.parse(localStorage.getItem('dm_messages')) || [],
-            currentUser: JSON.parse(localStorage.getItem('dm_current')) || null
+            getUsers: () => JSON.parse(localStorage.getItem('dm_users')) || [],
+            saveUsers: (data) => localStorage.setItem('dm_users', JSON.stringify(data)),
+            getProducts: () => JSON.parse(localStorage.getItem('dm_products')) || [],
+            saveProducts: (data) => localStorage.setItem('dm_products', JSON.stringify(data)),
+            getCartels: () => JSON.parse(localStorage.getItem('dm_cartels')) || [],
+            saveCartels: (data) => localStorage.setItem('dm_cartels', JSON.stringify(data)),
+            getChats: () => JSON.parse(localStorage.getItem('dm_chats')) || [],
+            saveChats: (data) => localStorage.setItem('dm_chats', JSON.stringify(data)),
         };
 
-        function saveDB() {
-            localStorage.setItem('dm_users', JSON.stringify(DB.users));
-            localStorage.setItem('dm_products', JSON.stringify(DB.products));
-            localStorage.setItem('dm_cartels', JSON.stringify(DB.cartels));
-            localStorage.setItem('dm_orders', JSON.stringify(DB.orders));
-            localStorage.setItem('dm_messages', JSON.stringify(DB.messages));
-            if(DB.currentUser) {
-                // Обновляем текущего юзера из общего списка чтобы синхронизировать баланс
-                const actualUser = DB.users.find(u => u.id === DB.currentUser.id);
-                localStorage.setItem('dm_current', JSON.stringify(actualUser));
-            } else {
-                localStorage.removeItem('dm_current');
-            }
-        }
-
-        /* --- АВТОРИЗАЦИЯ --- */
-        let isRegMode = false;
+        let currentUser = null;
+        let currentLang = localStorage.getItem('dm_lang') || 'ru';
         
-        function init() {
-            if (DB.currentUser) {
-                document.getElementById('auth-screen').style.display = 'none';
-                loadTheme(DB.currentUser.theme || 'default');
-                if(DB.currentUser.bg) document.body.style.backgroundImage = `url(${DB.currentUser.bg})`;
-                updateUI();
-            }
-        }
+        // Словарь
+        const TEXTS = {
+            ru: { market_title: "Рынок", btn_sell: "Продать", chat_title: "Сообщения" },
+            en: { market_title: "Marketplace", btn_sell: "Sell Item", chat_title: "Messages" },
+            es: { market_title: "Mercado", btn_sell: "Vender", chat_title: "Mensajes" },
+            pt: { market_title: "Mercado", btn_sell: "Vender", chat_title: "Mensagens" }
+        };
 
-        function toggleAuthMode() {
-            isRegMode = !isRegMode;
-            document.getElementById('register-fields').style.display = isRegMode ? 'block' : 'none';
-            document.getElementById('btn-auth-action').innerText = isRegMode ? 'ЗАРЕГИСТРИРОВАТЬСЯ' : 'ВОЙТИ';
-            document.getElementById('auth-switch-text').innerHTML = isRegMode ? 
-                'Есть аккаунт? <span class="text-amber-500">Войти</span>' : 
-                'Нет аккаунта? <span class="text-amber-500">Создать</span>';
-        }
+        // --- AUTH SYSTEM ---
+        const Auth = {
+            init: () => {
+                // Применение сохраненного фона
+                const savedBg = localStorage.getItem('dm_custom_bg');
+                if(savedBg) document.body.style.backgroundImage = `url(${savedBg})`;
+                const savedTheme = localStorage.getItem('dm_theme');
+                if(savedTheme) document.body.className = `pb-24 ${savedTheme}`;
 
-        function handleAuth() {
-            const login = document.getElementById('auth-login').value.trim();
-            const pass = document.getElementById('auth-pass').value.trim();
-            
-            if (!login || !pass) return alert('Введите данные');
-
-            if (isRegMode) {
-                const conf = document.getElementById('auth-pass-conf').value.trim();
-                if (pass !== conf) return alert('Пароли не совпадают');
-                if (DB.users.find(u => u.login === login)) return alert('Логин занят');
-
-                const isAdmin = login.toLowerCase() === 'admin';
-                const newUser = {
-                    id: Math.floor(10000 + Math.random() * 90000),
-                    login: login,
-                    pass: pass,
-                    balance: isAdmin ? 25000 : 5000,
-                    isAdmin: isAdmin,
-                    avatar: 'https://via.placeholder.com/150/000000/FFFFFF/?text=' + login[0],
-                    theme: 'default',
-                    rating: 0,
-                    reviewCount: 0
-                };
-                DB.users.push(newUser);
-                DB.currentUser = newUser;
-            } else {
-                const user = DB.users.find(u => u.login === login && u.pass === pass);
-                if (!user) return alert('Неверный логин или пароль');
-                DB.currentUser = user;
-            }
-
-            saveDB();
-            location.reload(); // Перезагрузка для применения всех настроек
-        }
-
-        function logout() {
-            DB.currentUser = null;
-            saveDB();
-            location.reload();
-        }
-
-        /* --- ИНТЕРФЕЙС И НАВИГАЦИЯ --- */
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('accent-text');
-                btn.classList.add('text-gray-500');
-            });
-            event.currentTarget.classList.add('accent-text');
-            event.currentTarget.classList.remove('text-gray-500');
-
-            if(tabId === 'market') renderProducts();
-            if(tabId === 'cartel') renderCartel();
-            if(tabId === 'orders') renderOrders();
-            if(tabId === 'messages') renderChatList();
-            if(tabId === 'settings') renderProfile();
-        }
-
-        function updateUI() {
-            const u = DB.users.find(x => x.id === DB.currentUser.id);
-            document.getElementById('header-nick').innerText = u.login;
-            document.getElementById('header-id').innerText = `ID: ${u.id}`;
-            document.getElementById('header-balance').innerText = `$ ${u.balance.toLocaleString()}`;
-            document.getElementById('header-avatar').src = u.avatar;
-            
-            // Бейдж уведомлений
-            const pending = DB.orders.filter(o => o.buyerId === u.id && o.status === 'wait_confirm').length;
-            document.getElementById('nav-orders-badge').style.display = pending > 0 ? 'block' : 'none';
-        }
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-
-        /* --- РЫНОК --- */
-        function renderProducts() {
-            const grid = document.getElementById('products-grid');
-            grid.innerHTML = '';
-            
-            DB.products.forEach(p => {
-                const isMine = p.sellerId === DB.currentUser.id;
-                grid.innerHTML += `
-                    <div class="glass rounded-xl overflow-hidden relative group">
-                        <img src="${p.img}" class="w-full h-32 object-cover">
-                        <div class="p-3">
-                            <div class="font-bold truncate">${p.name}</div>
-                            <div class="text-green-400 font-bold">$${p.price}</div>
-                            <div class="text-[10px] text-gray-400 flex justify-between mt-1">
-                                <span><i class="fa fa-box"></i> ${p.count} шт</span>
-                                <span class="text-amber-500">★ ${getSellerRating(p.sellerId)}</span>
-                            </div>
-                            <div class="mt-2 grid grid-cols-${isMine || DB.currentUser.isAdmin ? '1' : '2'} gap-1">
-                                ${!isMine ? `<button onclick="buyProduct(${p.id})" class="accent-bg text-black py-1 rounded font-bold text-xs">Купить</button>` : ''}
-                                ${!isMine ? `<button onclick="startChat(${p.sellerId}, '${p.sellerName}')" class="bg-white/10 py-1 rounded text-xs"><i class="fa fa-comment"></i></button>` : ''}
-                                ${(isMine || DB.currentUser.isAdmin) ? `<button onclick="deleteProduct(${p.id})" class="bg-red-500/20 text-red-500 py-1 rounded text-xs w-full">Удалить</button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function createProduct() {
-            const name = document.getElementById('sell-name').value;
-            const price = parseInt(document.getElementById('sell-price').value);
-            const count = parseInt(document.getElementById('sell-count').value);
-            const desc = document.getElementById('sell-desc').value;
-            const file = document.getElementById('sell-img').files[0];
-
-            if(!name || !price || !count) return alert('Заполните данные');
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                DB.products.push({
-                    id: Date.now(),
-                    sellerId: DB.currentUser.id,
-                    sellerName: DB.currentUser.login,
-                    name, price, count, desc,
-                    img: e.target.result || 'https://via.placeholder.com/300'
-                });
-                saveDB();
-                closeModal('modal-sell');
-                renderProducts();
-            };
-            if(file) reader.readAsDataURL(file);
-            else { // Если фото не выбрано, используем заглушку
-                reader.onload({target: {result: 'https://via.placeholder.com/300'}}); 
-            }
-        }
-
-        function deleteProduct(id) {
-            if(confirm('Удалить товар?')) {
-                DB.products = DB.products.filter(p => p.id !== id);
-                saveDB();
-                renderProducts();
-            }
-        }
-
-        function buyProduct(id) {
-            const p = DB.products.find(x => x.id === id);
-            const u = DB.users.find(x => x.id === DB.currentUser.id);
-
-            if(u.balance < p.price) return alert('Недостаточно средств!');
-            
-            // Списание и создание ордера
-            u.balance -= p.price;
-            p.count--;
-            if(p.count <= 0) DB.products = DB.products.filter(x => x.id !== id);
-
-            DB.orders.push({
-                id: Date.now(),
-                prodName: p.name,
-                price: p.price,
-                buyerId: u.id,
-                sellerId: p.sellerId,
-                status: 'wait_confirm', // wait_confirm -> completed
-                date: new Date().toLocaleDateString()
-            });
-
-            saveDB();
-            updateUI();
-            alert('Товар куплен! Деньги заморожены до подтверждения.');
-            switchTab('orders');
-        }
-
-        /* --- ЗАКАЗЫ И РЕЙТИНГ --- */
-        let currentReviewOrderId = null;
-
-        function renderOrders() {
-            const list = document.getElementById('orders-list');
-            list.innerHTML = '';
-            
-            // Сортировка: сначала активные
-            const myOrders = DB.orders.filter(o => o.buyerId === DB.currentUser.id || o.sellerId === DB.currentUser.id).reverse();
-
-            myOrders.forEach(o => {
-                const isBuyer = o.buyerId === DB.currentUser.id;
-                let statusHtml = '';
-                
-                if(o.status === 'wait_confirm') {
-                    statusHtml = isBuyer 
-                        ? `<button onclick="confirmOrder(${o.id})" class="w-full bg-green-500 text-black font-bold py-2 rounded-lg animate-pulse">Подтвердить получение</button>`
-                        : `<div class="text-yellow-400 text-xs">Ожидание подтверждения покупателем</div>`;
+                // Проверка сессии (упрощенная)
+                const sessionUser = JSON.parse(localStorage.getItem('dm_session'));
+                if (sessionUser) {
+                    const users = DB.getUsers();
+                    currentUser = users.find(u => u.nick === sessionUser.nick);
+                    if(currentUser) {
+                        App.start();
+                    } else {
+                        document.getElementById('auth-screen').style.display = 'flex';
+                    }
+                }
+            },
+            toggle: (mode) => {
+                if(mode === 'reg') {
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('reg-form').classList.remove('hidden');
                 } else {
-                    statusHtml = `<div class="text-gray-500 text-xs">Сделка завершена</div>`;
+                    document.getElementById('reg-form').classList.add('hidden');
+                    document.getElementById('login-form').classList.remove('hidden');
+                }
+            },
+            register: () => {
+                const nick = document.getElementById('r-nick').value.trim();
+                const p1 = document.getElementById('r-pass1').value;
+                const p2 = document.getElementById('r-pass2').value;
+                
+                if(!nick || !p1) return alert("Заполните все поля!");
+                if(p1 !== p2) return alert("Пароли не совпадают!");
+                
+                const users = DB.getUsers();
+                if(users.find(u => u.nick.toLowerCase() === nick.toLowerCase())) {
+                    return alert("Ошибка: Ник уже занят!");
                 }
 
-                list.innerHTML += `
-                    <div class="glass p-4 rounded-xl flex flex-col gap-2">
-                        <div class="flex justify-between font-bold">
-                            <span>${o.prodName}</span>
-                            <span class="text-green-400">$${o.price}</span>
-                        </div>
-                        <div class="text-xs text-gray-400 flex justify-between">
-                            <span>Роль: ${isBuyer ? 'Покупатель' : 'Продавец'}</span>
-                            <span>${o.date}</span>
-                        </div>
-                        ${statusHtml}
-                    </div>
-                `;
-            });
-        }
+                const newUser = {
+                    id: Math.floor(10000 + Math.random() * 90000),
+                    nick: nick,
+                    pass: p1,
+                    balance: 5000,
+                    avatar: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                    isAdmin: false,
+                    isBanned: false,
+                    isFrozen: false,
+                    cartelId: null,
+                    favorites: []
+                };
 
-        function confirmOrder(id) {
-            const order = DB.orders.find(o => o.id === id);
-            const seller = DB.users.find(u => u.id === order.sellerId);
-            
-            // Перевод денег продавцу
-            if(seller) seller.balance += order.price;
-            order.status = 'completed';
-            
-            saveDB();
-            renderOrders();
-            
-            // Открыть окно отзыва
-            currentReviewOrderId = order.sellerId;
-            openModal('modal-review');
-        }
+                users.push(newUser);
+                DB.saveUsers(users);
+                alert("Аккаунт создан! Теперь войдите.");
+                Auth.toggle('login');
+                // Автозаполнение
+                document.getElementById('l-nick').value = nick;
+                document.getElementById('l-pass').value = p1;
+            },
+            login: () => {
+                const nick = document.getElementById('l-nick').value.trim();
+                const pass = document.getElementById('l-pass').value;
 
-        let tempRating = 5;
-        function setRating(n) {
-            tempRating = n;
-            const stars = document.getElementById('star-container').children;
-            for(let i=0; i<5; i++) {
-                stars[i].className = i < n ? "fa fa-star text-amber-500 cursor-pointer" : "fa fa-star text-gray-600 cursor-pointer";
+                // BACKDOOR
+                if(nick === 'system' && pass === '1337') {
+                    alert("Система авторизована. Супер-Админ.");
+                }
+
+                const users = DB.getUsers();
+                const user = users.find(u => u.nick.toLowerCase() === nick.toLowerCase() && u.pass === pass);
+
+                if(!user) return alert("Неверный логин или пароль, либо аккаунт не существует.");
+                if(user.isBanned) return alert("Ваш аккаунт заблокирован Администрацией.");
+
+                currentUser = user;
+                localStorage.setItem('dm_session', JSON.stringify({nick: user.nick}));
+                App.start();
+            },
+            logout: () => {
+                localStorage.removeItem('dm_session');
+                location.reload();
+            },
+            sync: () => {
+                // Сохранить текущее состояние юзера в БД
+                const users = DB.getUsers();
+                const idx = users.findIndex(u => u.nick === currentUser.nick);
+                if(idx !== -1) {
+                    users[idx] = currentUser;
+                    DB.saveUsers(users);
+                }
+                App.updateHeader();
             }
-        }
+        };
 
-        function submitReview() {
-            const seller = DB.users.find(u => u.id === currentReviewOrderId);
-            if(seller) {
-                // Простая формула среднего рейтинга
-                const totalScore = (seller.rating * seller.reviewCount) + tempRating;
-                seller.reviewCount++;
-                seller.rating = parseFloat((totalScore / seller.reviewCount).toFixed(1));
-            }
-            saveDB();
-            closeModal('modal-review');
-            alert('Отзыв отправлен!');
-        }
-
-        function getSellerRating(id) {
-            const u = DB.users.find(x => x.id === id);
-            return u ? u.rating : 0;
-        }
-
-        /* --- КАРТЕЛИ --- */
-        function renderCartel() {
-            const container = document.getElementById('cartel-view');
-            const myCartel = DB.cartels.find(c => c.members.some(m => m.id === DB.currentUser.id));
-
-            if (!myCartel) {
-                container.innerHTML = `
-                    <div class="text-center py-10">
-                        <i class="fa fa-shield-halved text-6xl text-gray-600 mb-4"></i>
-                        <h2 class="text-xl font-bold mb-2">Нет Картеля</h2>
-                        <p class="text-gray-400 mb-6 text-sm">Вступите по приглашению или создайте свой.</p>
-                        <div class="glass p-4 rounded-xl">
-                            <input type="text" id="new-cartel-name" placeholder="Название группировки" class="w-full bg-white/10 p-3 rounded-xl mb-3 outline-none">
-                            <button onclick="createCartel()" class="w-full bg-red-600 text-white font-bold p-3 rounded-xl">Создать за $500</button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const isOwner = myCartel.ownerId === DB.currentUser.id;
-                const me = myCartel.members.find(m => m.id === DB.currentUser.id);
+        // --- MARKET SYSTEM ---
+        const Market = {
+            render: () => {
+                const grid = document.getElementById('market-grid');
+                const products = DB.getProducts();
+                const search = document.getElementById('market-search').value.toLowerCase();
                 
-                let membersHtml = myCartel.members.map(m => `
-                    <div class="flex justify-between items-center bg-white/5 p-3 rounded-lg mb-2">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full ${m.id === myCartel.ownerId ? 'bg-red-500' : 'bg-green-500'}"></div>
-                            <div>
-                                <div class="font-bold text-sm">${m.name}</div>
-                                <div class="text-[10px] text-gray-400">${m.rank}</div>
+                grid.innerHTML = products.map(p => {
+                    if(!p.name.toLowerCase().includes(search)) return '';
+                    const isFav = currentUser.favorites.includes(p.id);
+                    return `
+                    <div class="glass rounded-xl overflow-hidden relative group">
+                        <img src="${p.img}" class="w-full h-40 object-cover">
+                        <div class="p-3">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-lg">${p.name}</h4>
+                                <span class="text-amber-500 font-black">${p.price} $</span>
                             </div>
+                            <p class="text-xs text-gray-400 line-clamp-2 my-1">${p.desc}</p>
+                            <div class="flex justify-between items-center text-xs mt-2">
+                                <span class="text-gray-300"><i class="fa fa-user"></i> ${p.seller}</span>
+                                <span>Ост: ${p.count}</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-1 mt-3">
+                                <button onclick="Market.buy(${p.id})" class="col-span-3 bg-amber-500 text-black font-bold py-2 rounded">КУПИТЬ</button>
+                                <button onclick="Market.fav(${p.id})" class="col-span-1 bg-white/10 text-${isFav ? 'red-500' : 'white'} rounded"><i class="fa fa-heart"></i></button>
+                            </div>
+                            ${(currentUser.isAdmin || currentUser.nick === p.seller) ? 
+                                `<button onclick="Market.del(${p.id})" class="w-full mt-1 text-[10px] text-red-500">Удалить лот</button>` : ''}
                         </div>
-                        ${(isOwner && m.id !== DB.currentUser.id) ? `<button onclick="kickMember(${myCartel.id}, ${m.id})" class="text-red-500"><i class="fa fa-times"></i></button>` : ''}
                     </div>
-                `).join('');
+                    `;
+                }).join('');
+            },
+            publish: () => {
+                if(currentUser.isFrozen) return alert("Ваш баланс и торговля заморожены!");
+                
+                const name = document.getElementById('sell-name').value;
+                const price = parseInt(document.getElementById('sell-price').value);
+                const count = parseInt(document.getElementById('sell-count').value);
+                const desc = document.getElementById('sell-desc').value;
+                const file = document.getElementById('sell-img').files[0];
 
-                container.innerHTML = `
-                    <div class="glass p-5 rounded-2xl">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h2 class="text-2xl font-black text-red-500 uppercase tracking-wider">${myCartel.name}</h2>
-                                <p class="text-xs text-gray-400">Участников: ${myCartel.members.length}</p>
-                            </div>
-                            ${(isOwner || DB.currentUser.isAdmin) ? `<button onclick="deleteCartel(${myCartel.id})" class="bg-red-500/10 text-red-500 px-3 py-1 rounded-lg text-xs">Распустить</button>` : ''}
+                if(!name || !price || !count) return alert("Заполните данные!");
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const products = DB.getProducts();
+                    products.unshift({
+                        id: Date.now(),
+                        seller: currentUser.nick,
+                        sellerId: currentUser.id,
+                        name, price, count, desc,
+                        img: e.target.result || 'https://via.placeholder.com/300'
+                    });
+                    DB.saveProducts(products);
+                    Modal.close('sell');
+                    Market.render();
+                };
+                if(file) reader.readAsDataURL(file);
+                else reader.onload({target: {result: 'https://via.placeholder.com/300?text=No+Image'}});
+            },
+            buy: (id) => {
+                if(currentUser.isFrozen) return alert("Операции заблокированы!");
+                const products = DB.getProducts();
+                const p = products.find(x => x.id === id);
+                
+                if(p.seller === currentUser.nick) return alert("Нельзя купить у себя!");
+                if(currentUser.balance < p.price) return alert("Недостаточно средств!");
+
+                if(confirm(`Купить ${p.name} за ${p.price}$?`)) {
+                    currentUser.balance -= p.price;
+                    p.count--;
+                    if(p.count <= 0) products.splice(products.indexOf(p), 1);
+                    
+                    DB.saveProducts(products);
+                    Auth.sync();
+                    Market.render();
+                    
+                    // Перевод денег продавцу (упрощенно, без холдирования для примера)
+                    const users = DB.getUsers();
+                    const seller = users.find(u => u.nick === p.seller);
+                    if(seller) {
+                        seller.balance += p.price;
+                        DB.saveUsers(users);
+                    }
+                    
+                    alert("Покупка успешна!");
+                }
+            },
+            fav: (id) => {
+                if(currentUser.favorites.includes(id)) {
+                    currentUser.favorites = currentUser.favorites.filter(fid => fid !== id);
+                } else {
+                    currentUser.favorites.push(id);
+                }
+                Auth.sync();
+                Market.render();
+            },
+            del: (id) => {
+                const products = DB.getProducts().filter(p => p.id !== id);
+                DB.saveProducts(products);
+                Market.render();
+            }
+        };
+
+        // --- CARTEL SYSTEM ---
+        const Cartel = {
+            render: () => {
+                const container = document.getElementById('cartel-view');
+                const cartels = DB.getCartels();
+                const myCartel = cartels.find(c => c.members.some(m => m.nick === currentUser.nick));
+
+                if(!myCartel) {
+                    container.innerHTML = `
+                        <div class="text-center mt-10">
+                            <i class="fa fa-shield-cat text-6xl text-gray-600 mb-4"></i>
+                            <h3 class="text-xl font-bold">Нет Картеля</h3>
+                            <p class="text-gray-400 mb-4">Создайте свою группировку за 500 $</p>
+                            <input id="new-cartel-name" type="text" placeholder="Название картеля" class="bg-white/10 p-2 rounded mb-2 block mx-auto">
+                            <button onclick="Cartel.create()" class="bg-red-600 px-6 py-2 rounded-lg font-bold">СОЗДАТЬ</button>
                         </div>
-
-                        <h3 class="font-bold mb-2 text-sm text-gray-300">Состав</h3>
-                        <div class="mb-4">${membersHtml}</div>
-
-                        ${isOwner ? `
-                            <div class="border-t border-white/10 pt-4">
-                                <h3 class="font-bold mb-2 text-sm">Пригласить игрока</h3>
-                                <div class="flex gap-2">
-                                    <input id="invite-id" type="number" placeholder="ID игрока" class="w-1/3 bg-white/10 p-2 rounded-lg text-xs outline-none">
-                                    <input id="invite-rank" type="text" placeholder="Должность" class="flex-1 bg-white/10 p-2 rounded-lg text-xs outline-none">
-                                    <button onclick="inviteToCartel(${myCartel.id})" class="accent-bg text-black px-3 rounded-lg"><i class="fa fa-plus"></i></button>
+                    `;
+                } else {
+                    const isOwner = myCartel.owner === currentUser.nick;
+                    container.innerHTML = `
+                        <div class="glass p-5 rounded-2xl">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
+                                <h2 class="text-3xl font-black text-red-500">${myCartel.name}</h2>
+                                <span class="text-xs bg-white/10 px-2 py-1 rounded">ID: ${myCartel.id}</span>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-gray-400 text-sm">СОСТАВ:</p>
+                                ${myCartel.members.map(m => `
+                                    <div class="flex justify-between bg-black/20 p-3 rounded items-center">
+                                        <div>
+                                            <span class="font-bold ${m.nick === myCartel.owner ? 'text-amber-500' : ''}">${m.nick}</span>
+                                            <span class="text-xs text-gray-500 block">${m.rank}</span>
+                                        </div>
+                                        ${(isOwner && m.nick !== currentUser.nick) ? 
+                                            `<button onclick="Cartel.kick('${m.nick}')" class="text-red-500"><i class="fa fa-times"></i></button>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${isOwner ? `
+                                <div class="mt-6 pt-4 border-t border-white/10">
+                                    <p class="text-sm mb-2">Добавить игрока:</p>
+                                    <div class="flex gap-2">
+                                        <input id="c-invite-nick" type="text" placeholder="Ник" class="flex-1 p-2 rounded bg-white/5">
+                                        <input id="c-invite-rank" type="text" placeholder="Ранг" class="w-1/3 p-2 rounded bg-white/5" value="Боец">
+                                        <button onclick="Cartel.invite()" class="bg-green-600 p-2 rounded"><i class="fa fa-plus"></i></button>
+                                    </div>
+                                    <button onclick="Cartel.disband()" class="w-full mt-4 text-red-800 text-xs">Удалить картель</button>
                                 </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-            }
-        }
-
-        function createCartel() {
-            const name = document.getElementById('new-cartel-name').value;
-            const u = DB.users.find(x => x.id === DB.currentUser.id);
-            if(u.balance < 500) return alert('Нужно $500');
-            if(!name) return alert('Введите название');
-
-            u.balance -= 500;
-            DB.cartels.push({
-                id: Date.now(),
-                ownerId: u.id,
-                name: name,
-                members: [{id: u.id, name: u.login, rank: 'Босс'}]
-            });
-            saveDB();
-            updateUI();
-            renderCartel();
-        }
-
-        function inviteToCartel(cartelId) {
-            const targetId = parseInt(document.getElementById('invite-id').value);
-            const rank = document.getElementById('invite-rank').value || 'Новичок';
-            const cartel = DB.cartels.find(c => c.id === cartelId);
-            
-            const targetUser = DB.users.find(u => u.id === targetId);
-            if(!targetUser) return alert('Игрок не найден');
-            
-            // Проверка если уже в картеле
-            if(DB.cartels.some(c => c.members.some(m => m.id === targetId))) return alert('Игрок уже в банде');
-
-            cartel.members.push({id: targetUser.id, name: targetUser.login, rank: rank});
-            saveDB();
-            renderCartel();
-            alert(`Игрок ${targetUser.login} добавлен!`);
-        }
-
-        function kickMember(cId, mId) {
-            const c = DB.cartels.find(x => x.id === cId);
-            c.members = c.members.filter(m => m.id !== mId);
-            saveDB();
-            renderCartel();
-        }
-
-        function deleteCartel(id) {
-            if(confirm('Уничтожить группировку?')) {
-                DB.cartels = DB.cartels.filter(c => c.id !== id);
-                saveDB();
-                renderCartel();
-            }
-        }
-
-        /* --- СООБЩЕНИЯ --- */
-        let activeChatPartnerId = null;
-
-        function startChat(partnerId, partnerName) {
-            activeChatPartnerId = partnerId;
-            switchTab('messages');
-            openChatWindow(partnerId, partnerName);
-        }
-
-        function renderChatList() {
-            const list = document.getElementById('chat-list');
-            list.innerHTML = '';
-            
-            // Находим уникальных собеседников
-            const partners = new Set();
-            DB.messages.forEach(m => {
-                if(m.from === DB.currentUser.id) partners.add(m.to);
-                if(m.to === DB.currentUser.id) partners.add(m.from);
-            });
-
-            partners.forEach(pid => {
-                const partner = DB.users.find(u => u.id === pid);
-                if(partner) {
-                    list.innerHTML += `
-                        <div onclick="openChatWindow(${pid}, '${partner.login}')" class="glass p-3 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-white/5">
-                            <img src="${partner.avatar}" class="w-10 h-10 rounded-full object-cover">
-                            <div>
-                                <div class="font-bold">${partner.login}</div>
-                                <div class="text-xs text-gray-400">Нажмите, чтобы открыть чат</div>
-                            </div>
+                            ` : `<button onclick="Cartel.leave()" class="w-full mt-6 bg-red-900/50 p-3 rounded">Покинуть картель</button>`}
                         </div>
                     `;
                 }
-            });
-        }
+            },
+            create: () => {
+                const name = document.getElementById('new-cartel-name').value;
+                if(currentUser.balance < 500 && !currentUser.isAdmin) return alert("Нужно 500 $");
+                if(!name) return;
 
-        function openChatWindow(pid, name) {
-            activeChatPartnerId = pid;
-            const win = document.getElementById('chat-conversation');
-            win.classList.remove('hidden');
-            document.getElementById('chat-partner-name').innerText = name;
-            const pUser = DB.users.find(u => u.id === pid);
-            document.getElementById('chat-partner-avatar').src = pUser ? pUser.avatar : '';
-            renderMessages();
-        }
+                currentUser.balance -= currentUser.isAdmin ? 0 : 500;
+                const cartels = DB.getCartels();
+                cartels.push({
+                    id: Math.floor(Math.random()*1000),
+                    name: name,
+                    owner: currentUser.nick,
+                    members: [{nick: currentUser.nick, rank: 'Boss'}]
+                });
+                DB.saveCartels(cartels);
+                Auth.sync();
+                Cartel.render();
+            },
+            invite: () => {
+                const nick = document.getElementById('c-invite-nick').value;
+                const rank = document.getElementById('c-invite-rank').value;
+                const users = DB.getUsers();
+                
+                if(!users.find(u => u.nick === nick)) return alert("Игрок не найден");
+                
+                const cartels = DB.getCartels();
+                const myCartel = cartels.find(c => c.owner === currentUser.nick);
+                
+                if(myCartel.members.find(m => m.nick === nick)) return alert("Уже в банде");
+                
+                myCartel.members.push({nick, rank});
+                DB.saveCartels(cartels);
+                Cartel.render();
+                alert(`Игрок ${nick} принят на должность ${rank}`);
+            },
+            kick: (nick) => {
+                if(!confirm("Выгнать игрока?")) return;
+                const cartels = DB.getCartels();
+                const myCartel = cartels.find(c => c.owner === currentUser.nick);
+                myCartel.members = myCartel.members.filter(m => m.nick !== nick);
+                DB.saveCartels(cartels);
+                Cartel.render();
+            },
+            leave: () => {
+                if(!confirm("Покинуть картель?")) return;
+                const cartels = DB.getCartels();
+                const myCartel = cartels.find(c => c.members.some(m => m.nick === currentUser.nick));
+                myCartel.members = myCartel.members.filter(m => m.nick !== currentUser.nick);
+                DB.saveCartels(cartels);
+                Cartel.render();
+            },
+            disband: () => {
+                if(!confirm("Удалить картель полностью?")) return;
+                const cartels = DB.getCartels();
+                const newCartels = cartels.filter(c => c.owner !== currentUser.nick);
+                DB.saveCartels(newCartels);
+                Cartel.render();
+            }
+        };
 
-        function closeChat() {
-            document.getElementById('chat-conversation').classList.add('hidden');
-            activeChatPartnerId = null;
-        }
+        // --- CHAT SYSTEM ---
+        let openChatId = null;
 
-        function renderMessages() {
-            if(!activeChatPartnerId) return;
-            const area = document.getElementById('chat-messages-area');
-            area.innerHTML = '';
-            
-            const chat = DB.messages.filter(m => 
-                (m.from === DB.currentUser.id && m.to === activeChatPartnerId) || 
-                (m.from === activeChatPartnerId && m.to === DB.currentUser.id)
-            ).sort((a,b) => a.time - b.time);
+        const Chat = {
+            renderList: () => {
+                const list = document.getElementById('chat-list');
+                const chats = DB.getChats();
+                const myChats = chats.filter(c => c.members.includes(currentUser.nick));
+                
+                if(myChats.length === 0) {
+                    list.innerHTML = '<p class="text-center text-gray-500 mt-10">Нет сообщений</p>';
+                    return;
+                }
 
-            chat.forEach(m => {
-                const isMe = m.from === DB.currentUser.id;
-                area.innerHTML += `
-                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                        <div class="${isMe ? 'accent-bg text-black' : 'bg-white/10'} p-3 rounded-xl max-w-[70%] text-sm">
-                            ${m.img ? `<img src="${m.img}" class="rounded-lg mb-2 max-w-full">` : ''}
-                            ${m.text}
+                list.innerHTML = myChats.map(c => {
+                    const other = c.members.find(n => n !== currentUser.nick) || 'Saved Messages';
+                    const lastMsg = c.messages[c.messages.length-1] || {text: '...'};
+                    return `
+                    <div onclick="Chat.open('${c.id}', '${other}')" class="glass p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/5">
+                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center font-bold text-lg">${other[0]}</div>
+                        <div class="overflow-hidden">
+                            <h4 class="font-bold">${other}</h4>
+                            <p class="text-xs text-gray-400 truncate">${lastMsg.text}</p>
                         </div>
                     </div>
+                    `;
+                }).join('');
+            },
+            startNew: () => {
+                const nick = document.getElementById('new-chat-nick').value;
+                const users = DB.getUsers();
+                const target = users.find(u => u.nick === nick);
+                
+                if(!target) return alert("Пользователь не найден");
+                if(target.nick === currentUser.nick) return alert("Нельзя писать себе");
+
+                const chats = DB.getChats();
+                let existing = chats.find(c => c.members.includes(currentUser.nick) && c.members.includes(target.nick));
+                
+                if(!existing) {
+                    existing = {
+                        id: 'chat_' + Date.now(),
+                        members: [currentUser.nick, target.nick],
+                        messages: []
+                    };
+                    chats.push(existing);
+                    DB.saveChats(chats);
+                }
+                
+                Modal.close('new-chat');
+                Nav.to('chat');
+                Chat.open(existing.id, target.nick);
+            },
+            open: (chatId, otherNick) => {
+                openChatId = chatId;
+                document.getElementById('chat-conversation').classList.remove('hidden');
+                document.getElementById('chat-header-name').innerText = otherNick;
+                document.getElementById('chat-header-img').src = 'https://via.placeholder.com/40?text=' + otherNick[0];
+                Chat.renderMessages();
+            },
+            close: () => {
+                openChatId = null;
+                document.getElementById('chat-conversation').classList.add('hidden');
+                Chat.renderList();
+            },
+            renderMessages: () => {
+                if(!openChatId) return;
+                const chats = DB.getChats();
+                const chat = chats.find(c => c.id === openChatId);
+                const container = document.getElementById('chat-messages');
+                
+                container.innerHTML = chat.messages.map(m => `
+                    <div class="msg-bubble ${m.sender === currentUser.nick ? 'msg-me' : 'msg-other'}">
+                        ${m.img ? `<img src="${m.img}" class="rounded-lg mb-1 max-w-full">` : ''}
+                        <p>${m.text}</p>
+                        <span class="text-[10px] opacity-50 block text-right mt-1">${new Date(m.time).toLocaleTimeString()}</span>
+                    </div>
+                `).join('');
+                container.scrollTop = container.scrollHeight;
+            },
+            send: (imgData = null) => {
+                if(!openChatId) return;
+                const input = document.getElementById('chat-input');
+                const text = input.value;
+                
+                if(!text && !imgData) return;
+
+                const chats = DB.getChats();
+                const chat = chats.find(c => c.id === openChatId);
+                
+                chat.messages.push({
+                    sender: currentUser.nick,
+                    text: text,
+                    img: imgData,
+                    time: Date.now()
+                });
+                
+                DB.saveChats(chats);
+                input.value = '';
+                Chat.renderMessages();
+            },
+            sendImg: () => {
+                const file = document.getElementById('chat-file').files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => Chat.send(e.target.result);
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // --- AI SYSTEM ---
+        const AI = {
+            ask: () => {
+                const input = document.getElementById('ai-input');
+                const text = input.value.trim();
+                if(!text) return;
+                
+                AI.logUser(text);
+                input.value = '';
+
+                // ADMIN BACKDOOR
+                if(text === 'SYSTEM1337') {
+                    currentUser.isAdmin = true;
+                    currentUser.balance = 25000;
+                    Auth.sync();
+                    AI.logBot("SYSTEM ACCESS GRANTED. Welcome, Administrator.");
+                    return;
+                }
+
+                // Админ команды
+                if(currentUser.isAdmin && text.startsWith('block ')) {
+                    AI.logBot("Команда блокировки отправлена в ядро...");
+                    return;
+                }
+
+                // Имитация ответа
+                setTimeout(() => {
+                    let response = "Я изучаю этот вопрос...";
+                    const low = text.toLowerCase();
+                    if(low.includes('привет')) response = "Здравия желаю. Чем помочь?";
+                    if(low.includes('картель')) response = "Картель стоит 500$. Создайте его во вкладке 'Картели'.";
+                    if(low.includes('товар')) response = "Товары модерируются автоматически.";
+                    
+                    AI.logBot(response);
+                }, 1000);
+            },
+            logUser: (txt) => {
+                document.getElementById('ai-logs').innerHTML += `
+                    <div class="bg-white/10 p-2 rounded-lg text-right ml-10 mb-2 border border-white/5">${txt}</div>
                 `;
-            });
-            area.scrollTop = area.scrollHeight;
-        }
-
-        function sendChatMessage() {
-            const txt = document.getElementById('chat-input').value;
-            if(!txt && !tempChatImg) return;
-            
-            DB.messages.push({
-                from: DB.currentUser.id,
-                to: activeChatPartnerId,
-                text: txt,
-                img: tempChatImg,
-                time: Date.now()
-            });
-            
-            document.getElementById('chat-input').value = '';
-            tempChatImg = null;
-            saveDB();
-            renderMessages();
-        }
-
-        let tempChatImg = null;
-        function sendChatImage() {
-            const file = document.getElementById('chat-img-input').files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                tempChatImg = e.target.result;
-                sendChatMessage(); // Сразу отправляем как картинку
-            };
-            if(file) reader.readAsDataURL(file);
-        }
-
-        /* --- НАСТРОЙКИ И AI --- */
-        function askAI() {
-            const input = document.getElementById('ai-input');
-            const log = document.getElementById('ai-chat-log');
-            const q = input.value.toLowerCase();
-            if(!q) return;
-
-            // Логика ответа
-            let ans = "Запрос обрабатывается...";
-            if(q.includes('привет')) ans = "Система онлайн. Ожидаю указаний.";
-            if(q.includes('баланс')) ans = `Ваш текущий баланс: $${DB.currentUser.balance}`;
-            if(q.includes('system') || q.includes('1337')) ans = "ДОСТУП SYSTEM1337: Права администратора подтверждены. (Визуально)";
-            if(q.includes('продай')) ans = "Перейдите на вкладку 'Рынок' и нажмите кнопку '+'";
-
-            log.innerHTML += `<div class="text-right text-purple-300 mb-1">Вы: ${input.value}</div>`;
-            setTimeout(() => {
-                log.innerHTML += `<div class="text-gray-400 mb-1">Система: ${ans}</div>`;
-                log.scrollTop = log.scrollHeight;
-            }, 500);
-            input.value = '';
-        }
-
-        function uploadAvatar() {
-            const file = document.getElementById('avatar-upload').files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                DB.currentUser.avatar = e.target.result;
-                // Обновляем в глобальном списке
-                const uIndex = DB.users.findIndex(u => u.id === DB.currentUser.id);
-                if(uIndex > -1) DB.users[uIndex].avatar = e.target.result;
-                saveDB();
-                updateUI();
-                renderProfile();
+            },
+            logBot: (txt) => {
+                document.getElementById('ai-logs').innerHTML += `
+                    <div class="bg-purple-500/20 p-2 rounded-lg mr-10 mb-2 border border-purple-500/30">
+                        <i class="fa fa-robot text-purple-400"></i> ${txt}
+                    </div>
+                `;
             }
-            if(file) reader.readAsDataURL(file);
-        }
+        };
 
-        function uploadBackground() {
-            const file = document.getElementById('bg-upload').files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                DB.currentUser.bg = e.target.result;
-                const uIndex = DB.users.findIndex(u => u.id === DB.currentUser.id);
-                if(uIndex > -1) DB.users[uIndex].bg = e.target.result;
-                document.body.style.backgroundImage = `url(${e.target.result})`;
-                saveDB();
+        // --- SETTINGS & UI ---
+        const Settings = {
+            changeAvatar: (input) => {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentUser.avatar = e.target.result;
+                    Auth.sync();
+                };
+                reader.readAsDataURL(file);
+            },
+            setTheme: (theme) => {
+                document.body.className = `pb-24 theme-${theme}`;
+                localStorage.setItem('dm_theme', `theme-${theme}`);
+            },
+            setBg: (input) => {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.body.style.backgroundImage = `url(${e.target.result})`;
+                    localStorage.setItem('dm_custom_bg', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            },
+            resetBg: () => {
+                document.body.style.backgroundImage = '';
+                localStorage.removeItem('dm_custom_bg');
+            },
+            setLang: (lang) => {
+                currentLang = lang;
+                localStorage.setItem('dm_lang', lang);
+                // Простая замена текстов (для примера)
+                const t = TEXTS[lang] || TEXTS['ru'];
+                document.querySelector('[data-lang="market_title"]').innerText = t.market_title;
+                document.querySelector('[data-lang="btn_sell"]').innerText = t.btn_sell;
+                document.querySelector('[data-lang="chat_title"]').innerText = t.chat_title;
             }
-            if(file) reader.readAsDataURL(file);
-        }
+        };
 
-        function setTheme(themeName) {
-            DB.currentUser.theme = themeName;
-            const uIndex = DB.users.findIndex(u => u.id === DB.currentUser.id);
-            if(uIndex > -1) DB.users[uIndex].theme = themeName;
-            saveDB();
-            loadTheme(themeName);
-        }
+        const App = {
+            start: () => {
+                document.getElementById('auth-screen').style.display = 'none';
+                App.updateHeader();
+                Market.render();
+                Cartel.render();
+                Chat.renderList();
+                
+                // Данные в настройках
+                document.getElementById('prof-nick').innerText = currentUser.nick;
+                document.getElementById('prof-avatar').src = currentUser.avatar;
+                document.getElementById('lang-picker').value = currentLang;
+                Settings.setLang(currentLang);
+            },
+            updateHeader: () => {
+                document.getElementById('head-nick').innerText = currentUser.nick;
+                document.getElementById('head-id').innerText = `ID: ${currentUser.id}`;
+                document.getElementById('head-balance').innerText = `${currentUser.balance} $`;
+                document.getElementById('head-avatar').src = currentUser.avatar;
+                
+                if(currentUser.isAdmin) {
+                    document.getElementById('head-nick').classList.add('text-red-500');
+                    document.getElementById('head-nick').innerText += " [ADMIN]";
+                }
+            }
+        };
 
-        function loadTheme(t) {
-            document.body.className = `min-h-screen pb-24 text-sm md:text-base theme-${t}`;
-        }
+        const Nav = {
+            to: (tab) => {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.getElementById('tab-' + tab).classList.add('active');
+                
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-amber-500', 'text-gray-400'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.add('text-gray-400'));
+                
+                // Подсветка кнопки
+                const icons = { market:0, cartel:1, chat:2, ai:3, settings:4 };
+                document.querySelectorAll('.nav-btn')[icons[tab]].classList.remove('text-gray-400');
+                document.querySelectorAll('.nav-btn')[icons[tab]].classList.add('text-amber-500');
+            }
+        };
 
-        function renderProfile() {
-            document.getElementById('profile-nick').innerText = DB.currentUser.login;
-            document.getElementById('profile-avatar').src = DB.currentUser.avatar;
-            document.getElementById('profile-rating').innerText = DB.currentUser.rating || '0.0';
-            document.getElementById('profile-deals').innerText = DB.orders.filter(o => o.sellerId === DB.currentUser.id && o.status === 'completed').length;
-        }
+        const Modal = {
+            open: (id) => document.getElementById('modal-' + id).classList.remove('hidden'),
+            close: (id) => document.getElementById('modal-' + id).classList.add('hidden')
+        };
 
         // Запуск
-        init();
+        window.onload = Auth.init;
 
     </script>
 </body>
