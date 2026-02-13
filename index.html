@@ -6,7 +6,7 @@
     <title>Dragon Market | Синдикат</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 
@@ -25,6 +25,7 @@
             font-family: 'Inter', sans-serif; 
             transition: all 0.3s ease; 
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .bg-card { background-color: var(--card); }
@@ -58,12 +59,12 @@
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         /* Мобильный блюр */
-        .glass { backdrop-filter: blur(12px); background: rgba(0,0,0,0.2); }
+        .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(0,0,0,0.2); }
     </style>
 </head>
 <body :class="themeClass">
 
-    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs space-y-2">
+    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs space-y-2 px-4">
         <template x-for="n in notifications" :key="n.id">
             <div x-show="n.show" x-transition class="p-4 rounded-xl shadow-2xl flex items-center gap-3 border-l-4 glass border-primary animate-bounce">
                 <i class="fas fa-dragon text-primary"></i>
@@ -80,7 +81,7 @@
         <p class="mt-8 tracking-[0.5em] uppercase text-[10px] opacity-50">Initializing Dragon Protocol...</p>
     </div>
 
-    <div x-show="!user && !loading" class="min-h-screen flex items-center justify-center p-6 page-enter">
+    <div x-show="!user && !loading" x-cloak class="min-h-screen flex items-center justify-center p-6 page-enter">
         <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-white/5 shadow-2xl">
             <div class="text-center mb-10">
                 <h1 class="text-4xl font-black tracking-tighter italic">DRAGON<span class="text-primary text-5xl">.</span>MARKET</h1>
@@ -95,19 +96,19 @@
             <form @submit.prevent="handleAuth" class="space-y-4">
                 <div class="space-y-1">
                     <label class="text-[10px] uppercase font-black opacity-30 ml-2">Идентификатор</label>
-                    <input x-model="authForm.email" type="text" placeholder="Email или SYSTEM" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition">
+                    <input x-model="authForm.email" type="text" placeholder="Email или SYSTEM" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] uppercase font-black opacity-30 ml-2">Пароль</label>
-                    <input x-model="authForm.pass" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition">
+                    <input x-model="authForm.pass" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
                 </div>
                 <template x-if="authTab === 'reg'">
                     <div class="space-y-1 page-enter">
                         <label class="text-[10px] uppercase font-black opacity-30 ml-2">Подтверждение</label>
-                        <input x-model="authForm.passConfirm" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition">
+                        <input x-model="authForm.passConfirm" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
                     </div>
                 </template>
-                <button type="submit" class="w-full bg-primary py-4 rounded-xl font-black tracking-widest uppercase mt-4 btn-dragon shadow-xl shadow-primary/20">
+                <button type="submit" class="w-full bg-primary py-4 rounded-xl font-black tracking-widest uppercase mt-4 btn-dragon shadow-xl shadow-primary/20 text-white">
                     <span x-text="authTab === 'login' ? 'Авторизоваться' : 'Создать аккаунт'"></span>
                 </button>
             </form>
@@ -161,9 +162,9 @@
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="relative flex-1">
                             <i class="fas fa-search absolute left-4 top-4.5 opacity-20"></i>
-                            <input x-model="search" type="text" placeholder="Поиск снаряжения, услуг, артефактов..." class="w-full bg-card p-4 pl-12 rounded-2xl border border-white/5 outline-none focus:border-primary">
+                            <input x-model="search" type="text" placeholder="Поиск снаряжения, услуг, артефактов..." class="w-full bg-card p-4 pl-12 rounded-2xl border border-white/5 outline-none focus:border-primary text-white">
                         </div>
-                        <button @click="showAddModal = true" class="bg-primary px-8 py-4 rounded-2xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase text-xs tracking-widest">
+                        <button @click="showAddModal = true" class="bg-primary px-8 py-4 rounded-2xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase text-xs tracking-widest text-white">
                             <i class="fas fa-plus mr-2"></i> Выставить товар
                         </button>
                     </div>
@@ -200,12 +201,33 @@
                     </div>
                 </div>
 
+                <div x-show="view === 'my_deals'" class="p-6 page-enter max-w-4xl mx-auto">
+                     <h2 class="text-3xl font-black mb-8 tracking-tighter uppercase">Мои Заказы</h2>
+                     <div class="space-y-4">
+                        <template x-for="o in myOrders" :key="o.id">
+                            <div class="bg-card p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-lg" x-text="o.itemName"></h4>
+                                    <p class="text-xs opacity-50">Статус: <span :class="o.status === 'completed' ? 'text-green-500' : 'text-yellow-500'" x-text="o.status"></span></p>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <p class="font-black text-primary" x-text="formatMoney(o.amount)"></p>
+                                    <template x-if="o.status === 'pending'">
+                                        <button @click="confirmOrder(o)" class="bg-green-600 px-4 py-2 rounded-lg text-xs font-bold hover:scale-105 transition">Подтвердить</button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="myOrders.length === 0" class="text-center opacity-30 py-10">Пусто...</div>
+                     </div>
+                </div>
+
                 <div x-show="view === 'cartel'" class="p-6 page-enter max-w-5xl mx-auto">
                     <div x-show="!userData.cartelId" class="text-center py-20 bg-card rounded-[3rem] border-2 border-dashed border-white/10">
                         <i class="fas fa-users-slash text-6xl opacity-10 mb-6"></i>
                         <h2 class="text-3xl font-black mb-2 tracking-tighter uppercase">Вы одиночка</h2>
                         <p class="opacity-40 max-w-md mx-auto mb-8 text-sm italic">Картели позволяют контролировать рынок и получать бонусы. Создание стоит 500 EUR.</p>
-                        <button @click="createCartel()" class="bg-primary px-10 py-4 rounded-2xl font-black btn-dragon uppercase tracking-widest text-xs">Основать Картель</button>
+                        <button @click="createCartel()" class="bg-primary px-10 py-4 rounded-2xl font-black btn-dragon uppercase tracking-widest text-xs text-white">Основать Картель</button>
                     </div>
 
                     <div x-show="userData.cartelId" class="space-y-6">
@@ -239,8 +261,8 @@
                                 <h3 class="font-black mb-4 uppercase text-xs opacity-30 tracking-widest">Управление</h3>
                                 <div class="space-y-4">
                                     <div class="relative">
-                                        <input x-model="inviteId" type="text" placeholder="ID игрока" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary">
-                                        <button @click="sendInvite()" class="absolute right-2 top-2 bottom-2 bg-primary px-4 rounded-lg font-black text-[10px] uppercase">Пригласить</button>
+                                        <input x-model="inviteId" type="text" placeholder="ID игрока" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
+                                        <button @click="sendInvite()" class="absolute right-2 top-2 bottom-2 bg-primary px-4 rounded-lg font-black text-[10px] uppercase text-white">Пригласить</button>
                                     </div>
                                     <button @click="leaveCartel()" class="w-full py-3 rounded-xl border border-red-500/20 text-red-500 font-bold text-xs hover:bg-red-500/10 transition uppercase tracking-widest">Покинуть ряды</button>
                                 </div>
@@ -250,7 +272,7 @@
                 </div>
 
                 <div x-show="view === 'messages'" class="h-full flex flex-col p-4 md:p-6 page-enter">
-                    <div class="flex-1 bg-card rounded-[2rem] border border-white/5 overflow-hidden flex shadow-2xl">
+                    <div class="flex-1 bg-card rounded-[2rem] border border-white/5 overflow-hidden flex shadow-2xl h-[70vh]">
                         <div class="w-full md:w-80 border-r border-white/5 flex flex-col bg-black/10" :class="activeChat ? 'hidden md:flex' : 'flex'">
                             <div class="p-6 font-black border-b border-white/5 flex justify-between items-center">
                                 <span class="tracking-tighter uppercase">Шифросвязь</span>
@@ -269,6 +291,7 @@
                                         </div>
                                     </div>
                                 </template>
+                                <div x-show="chats.length === 0" class="p-6 text-center opacity-30 text-xs">Нет диалогов</div>
                             </div>
                         </div>
 
@@ -303,7 +326,7 @@
                                             <i class="fas fa-camera-retro"></i>
                                             <input type="file" class="hidden" @change="uploadMsgImg($event)">
                                         </label>
-                                        <input x-model="msgInput" @keyup.enter="sendMsg()" type="text" placeholder="Ваше зашифрованное сообщение..." class="flex-1 bg-card px-6 rounded-2xl outline-none focus:border-primary border border-white/5 shadow-inner">
+                                        <input x-model="msgInput" @keyup.enter="sendMsg()" type="text" placeholder="Ваше зашифрованное сообщение..." class="flex-1 bg-card px-6 rounded-2xl outline-none focus:border-primary border border-white/5 shadow-inner text-white">
                                         <button @click="sendMsg()" class="w-14 h-14 bg-primary text-white rounded-2xl btn-dragon flex items-center justify-center shadow-lg shadow-primary/30">
                                             <i class="fas fa-paper-plane"></i>
                                         </button>
@@ -362,10 +385,10 @@
                     <div class="bg-card p-8 rounded-[2rem] border border-white/5">
                         <h3 class="font-black text-sm uppercase tracking-widest mb-6 opacity-40">Финансовый шлюз</h3>
                         <div class="space-y-4">
-                            <input x-model="transfer.targetId" type="text" placeholder="ID Получателя (полный)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary">
+                            <input x-model="transfer.targetId" type="text" placeholder="ID Получателя (полный)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
                             <div class="flex gap-2">
-                                <input x-model="transfer.amount" type="number" placeholder="Сумма (EUR)" class="flex-1 bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary">
-                                <button @click="sendTransfer()" class="bg-primary px-8 rounded-xl font-black btn-dragon uppercase text-[10px]">Перевести</button>
+                                <input x-model="transfer.amount" type="number" placeholder="Сумма (EUR)" class="flex-1 bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
+                                <button @click="sendTransfer()" class="bg-primary px-8 rounded-xl font-black btn-dragon uppercase text-[10px] text-white">Перевести</button>
                             </div>
                         </div>
                     </div>
@@ -415,10 +438,10 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="space-y-4">
                                 <h3 class="text-xs font-black opacity-40 uppercase tracking-widest">User Management</h3>
-                                <input x-model="adminData.targetId" type="text" placeholder="Target User ID" class="w-full bg-black/40 p-4 rounded-xl border border-red-900/20 outline-none focus:border-red-500">
+                                <input x-model="adminData.targetId" type="text" placeholder="Target User ID" class="w-full bg-black/40 p-4 rounded-xl border border-red-900/20 outline-none focus:border-red-500 text-white">
                                 <div class="grid grid-cols-2 gap-2">
-                                    <button @click="adminBan()" class="bg-red-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition">BAN USER</button>
-                                    <button @click="adminFreeze()" class="bg-blue-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition">FREEZE BAL</button>
+                                    <button @click="adminBan()" class="bg-red-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition text-white">BAN USER</button>
+                                    <button @click="adminFreeze()" class="bg-blue-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition text-white">FREEZE BAL</button>
                                     <button @click="adminUnban()" class="col-span-2 border border-green-500 text-green-500 py-3 rounded-xl font-black uppercase text-[10px] hover:bg-green-500/10 transition">RESTORE ACCESS</button>
                                 </div>
                             </div>
@@ -467,12 +490,12 @@
                 <div @click.outside="showAddModal = false" class="bg-card w-full max-w-xl rounded-[2rem] border border-white/10 p-8 shadow-2xl page-enter">
                     <h2 class="text-2xl font-black mb-6 tracking-tighter uppercase italic">Создать лот</h2>
                     <div class="space-y-4">
-                        <input x-model="newItem.name" type="text" placeholder="Название предмета" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none">
+                        <input x-model="newItem.name" type="text" placeholder="Название предмета" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
                         <div class="grid grid-cols-2 gap-4">
-                            <input x-model="newItem.price" type="number" placeholder="Цена (EUR)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none">
-                            <input x-model="newItem.qty" type="number" placeholder="Кол-во" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none">
+                            <input x-model="newItem.price" type="number" placeholder="Цена (EUR)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
+                            <input x-model="newItem.qty" type="number" placeholder="Кол-во" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
                         </div>
-                        <textarea x-model="newItem.desc" placeholder="Краткое описание характеристик..." class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none h-32"></textarea>
+                        <textarea x-model="newItem.desc" placeholder="Краткое описание характеристик..." class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none h-32 text-white"></textarea>
                         <div class="bg-black/40 p-4 rounded-xl border border-dashed border-white/10 text-center relative cursor-pointer group">
                             <i class="fas fa-cloud-upload-alt text-2xl mb-2 group-hover:text-primary transition"></i>
                             <p class="text-[10px] font-bold opacity-30 uppercase">Загрузить изображение</p>
@@ -480,7 +503,7 @@
                         </div>
                         <div class="pt-4 flex gap-3">
                             <button @click="showAddModal = false" class="flex-1 py-4 border border-white/5 rounded-xl text-xs font-bold uppercase opacity-40">Отмена</button>
-                            <button @click="saveProduct()" class="flex-[2] py-4 bg-primary rounded-xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase tracking-widest text-xs">Разместить в сети</button>
+                            <button @click="saveProduct()" class="flex-[2] py-4 bg-primary rounded-xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase tracking-widest text-xs text-white">Разместить в сети</button>
                         </div>
                     </div>
                 </div>
@@ -493,21 +516,27 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, onSnapshot, serverTimestamp, increment, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
 
-        // ВСТАВИТЬ КОД FIREBASE СЮДА
+        // КОНФИГУРАЦИЯ FIREBASE (Из твоего проекта)
         const firebaseConfig = {
-            apiKey: "ВАШ_API_KEY",
-            authDomain: "ВАШ_DOMEN.firebaseapp.com",
-            projectId: "ВАШ_PROJECT",
-            storageBucket: "ВАШ_STORAGE.appspot.com",
-            messagingSenderId: "ВАШ_ID",
-            appId: "ВАШ_APP_ID"
+            apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
+            authDomain: "dragonmarket-ef97f.firebaseapp.com",
+            databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com",
+            projectId: "dragonmarket-ef97f",
+            storageBucket: "dragonmarket-ef97f.firebasestorage.app",
+            messagingSenderId: "733816628492",
+            appId: "1:733816628492:web:58816f9330e9f5475d1529",
+            measurementId: "G-82SSHP6H11"
         };
 
+        // Инициализация
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const analytics = getAnalytics(app);
 
+        // ALPINE.JS LOGIC
         document.addEventListener('alpine:init', () => {
             Alpine.data('dragonApp', () => ({
                 user: null,
@@ -521,6 +550,7 @@
                 
                 // Market
                 products: [],
+                myOrders: [], // Для "Мои покупки"
                 search: '',
                 showAddModal: false,
                 newItem: { name: '', price: null, qty: null, desc: '', img: null },
@@ -545,7 +575,7 @@
                 adminData: { targetId: '' },
 
                 async init() {
-                    // Hardware Ban Check
+                    // Hardware Ban Check (Имитация по localStorage)
                     if(localStorage.getItem('dragon_hwid_ban')) {
                         alert("NODE REJECTED. THIS HARDWARE IS BLACKLISTED.");
                         this.loading = false;
@@ -571,6 +601,7 @@
 
                             this.loadMarket();
                             this.loadChats();
+                            this.loadOrders();
                         } else {
                             this.user = null;
                         }
@@ -582,14 +613,18 @@
                 async handleAuth() {
                     if(this.authForm.email === 'SYSTEM' && this.authForm.pass === '1337') {
                         this.notify("ROOT BACKDOOR ACTIVATED", "success");
-                        // В реальном приложении здесь должен быть переход на скрытый админ-аккаунт
+                        // Скрытый админ вход (в реальном проекте - отдельная логика)
                         return;
                     }
 
                     try {
                         if (this.authTab === 'reg') {
                             if(this.authForm.pass !== this.authForm.passConfirm) throw new Error("Пароли не совпадают!");
+                            if(this.authForm.pass.length < 6) throw new Error("Слабый пароль (мин 6 символов)");
+                            
                             const res = await createUserWithEmailAndPassword(auth, this.authForm.email, this.authForm.pass);
+                            
+                            // Создаем профиль в базе
                             await setDoc(doc(db, "users", res.user.uid), {
                                 uid: res.user.uid,
                                 nick: this.authForm.email.split('@')[0],
@@ -606,19 +641,32 @@
                             this.notify("СОЕДИНЕНИЕ УСТАНОВЛЕНО");
                         }
                     } catch (e) {
-                        this.notify(e.message, 'error');
+                        console.error(e);
+                        let msg = e.message;
+                        if(msg.includes('email-already-in-use')) msg = "Email уже занят!";
+                        if(msg.includes('wrong-password')) msg = "Неверный пароль!";
+                        this.notify(msg, 'error');
                     }
                 },
 
                 async logout() {
                     await signOut(auth);
                     this.view = 'market';
+                    this.userData = {};
                 },
 
-                // MARKET
+                // MARKET & ORDERS
                 loadMarket() {
                     onSnapshot(collection(db, "products"), (snap) => {
                         this.products = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                    });
+                },
+
+                loadOrders() {
+                    if(!this.user) return;
+                    const q = query(collection(db, "orders"), where("buyerId", "==", this.user.uid));
+                    onSnapshot(q, (snap) => {
+                        this.myOrders = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     });
                 },
 
@@ -628,28 +676,32 @@
 
                 async saveProduct() {
                     if(!this.newItem.name || !this.newItem.price) return;
-                    await addDoc(collection(db, "products"), {
-                        ...this.newItem,
-                        sellerId: this.user.uid,
-                        sellerName: this.userData.nick,
-                        date: serverTimestamp()
-                    });
-                    this.showAddModal = false;
-                    this.newItem = { name: '', price: null, qty: null, desc: '', img: null };
-                    this.notify("ЛОТ ОПУБЛИКОВАН");
+                    try {
+                        await addDoc(collection(db, "products"), {
+                            ...this.newItem,
+                            sellerId: this.user.uid,
+                            sellerName: this.userData.nick,
+                            date: serverTimestamp()
+                        });
+                        this.showAddModal = false;
+                        this.newItem = { name: '', price: null, qty: null, desc: '', img: null };
+                        this.notify("ЛОТ ОПУБЛИКОВАН");
+                    } catch(e) { this.notify(e.message, 'error'); }
                 },
 
                 async buyItem(p) {
                     if(this.userData.balance < p.price) return this.notify("НЕДОСТАТОЧНО КРЕДИТОВ", "error");
+                    if(p.sellerId === this.user.uid) return this.notify("НЕЛЬЗЯ КУПИТЬ У СЕБЯ", "error");
                     
                     try {
-                        // Списание средств (Escrow логика)
+                        // Списание средств (условно транзакция)
                         await updateDoc(doc(db, "users", this.user.uid), { balance: increment(-p.price) });
+                        
                         await addDoc(collection(db, "orders"), {
                             buyerId: this.user.uid,
                             sellerId: p.sellerId,
                             amount: p.price,
-                            status: 'pending',
+                            status: 'pending', // Ждет подтверждения
                             itemName: p.name,
                             date: serverTimestamp()
                         });
@@ -657,7 +709,64 @@
                     } catch(e) { this.notify(e.message, 'error'); }
                 },
 
+                async confirmOrder(order) {
+                    try {
+                        // Деньги уходят продавцу (-5% комиссия)
+                        const sellerProfit = Math.floor(order.amount * 0.95);
+                        await updateDoc(doc(db, "users", order.sellerId), { 
+                            balance: increment(sellerProfit),
+                            deals: increment(1)
+                        });
+                        await updateDoc(doc(db, "orders", order.id), { status: 'completed' });
+                        await updateDoc(doc(db, "users", this.user.uid), { deals: increment(1) }); // +1 сделка покупателю
+                        this.notify("СДЕЛКА ЗАКРЫТА");
+                    } catch(e) { this.notify(e.message, 'error'); }
+                },
+
+                async sendTransfer() {
+                    const amount = parseInt(this.transfer.amount);
+                    if(!amount || amount <= 0) return;
+                    if(this.userData.balance < amount) return this.notify("НЕТ СРЕДСТВ", 'error');
+                    if(!this.transfer.targetId) return this.notify("УКАЖИТЕ ID", 'error');
+
+                    try {
+                        // Проверка существования получателя
+                        const targetRef = doc(db, "users", this.transfer.targetId);
+                        const targetSnap = await getDoc(targetRef);
+                        if(!targetSnap.exists()) return this.notify("ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН", 'error');
+
+                        await updateDoc(doc(db, "users", this.user.uid), { balance: increment(-amount) });
+                        await updateDoc(targetRef, { balance: increment(amount) });
+                        
+                        this.transfer.amount = '';
+                        this.notify("ПЕРЕВОД УСПЕШЕН");
+                    } catch(e) { this.notify("ОШИБКА ПЕРЕВОДА", 'error'); }
+                },
+
                 // CHATS
+                async openSeller(sellerId) {
+                    if(sellerId === this.user.uid) return;
+                    // Проверяем, есть ли уже чат
+                    // (Для упрощения создаем новый, в идеале - поиск существующего)
+                    this.view = 'messages';
+                    // Логика создания чата (упрощенная)
+                    const sellerDoc = await getDoc(doc(db, "users", sellerId));
+                    if(!sellerDoc.exists()) return;
+                    
+                    const chatId = [this.user.uid, sellerId].sort().join('_');
+                    const chatRef = doc(db, "chats", chatId);
+                    const chatSnap = await getDoc(chatRef);
+
+                    if(!chatSnap.exists()) {
+                        await setDoc(chatRef, {
+                            uids: [this.user.uid, sellerId],
+                            nicks: [this.userData.nick, sellerDoc.data().nick],
+                            lastUpdate: serverTimestamp(),
+                            lastMsg: 'Начало диалога'
+                        });
+                    }
+                },
+
                 loadChats() {
                     const q = query(collection(db, "chats"), where("uids", "array-contains", this.user.uid));
                     onSnapshot(q, (snap) => {
@@ -667,7 +776,7 @@
                             return {
                                 id: d.id,
                                 ...data,
-                                partnerNick: data.nicks[partnerIdx],
+                                partnerNick: data.nicks ? data.nicks[partnerIdx] : 'Unknown',
                                 partnerId: data.uids[partnerIdx]
                             };
                         });
@@ -687,12 +796,19 @@
                     if(!this.msgInput && !this.msgImg) return;
                     const text = this.msgInput;
                     this.msgInput = '';
+                    
                     await addDoc(collection(db, `chats/${this.activeChat.id}/messages`), {
                         text,
                         img: this.msgImg,
                         senderId: this.user.uid,
                         date: Date.now()
                     });
+                    
+                    await updateDoc(doc(db, "chats", this.activeChat.id), {
+                        lastMsg: text || 'Изображение',
+                        lastUpdate: serverTimestamp()
+                    });
+
                     this.msgImg = null;
                 },
 
@@ -720,8 +836,17 @@
                     });
                 },
 
+                async leaveCartel() {
+                    if(!this.userData.cartelId || !confirm("Покинуть синдикат?")) return;
+                    // Удаление из массива (упрощенно - просто стираем ID у юзера)
+                    // В реальном проде нужно удалять из массива members в документе картеля
+                    await updateDoc(doc(db, "users", this.user.uid), { cartelId: null });
+                    this.notify("ВЫ ПОКИНУЛИ СИНДИКАТ");
+                },
+
                 // UTILS
                 formatMoney(amt) {
+                    if(amt === undefined || amt === null) return '0 ' + this.currency;
                     const val = amt * this.rates[this.currency];
                     return new Intl.NumberFormat('ru-RU').format(val) + ' ' + this.currency;
                 },
@@ -772,7 +897,8 @@
 
                 formatTime(t) {
                     if(!t) return '';
-                    const d = new Date(t);
+                    // Обработка timestamp firebase
+                    const d = t.toDate ? t.toDate() : new Date(t);
                     return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
                 },
 
