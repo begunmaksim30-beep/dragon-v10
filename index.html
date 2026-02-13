@@ -3,577 +3,671 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DragonMarket | Supreme Luxury</title>
+    <title>DragonMarket | Absolute Power</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --gold: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
-            --gold-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-            --carbon: #050505;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 215, 0, 0.15);
+            --gold-glow: 0 0 20px rgba(255, 215, 0, 0.5);
+            --bg: #050505;
+            --carbon: #0a0a0a;
+            --border: rgba(255, 215, 0, 0.2);
         }
 
-        body {
-            background-color: var(--carbon);
-            color: #e0e0e0;
-            font-family: 'Montserrat', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; outline: none; }
+        body { 
+            background: var(--bg); color: #fff; font-family: 'Montserrat', sans-serif; 
+            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
         }
 
         .cinzel { font-family: 'Cinzel', serif; }
         .gold-text { background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .glass { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 20px; }
         
+        /* Кнопки с жестким свечением */
         .btn-luxury {
-            background: var(--gold);
-            color: black;
-            font-weight: 800;
-            text-transform: uppercase;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            letter-spacing: 1px;
-            cursor: pointer;
+            background: var(--gold); color: #000; font-weight: 900; 
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s; box-shadow: var(--gold-glow);
+            border-radius: 12px; cursor: pointer; border: none;
         }
-        .btn-luxury:hover { box-shadow: var(--gold-shadow); transform: translateY(-2px); }
-        .btn-luxury:active { transform: scale(0.95); }
+        .btn-luxury:hover { transform: scale(1.02); filter: brightness(1.2); box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+        .btn-luxury:active { transform: scale(0.98); }
 
-        .page { display: none; padding: 85px 15px 100px 15px; min-height: 100vh; animation: slideUp 0.4s ease; }
-        .active-page { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        input, textarea {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-            color: white; border-radius: 12px; padding: 14px; width: 100%; outline: none;
+        .glass { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid var(--border);
+            border-radius: 20px;
         }
-        input:focus { border-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
 
+        /* Навигация */
         .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
-            background: rgba(5,5,5,0.95); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 80px;
+            background: rgba(5, 5, 5, 0.95); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center; z-index: 2000;
         }
-        .nav-item { color: #555; font-size: 20px; transition: 0.3s; position: relative; }
-        .nav-item.active { color: #FFD700; filter: drop-shadow(0 0 8px #FFD700); }
+        .nav-item { color: #444; font-size: 24px; transition: 0.4s; cursor: pointer; text-align: center; }
+        .nav-item.active { color: #FFD700; transform: translateY(-5px); filter: drop-shadow(0 0 10px #FFD700); }
+        .nav-label { font-size: 9px; display: block; font-weight: bold; margin-top: 4px; }
 
-        .badge {
-            position: absolute; top: -10px; right: -12px;
-            background: #ff0000; color: white; font-size: 10px;
-            padding: 2px 6px; border-radius: 10px; border: 2px solid var(--carbon);
+        /* Страницы */
+        .page { display: none; padding: 90px 20px 120px 20px; min-height: 100vh; }
+        .page.active { display: block; animation: pageFade 0.4s ease forwards; }
+        @keyframes pageFade { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* Хедер */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; height: 75px;
+            background: rgba(5, 5, 5, 0.9); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 2500; backdrop-filter: blur(10px);
         }
 
-        .product-card { background: var(--glass); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; margin-bottom: 20px; }
-        .bubble { max-width: 80%; padding: 12px 16px; border-radius: 18px; margin-bottom: 8px; font-size: 14px; }
-        .bubble.me { background: var(--gold); color: black; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .bubble.them { background: #1a1a1a; color: white; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid var(--border); }
+        /* Инпуты */
+        input, textarea {
+            background: #111; border: 1px solid var(--border);
+            color: #fff; padding: 15px; border-radius: 12px; width: 100%;
+        }
 
+        /* Сайдбар */
         #sidebar {
-            position: fixed; top: 0; right: -100%; width: 280px; height: 100%;
-            background: #080808; z-index: 2500; transition: 0.4s;
-            border-left: 1px solid var(--border); padding: 30px 20px;
+            position: fixed; top: 0; right: -100%; width: 80%; height: 100%;
+            background: var(--carbon); border-left: 2px solid #FFD700;
+            z-index: 4000; transition: 0.5s cubic-bezier(0.1, 0.7, 0.1, 1);
+            padding: 40px 25px; box-shadow: -20px 0 50px rgba(0,0,0,0.9);
         }
         #sidebar.open { right: 0; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2400; display: none; }
 
-        .seller-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #FFD700; }
-        .stars { color: #FFD700; font-size: 12px; }
+        .badge {
+            position: absolute; top: -5px; right: -10px; background: #FF0000;
+            color: #fff; font-size: 10px; border-radius: 50%; width: 18px; height: 18px;
+            display: flex; align-items: center; justify-content: center; font-weight: 900;
+        }
+
+        /* Чат пузыри */
+        .msg { max-width: 80%; padding: 12px 18px; border-radius: 20px; margin-bottom: 10px; font-size: 14px; line-height: 1.4; }
+        .msg.me { align-self: flex-end; background: var(--gold); color: #000; border-bottom-right-radius: 4px; font-weight: 600; }
+        .msg.them { align-self: flex-start; background: #1a1a1a; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+        /* Стили отзывов */
+        .rating-star { color: #FFD700; text-shadow: 0 0 5px #FFD700; }
+        .rating-empty { color: #333; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-<div id="auth-page" class="fixed inset-0 z-[5000] bg-black flex items-center justify-center p-6">
-    <div class="w-full max-w-sm space-y-6 text-center">
-        <h1 class="cinzel text-5xl gold-text font-black">DRAGON</h1>
-        <div class="glass p-6 space-y-4">
-            <input id="auth-login" type="text" placeholder="Никнейм">
-            <div class="relative">
-                <input id="auth-pass" type="password" placeholder="Пароль">
-                <i onclick="togglePass('auth-pass')" class="fa fa-eye absolute right-4 top-4 text-gray-600"></i>
-            </div>
-            <div id="reg-ext" class="hidden space-y-4">
-                <input id="auth-pass-confirm" type="password" placeholder="Повторите пароль">
-            </div>
-            <button onclick="handleAuth()" class="btn-luxury w-full py-4 rounded-xl">Войти</button>
-            <p id="auth-toggle" onclick="switchAuth()" class="text-xs text-gray-500 cursor-pointer">Нет аккаунта? Регистрация</p>
-        </div>
-    </div>
-</div>
-
-<header class="fixed top-0 left-0 w-full h-[75px] glass z-[2000] flex items-center justify-between px-5 border-b border-yellow-500/10">
-    <div class="flex items-center gap-3" onclick="nav('market')">
-        <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center shadow-lg"><i class="fa fa-dragon text-black text-xl"></i></div>
-        <h1 class="cinzel text-xl gold-text font-black">DragonMarket</h1>
-    </div>
-    <div class="flex items-center gap-4">
-        <div class="text-right">
-            <p id="h-balance" class="font-black text-white leading-none">0 €</p>
-            <p class="text-[9px] text-yellow-600 font-bold uppercase">Доступно</p>
-        </div>
-        <i onclick="toggleSidebar(true)" class="fa fa-ellipsis-v text-xl text-gray-500 p-2 cursor-pointer"></i>
-    </div>
-</header>
-
-<div class="overlay" id="overlay" onclick="toggleSidebar(false)"></div>
-
-<div id="sidebar">
-    <div class="flex justify-between items-center mb-8">
-        <h3 class="cinzel text-lg gold-text">Кабинет</h3>
-        <i onclick="toggleSidebar(false)" class="fa fa-times text-gray-500"></i>
-    </div>
-    <div class="space-y-6">
-        <div onclick="nav('my-purchases')" class="flex items-center gap-4 text-sm font-bold hover:text-yellow-500 transition cursor-pointer"><i class="fa fa-shopping-bag w-5"></i> Мои покупки</div>
-        <div onclick="nav('my-sales')" class="flex items-center gap-4 text-sm font-bold hover:text-yellow-500 transition cursor-pointer"><i class="fa fa-hand-holding-usd w-5"></i> Мои продажи</div>
-        <div onclick="nav('favorites')" class="flex items-center gap-4 text-sm font-bold hover:text-yellow-500 transition cursor-pointer"><i class="fa fa-heart w-5 text-red-500"></i> Избранное</div>
-        <div onclick="nav('cart')" class="flex items-center gap-4 text-sm font-bold hover:text-yellow-500 transition cursor-pointer"><i class="fa fa-shopping-cart w-5 text-yellow-500"></i> Корзина</div>
-        <div onclick="nav('rules')" class="flex items-center gap-4 text-sm font-bold hover:text-yellow-500 transition cursor-pointer"><i class="fa fa-file-contract w-5"></i> Правила</div>
-        <hr class="border-white/5">
-        <div onclick="logout()" class="flex items-center gap-4 text-sm font-bold text-red-500 cursor-pointer"><i class="fa fa-power-off w-5"></i> Выход</div>
-    </div>
-</div>
-
-<main>
-    <div id="page-market" class="page active-page">
-        <div class="mb-8">
-            <h2 class="cinzel text-xl gold-text mb-4">Топ Синдиката</h2>
-            <div id="top-sellers" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
-        </div>
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="cinzel text-3xl gold-text">Витрина</h2>
-            <button onclick="openModal('modal-add')" class="w-12 h-12 glass flex items-center justify-center text-yellow-500"><i class="fa fa-plus"></i></button>
-        </div>
-        <div id="market-list" class="space-y-4"></div>
-    </div>
-
-    <div id="page-mail" class="page">
-        <h2 class="cinzel text-3xl gold-text mb-6">Почта</h2>
-        <div class="flex gap-2 mb-6">
-            <input id="search-id" type="number" placeholder="Поиск по ID (5 цифр)">
-            <button onclick="searchByID()" class="btn-luxury px-6 rounded-xl"><i class="fa fa-search"></i></button>
-        </div>
-        <div id="chat-list" class="space-y-3"></div>
-    </div>
-
-    <div id="page-cartel" class="page">
-        <div id="cartel-content"></div>
-    </div>
-
-    <div id="page-profile" class="page">
-        <div id="profile-view"></div>
-    </div>
-
-    <div id="page-favorites" class="page"><h2 class="cinzel text-3xl gold-text mb-6">Избранное</h2><div id="fav-list" class="space-y-4"></div></div>
-    <div id="page-cart" class="page"><h2 class="cinzel text-3xl gold-text mb-6">Корзина</h2><div id="cart-list" class="space-y-4"></div></div>
-    <div id="page-my-purchases" class="page"><h2 class="cinzel text-3xl gold-text mb-6">Покупки</h2><div id="pur-list" class="space-y-4"></div></div>
-    <div id="page-my-sales" class="page"><h2 class="cinzel text-3xl gold-text mb-6">Продажи</h2><div id="sal-list" class="space-y-4"></div></div>
-    <div id="page-rules" class="page">
-        <h2 class="cinzel text-3xl gold-text mb-6">Кодекс</h2>
-        <div class="glass p-6 space-y-4 text-sm text-gray-400 leading-relaxed">
-            <p><b class="text-yellow-500">1.</b> Комиссия 5% на всё.</p>
-            <p><b class="text-yellow-500">2.</b> Подтверждение только после получения товара.</p>
-            <p><b class="text-yellow-500">3.</b> Передача контактов — бан ID.</p>
-        </div>
-    </div>
-</main>
-
-<nav class="nav-bar">
-    <div onclick="nav('market')" id="n-market" class="nav-item active"><i class="fa fa-gem"></i></div>
-    <div onclick="nav('mail')" id="n-mail" class="nav-item"><i class="fa fa-comment-dots"></i><div id="mail-badge" class="badge hidden">0</div></div>
-    <div onclick="nav('cartel')" id="n-cartel" class="nav-item"><i class="fa fa-shield-halved"></i></div>
-    <div onclick="nav('profile')" id="n-profile" class="nav-item"><i class="fa fa-user-circle"></i></div>
-</nav>
-
-<div id="modal-add" class="fixed inset-0 z-[4000] bg-black/90 hidden flex items-center justify-center p-6">
-    <div class="glass w-full max-w-md p-6 space-y-4 overflow-y-auto max-h-[90vh]">
-        <div class="flex justify-between items-center mb-2"><h3 class="cinzel text-xl gold-text">Новый лот</h3><i onclick="closeModal('modal-add')" class="fa fa-times text-gray-500"></i></div>
-        <div class="w-full h-40 bg-white/5 rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center relative overflow-hidden">
-            <img id="add-pre" class="hidden w-full h-full object-cover">
-            <div id="add-icon" class="text-center text-gray-600"><i class="fa fa-camera text-2xl"></i><p class="text-[10px] mt-1">Фото товара</p></div>
-            <input type="file" class="absolute inset-0 opacity-0" onchange="previewFile(this, 'add-pre', 'add-icon')">
-        </div>
-        <input id="add-title" type="text" placeholder="Название">
-        <div class="flex gap-2">
-            <input id="add-price" type="number" placeholder="Цена €" class="flex-1">
-            <input id="add-qty" type="number" placeholder="Кол-во" class="w-24">
-        </div>
-        <textarea id="add-desc" placeholder="Описание и Автовыдача..." class="h-24"></textarea>
-        <button onclick="createProduct()" class="btn-luxury w-full py-4 rounded-xl">Выставить</button>
-    </div>
-</div>
-
-<div id="modal-chat" class="fixed inset-0 z-[4500] bg-black hidden flex flex-col">
-    <div class="h-[75px] glass flex items-center px-5 gap-4 border-b border-yellow-500/10">
-        <i onclick="closeChat()" class="fa fa-arrow-left text-yellow-500"></i>
-        <img id="chat-ava" class="w-10 h-10 rounded-full border border-yellow-500">
-        <p id="chat-name" class="font-bold text-sm">...</p>
-    </div>
-    <div id="chat-msgs" class="flex-1 overflow-y-auto p-5 flex flex-col"></div>
-    <div class="p-4 glass flex gap-2">
-        <input id="chat-inp" type="text" placeholder="Сообщение...">
-        <button onclick="sendMsg()" class="w-14 h-14 btn-luxury rounded-xl flex items-center justify-center"><i class="fa fa-paper-plane"></i></button>
-    </div>
-</div>
-
-<div id="modal-review" class="fixed inset-0 z-[4800] bg-black/95 hidden flex items-center justify-center p-6">
-    <div class="glass w-full max-w-sm p-6 space-y-4">
-        <h3 class="cinzel text-xl gold-text text-center">Оставить отзыв</h3>
-        <div class="flex justify-center gap-2 text-2xl" id="star-box">
-            <i class="fa fa-star text-gray-700 cursor-pointer" onclick="setStars(1)"></i>
-            <i class="fa fa-star text-gray-700 cursor-pointer" onclick="setStars(2)"></i>
-            <i class="fa fa-star text-gray-700 cursor-pointer" onclick="setStars(3)"></i>
-            <i class="fa fa-star text-gray-700 cursor-pointer" onclick="setStars(4)"></i>
-            <i class="fa fa-star text-gray-700 cursor-pointer" onclick="setStars(5)"></i>
-        </div>
-        <textarea id="review-txt" placeholder="Текст отзыва..." class="h-24"></textarea>
-        <button id="rev-submit" class="btn-luxury w-full py-3 rounded-xl">Опубликовать</button>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onValue, push, child, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
-        authDomain: "dragonmarket-ef97f.firebaseapp.com",
-        databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com",
-        projectId: "dragonmarket-ef97f",
-        storageBucket: "dragonmarket-ef97f.firebasestorage.app",
-        messagingSenderId: "733816628492",
-        appId: "1:733816628492:web:58816f9330e9f5475d1529",
-        measurementId: "G-82SSHP6H11"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    window.fb = { db, ref, set, get, update, onValue, push, child, query, orderByChild, equalTo };
-
-    window.user = null;
-    window.activeChat = null;
-    window.curStars = 5;
-    window.authMode = 'login';
-
-    // INITIALIZE
-    window.onload = () => {
-        const saved = localStorage.getItem('dragon_session');
-        if(saved) loginSuccess(JSON.parse(saved));
-    };
-
-    // AUTH
-    window.switchAuth = () => {
-        authMode = authMode === 'login' ? 'reg' : 'login';
-        document.getElementById('reg-ext').classList.toggle('hidden');
-        document.querySelector('#auth-page button').innerText = authMode === 'login' ? 'Войти' : 'Регистрация';
-        document.getElementById('auth-toggle').innerText = authMode === 'login' ? 'Нет аккаунта? Регистрация' : 'Есть аккаунт? Войти';
-    };
-
-    window.handleAuth = async () => {
-        const nick = document.getElementById('auth-login').value.trim();
-        const pass = document.getElementById('auth-pass').value;
-        if(!nick || !pass) return;
-
-        if(nick === 'system' && pass === '1337') {
-            return loginSuccess({ nick: 'SYSTEM', id: '00000', balance: 999999, isAdmin: true, avatar: 'https://i.imgur.com/6vb8kw8.png' });
-        }
-
-        const uRef = fb.ref(fb.db, 'users/' + nick);
-        if(authMode === 'reg') {
-            const snap = await fb.get(uRef);
-            if(snap.exists()) return alert("Логин занят");
-            const newUser = {
-                nick, pass, balance: 1000,
-                id: Math.floor(10000 + Math.random()*90000).toString(),
-                avatar: `https://ui-avatars.com/api/?name=${nick}&background=random`,
-                regDate: Date.now(), deals: 0
-            };
-            await fb.set(uRef, newUser);
-            loginSuccess(newUser);
-        } else {
-            const snap = await fb.get(uRef);
-            if(!snap.exists() || snap.val().pass !== pass) return alert("Ошибка");
-            loginSuccess(snap.val());
-        }
-    };
-
-    function loginSuccess(data) {
-        window.user = data;
-        localStorage.setItem('dragon_session', JSON.stringify(data));
-        document.getElementById('auth-page').style.display = 'none';
-        startSync();
-        nav('market');
-    }
-
-    // SYNC
-    function startSync() {
-        fb.onValue(fb.ref(fb.db, 'users/' + user.nick), snap => {
-            if(snap.exists()) {
-                user = snap.val();
-                document.getElementById('h-balance').innerText = user.balance.toFixed(2) + " €";
-                if(document.getElementById('page-profile').classList.contains('active-page')) renderProfile(user.nick);
-            }
-        });
-
-        fb.onValue(fb.ref(fb.db, 'products'), snap => {
-            const list = document.getElementById('market-list');
-            list.innerHTML = "";
-            snap.forEach(c => {
-                const p = c.val(); const key = c.key;
-                const isFav = user.favs && user.favs[key];
-                list.innerHTML += `
-                    <div class="product-card animate-in">
-                        <img src="${p.img}" class="w-full h-48 object-cover" onclick="renderProfile('${p.seller}')">
-                        <div class="p-5">
-                            <div class="flex justify-between items-start mb-3">
-                                <div><h3 class="font-bold text-lg text-white">${p.title}</h3><p class="text-[10px] text-yellow-600 font-bold uppercase">Seller ID: ${p.sellerID}</p></div>
-                                <p class="text-xl font-black gold-text">${p.price} €</p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="addToCart('${key}')" class="flex-1 bg-white/5 py-3 rounded-xl border border-white/5 text-[10px] font-bold">В корзину</button>
-                                <button onclick="buyProduct('${key}', ${p.price}, '${p.seller}')" class="flex-[2] btn-luxury py-3 rounded-xl text-[10px]">Купить</button>
-                                <button onclick="toggleFav('${key}')" class="w-12 h-12 glass flex items-center justify-center ${isFav ? 'text-red-500' : 'text-gray-500'}"><i class="fa fa-heart"></i></button>
-                                ${(user.isAdmin || p.seller === user.nick) ? `<button onclick="delProd('${key}')" class="w-12 h-12 glass text-red-500"><i class="fa fa-trash"></i></button>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        });
-
-        syncOrders();
-        syncMail();
-        syncTops();
-    }
-
-    // ECONOMY
-    window.buyProduct = async (key, price, seller) => {
-        if(seller === user.nick) return;
-        const total = price * 1.05;
-        if(user.balance < total) return alert("Недостаточно € (+5% комиссия)");
-        if(!confirm(`Оплатить ${total.toFixed(2)}€?`)) return;
-
-        await fb.update(fb.ref(fb.db, 'users/' + user.nick), { balance: user.balance - total });
-        await fb.push(fb.ref(fb.db, 'orders'), { pid: key, price, buyer: user.nick, seller, status: 'HOLD', date: Date.now(), title: "Заказ товара" });
-        alert("Оплачено. Ожидайте подтверждения.");
-        nav('my-purchases');
-    };
-
-    window.confirmOrder = async (okey) => {
-        const snap = await fb.get(fb.ref(fb.db, 'orders/' + okey));
-        const o = snap.val();
-        const sSnap = await fb.get(fb.ref(fb.db, 'users/' + o.seller));
-        const s = sSnap.val();
-
-        await fb.update(fb.ref(fb.db, 'users/' + o.seller), { balance: s.balance + o.price, deals: (s.deals || 0) + 1 });
-        await fb.update(fb.ref(fb.db, 'orders/' + okey), { status: 'COMPLETED' });
-        
-        // Отзыв
-        window.tempOrder = o;
-        openModal('modal-review');
-        document.getElementById('rev-submit').onclick = () => submitReview(okey);
-    };
-
-    window.refundOrder = async (okey) => {
-        if(!confirm("Вернуть деньги покупателю? (5% комиссия не возвращается)")) return;
-        const snap = await fb.get(fb.ref(fb.db, 'orders/' + okey));
-        const o = snap.val();
-        const bSnap = await fb.get(fb.ref(fb.db, 'users/' + o.buyer));
-        await fb.update(fb.ref(fb.db, 'users/' + o.buyer), { balance: bSnap.val().balance + o.price });
-        await fb.update(fb.ref(fb.db, 'orders/' + okey), { status: 'REFUNDED' });
-    };
-
-    // TRANSFER
-    window.transferMoney = async (targetID) => {
-        const amount = parseFloat(prompt("Сумма перевода (€):"));
-        if(!amount || amount <= 0) return;
-        const total = amount * 1.05;
-        if(user.balance < total) return alert("Мало средств (+5% комиссия)");
-
-        const q = fb.query(fb.ref(fb.db, 'users'), fb.orderByChild('id'), fb.equalTo(targetID));
-        const snap = await fb.get(q);
-        if(!snap.exists()) return alert("ID не найден");
-
-        let targetNick = "";
-        snap.forEach(c => targetNick = c.key);
-        
-        await fb.update(fb.ref(fb.db, 'users/' + user.nick), { balance: user.balance - total });
-        await fb.update(fb.ref(fb.db, 'users/' + targetNick), { balance: snap.val()[targetNick].balance + amount });
-        alert("Перевод выполнен!");
-    };
-
-    // CARTEL HIERARCHY
-    window.loadCartel = async () => {
-        const box = document.getElementById('cartel-content');
-        if(!user.cartel) {
-            box.innerHTML = `
-                <div class="page active-page flex flex-col items-center justify-center space-y-6 text-center">
-                    <i class="fa fa-shield-halved text-6xl text-gray-800"></i>
-                    <h2 class="cinzel text-2xl gold-text">Вы одиночка</h2>
-                    <p class="text-xs text-gray-500">Создайте Картель за 500 €</p>
-                    <button onclick="createCartel()" class="btn-luxury px-8 py-4 rounded-xl">Основать Синдикат</button>
+    <div id="auth-screen" class="fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center p-6">
+        <div class="w-full max-w-sm text-center">
+            <h1 class="cinzel text-5xl gold-text font-black mb-10 tracking-tighter">DRAGON<br>MARKET</h1>
+            <div class="glass p-8 space-y-5">
+                <div class="flex gap-2 p-1 bg-black/50 rounded-xl mb-4">
+                    <button id="tab-login-btn" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-lg bg-yellow-500 text-black font-black text-xs">ВХОД</button>
+                    <button id="tab-reg-btn" onclick="setAuthMode('reg')" class="flex-1 py-2 rounded-lg text-gray-500 font-black text-xs">РЕГИСТРАЦИЯ</button>
                 </div>
-            `;
-            return;
+                <input type="text" id="auth-login" placeholder="Логин">
+                <div class="relative">
+                    <input type="password" id="auth-pass" placeholder="Пароль">
+                    <i class="fa fa-eye absolute right-4 top-4 text-gray-600" onclick="togglePass('auth-pass')"></i>
+                </div>
+                <div id="reg-box" class="hidden animate-pulse">
+                    <input type="password" id="auth-pass-2" placeholder="Повторите пароль">
+                </div>
+                <button onclick="handleAuthSubmit()" class="btn-luxury w-full py-4 text-sm mt-4">Приступить</button>
+            </div>
+        </div>
+    </div>
+
+    <header id="ui-header" class="hidden">
+        <div class="flex items-center gap-2" onclick="app.nav('market')">
+            <i class="fa fa-dragon text-yellow-500 text-2xl"></i>
+            <span class="cinzel text-xl gold-text font-black">DRAGON</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-right">
+                <p class="text-[9px] text-yellow-700 font-bold uppercase tracking-widest">Твой Баланс</p>
+                <p id="ui-balance" class="text-lg font-black tracking-tighter">0.00 €</p>
+            </div>
+            <button onclick="toggleSidebar(true)" class="w-10 h-10 glass flex items-center justify-center text-yellow-500">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="sidebar">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="cinzel text-2xl gold-text">МЕНЮ</h2>
+            <i class="fa fa-times text-3xl text-gray-600" onclick="toggleSidebar(false)"></i>
+        </div>
+        <div class="space-y-6">
+            <div onclick="app.nav('purchases')" class="flex items-center gap-4 text-lg font-bold"><i class="fa fa-shopping-bag text-yellow-500 w-8"></i> Мои покупки</div>
+            <div onclick="app.nav('sales')" class="flex items-center gap-4 text-lg font-bold"><i class="fa fa-hand-holding-usd text-yellow-500 w-8"></i> Мои продажи</div>
+            <div onclick="app.nav('favorites')" class="flex items-center gap-4 text-lg font-bold"><i class="fa fa-heart text-red-500 w-8"></i> Избранное</div>
+            <div onclick="app.nav('cart')" class="flex items-center gap-4 text-lg font-bold"><i class="fa fa-shopping-cart text-green-500 w-8"></i> Корзина</div>
+            <div onclick="app.nav('rules')" class="flex items-center gap-4 text-lg font-bold"><i class="fa fa-scroll text-blue-500 w-8"></i> Правила</div>
+            <hr class="border-yellow-500/10 my-8">
+            <div onclick="app.logout()" class="flex items-center gap-4 text-lg font-bold text-red-600"><i class="fa fa-power-off w-8"></i> Выйти</div>
+        </div>
+    </div>
+
+    <main id="main-content" class="hidden">
+        <div id="page-market" class="page active">
+            <div class="mb-8">
+                <h3 class="cinzel text-[10px] text-yellow-600 font-black mb-4 tracking-[0.3em]">TOP TRADERS</h3>
+                <div id="market-tops" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
+            </div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="cinzel text-3xl gold-text">РЫНОК</h2>
+                <button onclick="openCreateLoot()" class="w-12 h-12 btn-luxury rounded-xl"><i class="fa fa-plus"></i></button>
+            </div>
+            <div id="market-list" class="space-y-6"></div>
+        </div>
+
+        <div id="page-mail" class="page">
+            <h2 class="cinzel text-3xl gold-text mb-6">ПОЧТА</h2>
+            <div class="flex gap-2 mb-8">
+                <input type="text" id="user-search-input" placeholder="Введите 5-значный ID">
+                <button onclick="searchUserByID()" class="btn-luxury px-6 rounded-xl"><i class="fa fa-search"></i></button>
+            </div>
+            <div id="chat-list" class="space-y-3"></div>
+        </div>
+
+        <div id="page-cartel" class="page">
+            <div id="cartel-ui"></div>
+        </div>
+
+        <div id="page-profile" class="page">
+            <div id="profile-ui"></div>
+        </div>
+
+        <div id="page-rules" class="page">
+            <h2 class="cinzel text-3xl gold-text mb-6">ПРАВИЛА</h2>
+            <div class="glass p-6 space-y-4 text-sm leading-relaxed text-gray-400">
+                <p><span class="text-yellow-500 font-black">01.</span> DragonMarket — территория честных сделок.</p>
+                <p><span class="text-yellow-500 font-black">02.</span> Комиссия площадки — 5% на все операции.</p>
+                <p><span class="text-yellow-500 font-black">03.</span> Подтверждайте заказ только после получения товара.</p>
+                <p><span class="text-yellow-500 font-black">04.</span> Передача контактов до сделки карается БАНОМ.</p>
+                <p><span class="text-yellow-500 font-black">05.</span> Картели: Вступая, ты принимаешь устав. Выход невозможен.</p>
+            </div>
+        </div>
+
+        <div id="page-purchases" class="page"><h2 class="cinzel text-3xl gold-text mb-6">ПОКУПКИ</h2><div id="purchases-list" class="space-y-4"></div></div>
+        <div id="page-sales" class="page"><h2 class="cinzel text-3xl gold-text mb-6">ПРОДАЖИ</h2><div id="sales-list" class="space-y-4"></div></div>
+        <div id="page-favorites" class="page"><h2 class="cinzel text-3xl gold-text mb-6">ИЗБРАННОЕ</h2><div id="favorites-list" class="space-y-4"></div></div>
+        <div id="page-cart" class="page"><h2 class="cinzel text-3xl gold-text mb-6">КОРЗИНА</h2><div id="cart-list" class="space-y-4"></div></div>
+    </main>
+
+    <nav class="nav-bar hidden" id="ui-nav">
+        <div onclick="app.nav('market')" id="nav-market" class="nav-item active"><i class="fa fa-gem"></i><span class="nav-label">Рынок</span></div>
+        <div onclick="app.nav('mail')" id="nav-mail" class="nav-item"><i class="fa fa-envelope"></i><div id="mail-badge" class="badge hidden">0</div><span class="nav-label">Почта</span></div>
+        <div onclick="app.nav('cartel')" id="nav-cartel" class="nav-item"><i class="fa fa-shield-halved"></i><span class="nav-label">Картель</span></div>
+        <div onclick="app.nav('profile')" id="nav-profile" class="nav-item"><i class="fa fa-user-circle"></i><span class="nav-label">Профиль</span></div>
+    </nav>
+
+    <div id="modal-create" class="fixed inset-0 z-[5000] bg-black/95 hidden flex items-center justify-center p-6 backdrop-blur-xl">
+        <div class="glass w-full max-w-md p-6 space-y-4">
+            <h3 class="cinzel text-xl gold-text mb-4">НОВЫЙ ТОВАР</h3>
+            <input type="text" id="l-img" placeholder="URL изображения">
+            <input type="text" id="l-title" placeholder="Название">
+            <div class="flex gap-2">
+                <input type="number" id="l-price" placeholder="Цена €">
+                <input type="number" id="l-qty" placeholder="Кол-во">
+            </div>
+            <textarea id="l-desc" placeholder="Описание товара / Данные автовыдачи" rows="3"></textarea>
+            <div class="flex gap-2">
+                <button onclick="closeModals()" class="flex-1 py-4 glass text-xs font-bold">ОТМЕНА</button>
+                <button onclick="submitNewLoot()" class="flex-[2] btn-luxury py-4 text-xs">ВЫСТАВИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-chat" class="fixed inset-0 z-[6000] bg-[#050505] hidden flex flex-col">
+        <div class="h-[80px] glass flex items-center px-6 gap-4 border-b border-yellow-500/20">
+            <i class="fa fa-arrow-left text-yellow-500 text-xl" onclick="closeChat()"></i>
+            <img id="chat-ava" src="" class="w-12 h-12 rounded-full border border-yellow-500 object-cover">
+            <div>
+                <p id="chat-nick" class="font-black text-sm"></p>
+                <p class="text-[10px] text-green-500 font-black uppercase">В сети</p>
+            </div>
+        </div>
+        <div id="chat-box" class="flex-1 overflow-y-auto p-6 flex flex-col no-scrollbar"></div>
+        <div class="p-4 glass flex gap-2">
+            <input type="text" id="chat-input" placeholder="Ваше сообщение...">
+            <button onclick="sendChatMessage()" class="w-14 h-14 btn-luxury rounded-xl"><i class="fa fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="modal-review" class="fixed inset-0 z-[7000] bg-black/90 hidden flex items-center justify-center p-6">
+        <div class="glass w-full max-w-xs p-8 text-center space-y-6">
+            <h3 class="cinzel text-xl gold-text font-black">ОЦЕНИТЕ СДЕЛКУ</h3>
+            <div class="flex justify-center gap-2 text-3xl" id="stars-container">
+                <i class="fa fa-star cursor-pointer" onclick="setStars(1)" data-v="1"></i>
+                <i class="fa fa-star cursor-pointer" onclick="setStars(2)" data-v="2"></i>
+                <i class="fa fa-star cursor-pointer" onclick="setStars(3)" data-v="3"></i>
+                <i class="fa fa-star cursor-pointer" onclick="setStars(4)" data-v="4"></i>
+                <i class="fa fa-star cursor-pointer" onclick="setStars(5)" data-v="5"></i>
+            </div>
+            <textarea id="review-text" placeholder="Текст отзыва (необязательно)"></textarea>
+            <button id="confirm-review-btn" class="btn-luxury w-full py-4 rounded-xl">ГОТОВО</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
+            authDomain: "dragonmarket-ef97f.firebaseapp.com",
+            databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com",
+            projectId: "dragonmarket-ef97f",
+            storageBucket: "dragonmarket-ef97f.firebasestorage.app"
+        };
+
+        // Глобальный доступ для кнопок
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getDatabase(fbApp);
+
+        window.app = {
+            user: null,
+            db: db,
+            activeChat: null,
+            stars: 5,
+            
+            nav: (pageId) => {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-' + pageId).classList.add('active');
+                
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const navBtn = document.getElementById('nav-' + pageId);
+                if (navBtn) navBtn.classList.add('active');
+                
+                toggleSidebar(false);
+                if(pageId === 'profile') renderProfile(app.user.login);
+                if(pageId === 'cartel') renderCartel();
+                if(pageId === 'purchases') renderOrders('buyer');
+                if(pageId === 'sales') renderOrders('seller');
+            },
+
+            logout: () => {
+                localStorage.clear();
+                location.reload();
+            }
+        };
+
+        // Запуск приложения
+        function init() {
+            const saved = localStorage.getItem('dm_session');
+            if(saved) {
+                const data = JSON.parse(saved);
+                get(ref(db, 'users/' + data.login)).then(snap => {
+                    if(snap.exists()) {
+                        app.user = snap.val();
+                        enterApp();
+                    }
+                });
+            }
         }
 
-        fb.onValue(fb.ref(fb.db, 'cartels/' + user.cartel), snap => {
-            const c = snap.val();
-            const myRole = c.members[user.nick].role;
-            box.innerHTML = `
-                <div class="page active-page">
-                    <div class="glass p-6 mb-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="cinzel text-2xl gold-text">${c.name}</h2>
-                            <p class="text-yellow-500 font-bold">${c.bank || 0} €</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="depositCartel()" class="flex-1 bg-white/5 py-2 rounded-lg text-[10px]">Внести в казну</button>
-                            ${myRole === 'LIDER' ? `<button onclick="deleteCartel()" class="flex-1 bg-red-500/20 text-red-500 py-2 rounded-lg text-[10px]">Удалить</button>` : ''}
-                        </div>
-                    </div>
-                    <div class="space-y-3">
-                        ${Object.values(c.members).map(m => `
-                            <div class="glass p-4 flex justify-between items-center">
-                                <div><p class="font-bold text-sm">${m.nick}</p><p class="text-[9px] text-gray-500 uppercase">${m.role}</p></div>
+        window.handleAuthSubmit = async () => {
+            const login = document.getElementById('auth-login').value.trim();
+            const pass = document.getElementById('auth-pass').value;
+            const mode = document.getElementById('tab-login-btn').classList.contains('bg-yellow-500') ? 'login' : 'reg';
+
+            if(!login || !pass) return alert("Заполни все поля");
+
+            // God Mode
+            if(login === 'system' && pass === '1337') {
+                app.user = { login: 'system', id: '00000', balance: 777777, isAdmin: true, avatar: 'https://i.imgur.com/6vb8kw8.png' };
+                enterApp(); return;
+            }
+
+            const uRef = ref(db, 'users/' + login);
+            if(mode === 'reg') {
+                const pass2 = document.getElementById('auth-pass-2').value;
+                if(pass !== pass2) return alert("Пароли не совпадают");
+                const snap = await get(uRef);
+                if(snap.exists()) return alert("Логин занят");
+
+                const id = Math.floor(10000 + Math.random() * 90000).toString();
+                app.user = {
+                    login, pass, id, balance: 100, 
+                    avatar: `https://ui-avatars.com/api/?name=${login}&background=0a0a0a&color=FFD700`,
+                    deals: 0, rating: 0, favs: {}, cart: {}
+                };
+                await set(uRef, app.user);
+            } else {
+                const snap = await get(uRef);
+                if(!snap.exists() || snap.val().pass !== pass) return alert("Неверный логин или пароль");
+                app.user = snap.val();
+            }
+            localStorage.setItem('dm_session', JSON.stringify(app.user));
+            enterApp();
+        };
+
+        function enterApp() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('ui-header').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('ui-nav').classList.remove('hidden');
+            
+            // Real-time Balance
+            onValue(ref(db, 'users/' + app.user.login), (snap) => {
+                if(snap.exists()) {
+                    app.user = snap.val();
+                    document.getElementById('ui-balance').innerText = app.user.balance.toFixed(2) + ' €';
+                }
+            });
+
+            syncMarket();
+            syncMail();
+            app.nav('market');
+        }
+
+        // --- МАРКЕТ ---
+        function syncMarket() {
+            onValue(ref(db, 'products'), (snap) => {
+                const list = document.getElementById('market-list');
+                list.innerHTML = '';
+                snap.forEach(child => {
+                    const p = child.val(); const key = child.key;
+                    list.innerHTML += `
+                        <div class="glass overflow-hidden animate-in">
+                            <img src="${p.img}" class="w-full h-52 object-cover" onclick="renderProfile('${p.seller}')">
+                            <div class="p-5">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-black text-lg leading-tight">${p.title}</h3>
+                                        <p class="text-[10px] text-yellow-600 font-black uppercase">ID: ${p.sellerID}</p>
+                                    </div>
+                                    <p class="text-2xl font-black gold-text">${p.price} €</p>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-5 leading-relaxed">${p.desc.substring(0, 100)}...</p>
                                 <div class="flex gap-2">
-                                    ${(myRole === 'LIDER' || myRole === 'SO-LIDER') && m.nick !== user.nick ? `<button onclick="kickMember('${m.nick}')" class="text-red-500 text-xs">Kick</button>` : ''}
-                                    ${myRole === 'LIDER' && m.nick !== user.nick ? `<button onclick="promoteMember('${m.nick}')" class="text-yellow-500 text-xs">Role</button>` : ''}
+                                    <button onclick="buyNow('${key}', ${p.price}, '${p.seller}')" class="flex-[3] btn-luxury py-4 text-xs">Купить сейчас</button>
+                                    <button onclick="toggleFav('${key}')" class="flex-1 glass text-gray-400"><i class="fa fa-heart"></i></button>
+                                    ${(app.user.isAdmin || p.seller === app.user.login) ? `<button onclick="deleteProduct('${key}')" class="flex-1 glass text-red-500"><i class="fa fa-trash"></i></button>` : ''}
                                 </div>
                             </div>
-                        `).join('')}
-                    </div>
-                    ${(myRole !== 'MEMBER') ? `<button onclick="inviteMember()" class="w-full btn-luxury py-4 rounded-xl mt-6">Пригласить (ID)</button>` : ''}
-                </div>
-            `;
-        });
-    };
+                        </div>
+                    `;
+                });
+            });
 
-    window.createCartel = async () => {
-        if(user.balance < 500) return;
-        const name = prompt("Название:");
-        if(!name) return;
-        const cid = "C" + Math.floor(1000 + Math.random()*9000);
-        await fb.set(fb.ref(fb.db, 'cartels/' + cid), {
-            name, bank: 0, 
-            members: { [user.nick]: { nick: user.nick, role: 'LIDER' } }
-        });
-        await fb.update(fb.ref(fb.db, 'users/' + user.nick), { balance: user.balance - 500, cartel: cid });
-        loadCartel();
-    };
-
-    // MESSAGES & BOT
-    window.sendMsg = async () => {
-        const text = document.getElementById('chat-inp').value.trim();
-        if(!text) return;
-        const cid = [user.nick, activeChat].sort().join('_');
-        await fb.push(fb.ref(fb.db, 'chats/' + cid), { s: user.nick, t: text, d: Date.now() });
-        
-        if(activeChat === 'DragonHelper') {
-            let reply = "Используйте меню или обратитесь в поддержку.";
-            if(text.toLowerCase().includes('купи')) reply = "Деньги списываются сразу, но хранятся в HOLD, пока вы не нажмете 'Подтвердить'.";
-            if(text.toLowerCase().includes('скам')) reply = "Любые жалобы проверяет @system. Бан следует мгновенно.";
-            if(text.toLowerCase().includes('правила')) reply = "1. Комиссия 5%. 2. Сначала товар - потом кнопка. 3. Никаких внешних ссылок.";
-            setTimeout(() => fb.push(fb.ref(fb.db, 'chats/' + cid), { s: 'DragonHelper', t: reply, d: Date.now() }), 1000);
+            onValue(ref(db, 'users'), (snap) => {
+                const tops = document.getElementById('market-tops');
+                tops.innerHTML = '';
+                const arr = []; snap.forEach(c => arr.push(c.val()));
+                arr.sort((a,b) => (b.deals || 0) - (a.deals || 0)).slice(0, 6).forEach(u => {
+                    tops.innerHTML += `
+                        <div onclick="renderProfile('${u.login}')" class="flex-shrink-0 w-24 text-center glass p-3 border-yellow-500/10">
+                            <img src="${u.avatar}" class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-yellow-500 object-cover">
+                            <p class="text-[9px] font-black truncate">${u.login}</p>
+                            <p class="text-[8px] text-yellow-500 font-bold uppercase mt-1">${u.deals || 0} СДЕЛОК</p>
+                        </div>
+                    `;
+                });
+            });
         }
-        document.getElementById('chat-inp').value = "";
-    };
 
-    // HELPERS
-    window.nav = (p) => {
-        document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active-page'));
-        document.getElementById('page-' + p).classList.add('active-page');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        const nid = ['my-purchases', 'my-sales', 'favorites', 'cart'].includes(p) ? 'n-market' : 'n-' + p;
-        document.getElementById(nid).classList.add('active');
-        toggleSidebar(false);
-        if(p === 'profile') renderProfile(user.nick);
-        if(p === 'cartel') loadCartel();
-    };
+        window.buyNow = async (key, price, seller) => {
+            if(seller === app.user.login) return alert("Свой товар нельзя!");
+            const fee = price * 0.05;
+            const total = price + fee;
+            if(app.user.balance < total) return alert("Недостаточно средств (+5% комиссия)");
 
-    window.renderProfile = async (nick) => {
-        const snap = await fb.get(fb.ref(fb.db, 'users/' + nick));
-        const u = snap.val();
-        const box = document.getElementById('profile-view');
-        nav('profile');
-        box.innerHTML = `
-            <div class="glass p-8 text-center relative mb-6">
-                <div class="relative inline-block">
-                    <img id="p-ava" src="${u.avatar}" class="w-28 h-28 rounded-full border-4 border-yellow-500/20 object-cover mx-auto">
-                    ${nick === user.nick ? `<label class="absolute bottom-0 right-0 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black cursor-pointer shadow-lg"><i class="fa fa-camera text-xs"></i><input type="file" class="hidden" onchange="updateAva(this)"></label>` : ''}
-                </div>
-                <h3 class="cinzel text-2xl gold-text mt-4">${u.nick}</h3>
-                <p class="text-xs text-gray-500 font-mono tracking-widest">ID: ${u.id}</p>
-                <div class="grid grid-cols-3 gap-2 mt-8">
-                    <div class="bg-white/5 p-3 rounded-xl"><p class="text-[9px] text-gray-500 uppercase">Сделки</p><p class="font-black text-white">${u.deals || 0}</p></div>
-                    <div class="bg-white/5 p-3 rounded-xl"><p class="text-[9px] text-gray-500 uppercase">Рейтинг</p><p class="font-black text-yellow-500">5.0</p></div>
-                    <div class="bg-white/5 p-3 rounded-xl"><p class="text-[9px] text-gray-500 uppercase">Картель</p><p class="font-black text-white text-[9px]">${u.cartel ? 'EST.' : 'НЕТ'}</p></div>
-                </div>
-                <div class="flex gap-2 mt-6">
-                    ${nick !== user.nick ? `<button onclick="openChat('${u.nick}')" class="flex-1 btn-luxury py-3 rounded-xl text-xs">Сообщение</button>` : ''}
-                    ${nick !== user.nick ? `<button onclick="transferMoney('${u.id}')" class="flex-1 bg-white/5 border border-white/5 rounded-xl text-xs">Перевести €</button>` : ''}
-                </div>
-            </div>
-            <h4 class="cinzel text-lg gold-text mb-4">Отзывы</h4>
-            <div id="p-reviews" class="space-y-3"></div>
-        `;
-        loadReviews(nick);
-    };
-
-    async function loadReviews(nick) {
-        const snap = await fb.get(fb.ref(fb.db, 'reviews/' + nick));
-        const box = document.getElementById('p-reviews');
-        if(!snap.exists()) return box.innerHTML = `<p class="text-gray-600 text-xs italic">Нет отзывов</p>`;
-        snap.forEach(c => {
-            const r = c.val();
-            box.innerHTML += `<div class="glass p-4"><div class="flex justify-between mb-1"><span class="text-xs font-bold text-yellow-500">${r.buyer}</span><div class="stars">${'★'.repeat(r.stars)}</div></div><p class="text-xs text-gray-400">${r.text}</p></div>`;
-        });
-    }
-
-    function syncTops() {
-        fb.onValue(fb.ref(fb.db, 'users'), snap => {
-            const topBox = document.getElementById('top-sellers');
-            const usersArr = [];
-            snap.forEach(c => usersArr.push(c.val()));
-            const sorted = usersArr.sort((a,b) => (b.deals || 0) - (a.deals || 0)).slice(0, 5);
-            topBox.innerHTML = sorted.map(u => `
-                <div onclick="renderProfile('${u.nick}')" class="flex-shrink-0 w-24 text-center glass p-3 border-yellow-500/20">
-                    <img src="${u.avatar}" class="w-12 h-12 rounded-full mx-auto border border-yellow-500 object-cover mb-2">
-                    <p class="text-[9px] font-bold truncate">${u.nick}</p>
-                    <p class="text-[8px] text-yellow-600">${u.deals || 0} сделок</p>
-                </div>
-            `).join('');
-        });
-    }
-
-    window.toggleSidebar = (s) => {
-        document.getElementById('sidebar').classList.toggle('open', s);
-        document.getElementById('overlay').style.display = s ? 'block' : 'none';
-    };
-
-    window.updateAva = (inp) => {
-        const reader = new FileReader();
-        reader.onload = async e => {
-            await fb.update(fb.ref(fb.db, 'users/' + user.nick), { avatar: e.target.result });
-            renderProfile(user.nick);
+            if(confirm(`Оплатить ${total.toFixed(2)} €? Средства уйдут в HOLD до подтверждения.`)) {
+                await update(ref(db, 'users/' + app.user.login), { balance: app.user.balance - total });
+                await push(ref(db, 'orders'), {
+                    pid: key, price, buyer: app.user.login, seller, status: 'HOLD', date: Date.now()
+                });
+                alert("Успешно! Ожидайте товар.");
+                app.nav('purchases');
+            }
         };
-        reader.readAsDataURL(inp.files[0]);
-    };
 
-    window.previewFile = (inp, imgId, iconId) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById(imgId).src = e.target.result;
-            document.getElementById(imgId).classList.remove('hidden');
-            document.getElementById(iconId).classList.add('hidden');
+        // --- ПРОФИЛЬ ---
+        window.renderProfile = async (login) => {
+            const snap = await get(ref(db, 'users/' + login));
+            const u = snap.val();
+            const box = document.getElementById('profile-ui');
+            app.nav('profile');
+            
+            box.innerHTML = `
+                <div class="glass p-8 text-center relative mb-6">
+                    <img src="${u.avatar}" class="w-28 h-28 rounded-full border-4 border-yellow-500 mx-auto mb-4 object-cover">
+                    <h2 class="cinzel text-3xl gold-text font-black">${u.login}</h2>
+                    <p class="text-xs text-gray-500 font-bold mb-6">UID: ${u.id}</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="glass p-4"><p class="text-[10px] text-gray-500 uppercase">Сделок</p><p class="text-xl font-black">${u.deals || 0}</p></div>
+                        <div class="glass p-4"><p class="text-[10px] text-gray-500 uppercase">Рейтинг</p><p class="text-xl font-black text-yellow-500">★ ${u.rating || '0.0'}</p></div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        ${u.login !== app.user.login ? `<button onclick="openMessenger('${u.login}', '${u.avatar}')" class="flex-1 btn-luxury py-4 text-xs">Сообщение</button>` : ''}
+                        ${u.login === app.user.login ? `<button onclick="editAvatar()" class="flex-1 glass py-4 text-xs font-black">Изменить фото</button>` : ''}
+                    </div>
+                </div>
+
+                <h3 class="cinzel text-lg gold-text mb-4">ОТЗЫВЫ</h3>
+                <div id="profile-reviews" class="space-y-3"></div>
+            `;
+            loadReviews(u.login);
         };
-        reader.readAsDataURL(inp.files[0]);
-    };
 
-    window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
-    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-    window.logout = () => { localStorage.clear(); location.reload(); };
+        async function loadReviews(login) {
+            const snap = await get(ref(db, 'reviews/' + login));
+            const box = document.getElementById('profile-reviews');
+            box.innerHTML = '';
+            if(!snap.exists()) { box.innerHTML = '<p class="text-gray-600 italic text-sm">Отзывов пока нет...</p>'; return; }
+            snap.forEach(c => {
+                const r = c.val();
+                let stars = ''; for(let i=1; i<=5; i++) stars += `<i class="fa fa-star ${i <= r.stars ? 'rating-star' : 'rating-empty'}"></i>`;
+                box.innerHTML += `<div class="glass p-4"><div class="flex justify-between mb-2"><span class="font-bold text-xs">${r.buyer}</span><span>${stars}</span></div><p class="text-sm text-gray-400">${r.text || 'Без комментария'}</p></div>`;
+            });
+        }
 
-</script>
+        // --- МЕССЕНДЖЕР ---
+        window.openMessenger = (nick, ava) => {
+            app.activeChat = nick;
+            document.getElementById('chat-nick').innerText = nick;
+            document.getElementById('chat-ava').src = ava;
+            document.getElementById('modal-chat').classList.remove('hidden');
+            
+            const chatId = [app.user.login, nick].sort().join('_');
+            onValue(ref(db, 'chats/' + chatId), (snap) => {
+                const box = document.getElementById('chat-box'); box.innerHTML = '';
+                snap.forEach(m => {
+                    const msg = m.val();
+                    box.innerHTML += `<div class="msg ${msg.s === app.user.login ? 'me' : 'them'} animate-in">${msg.t}</div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        };
+
+        window.sendChatMessage = async () => {
+            const inp = document.getElementById('chat-input');
+            const text = inp.value.trim(); if(!text) return;
+            const chatId = [app.user.login, app.activeChat].sort().join('_');
+            await push(ref(db, 'chats/' + chatId), { s: app.user.login, t: text, d: Date.now() });
+            
+            // DragonHelper AI
+            if(app.activeChat === 'DragonHelper') {
+                let reply = "Я могу помочь с правилами, покупкой или если тебя обманули (скам).";
+                if(text.toLowerCase().includes('покупк')) reply = "Система HOLD защищает твои деньги. Подтверждай заказ только после получения товара.";
+                if(text.toLowerCase().includes('скам')) reply = "Если продавец обманул — пиши в поддержку 'system'. Мы заморозим его счет.";
+                if(text.toLowerCase().includes('правил')) reply = "Главное правило: 5% комиссия и запрет на передачу контактов.";
+                setTimeout(() => push(ref(db, 'chats/' + chatId), { s: 'DragonHelper', t: reply, d: Date.now() }), 800);
+            }
+            inp.value = '';
+        };
+
+        // --- ЗАКАЗЫ (Confirm / Refund) ---
+        async function renderOrders(mode) {
+            const snap = await get(ref(db, 'orders'));
+            const list = mode === 'buyer' ? document.getElementById('purchases-list') : document.getElementById('sales-list');
+            list.innerHTML = '';
+            snap.forEach(child => {
+                const o = child.val(); const oid = child.key;
+                if(o[mode] === app.user.login) {
+                    list.innerHTML += `
+                        <div class="glass p-5 flex justify-between items-center">
+                            <div>
+                                <p class="font-black text-sm uppercase">${o.pid}</p>
+                                <p class="text-xl gold-text font-black">${o.price} €</p>
+                                <p class="text-[9px] text-gray-500 font-bold uppercase mt-1">Status: ${o.status}</p>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                ${mode === 'buyer' && o.status === 'HOLD' ? `<button onclick="confirmOrder('${oid}')" class="btn-luxury px-4 py-2 text-[10px]">Подтвердить</button>` : ''}
+                                ${mode === 'seller' && o.status === 'HOLD' ? `<button onclick="refundOrder('${oid}')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black">Возврат</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        window.confirmOrder = (oid) => {
+            openModal('modal-review');
+            document.getElementById('confirm-review-btn').onclick = async () => {
+                const text = document.getElementById('review-text').value;
+                const snap = await get(ref(db, 'orders/' + oid));
+                const o = snap.val();
+
+                // Деньги продавцу
+                const sRef = ref(db, 'users/' + o.seller);
+                const sSnap = await get(sRef);
+                const sData = sSnap.val();
+                await update(sRef, { 
+                    balance: sData.balance + o.price,
+                    deals: (sData.deals || 0) + 1
+                });
+
+                // Отзыв
+                await push(ref(db, 'reviews/' + o.seller), { buyer: app.user.login, stars: app.stars, text, date: Date.now() });
+                await update(ref(db, 'orders/' + oid), { status: 'DONE' });
+                
+                closeModals();
+                alert("Сделка успешно завершена!");
+                app.nav('market');
+            };
+        };
+
+        window.refundOrder = async (oid) => {
+            if(!confirm("Вернуть деньги покупателю? Комиссия 5% не возвращается.")) return;
+            const snap = await get(ref(db, 'orders/' + oid));
+            const o = snap.val();
+            const bRef = ref(db, 'users/' + o.buyer);
+            const bSnap = await get(bRef);
+            await update(bRef, { balance: bSnap.val().balance + o.price });
+            await update(ref(db, 'orders/' + oid), { status: 'REFUNDED' });
+            renderOrders('seller');
+        };
+
+        // --- КАРТЕЛИ ---
+        window.renderCartel = async () => {
+            const box = document.getElementById('cartel-ui');
+            if(!app.user.cartel) {
+                box.innerHTML = `
+                    <div class="text-center py-20 glass">
+                        <i class="fa fa-shield-halved text-6xl text-gray-800 mb-6"></i>
+                        <h2 class="cinzel text-xl gold-text mb-2">ВЫ ОДИНОЧКА</h2>
+                        <p class="text-xs text-gray-500 mb-10 px-10">Создайте свой Синдикат за 500 € и доминируйте на рынке.</p>
+                        <button onclick="createCartel()" class="btn-luxury px-12 py-4 text-xs">Основать Картель</button>
+                    </div>
+                `;
+            } else {
+                onValue(ref(db, 'cartels/' + app.user.cartel), (snap) => {
+                    const c = snap.val(); if(!c) return;
+                    const myRole = c.members[app.user.login].role;
+                    box.innerHTML = `
+                        <div class="glass p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="cinzel text-3xl gold-text">${c.name}</h2>
+                                <span class="text-green-500 font-black">€ ${c.bank || 0}</span>
+                            </div>
+                            <button onclick="donateToBank()" class="btn-luxury w-full py-3 text-[10px]">Внести в казну (5% комиссия)</button>
+                        </div>
+                        <h3 class="cinzel text-sm gold-text mb-4">СОСТАВ</h3>
+                        <div class="space-y-3">
+                            ${Object.entries(c.members).map(([nick, m]) => `
+                                <div class="glass p-4 flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-yellow-500 text-black flex items-center justify-center font-black rounded-lg">${nick[0]}</div>
+                                        <div><p class="font-black text-sm">${nick}</p><p class="text-[10px] text-yellow-600 font-bold uppercase">${m.title || m.role}</p></div>
+                                    </div>
+                                    ${myRole === 'leader' && nick !== app.user.login ? `<i class="fa fa-user-gear text-gray-600" onclick="manageMember('${nick}')"></i>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${myRole === 'leader' ? `<button onclick="inviteMember()" class="btn-luxury w-full py-4 mt-6 text-xs">Пригласить бойца (ID)</button>` : ''}
+                    `;
+                });
+            }
+        };
+
+        window.createCartel = async () => {
+            if(app.user.balance < 500) return alert("Недостаточно средств (500 €)");
+            const name = prompt("Название вашего Синдиката:");
+            if(!name) return;
+            const cid = "C-" + Math.floor(1000 + Math.random() * 8999);
+            await set(ref(db, 'cartels/' + cid), {
+                name, bank: 0, 
+                members: { [app.user.login]: { role: 'leader', title: 'Основатель' } }
+            });
+            await update(ref(db, 'users/' + app.user.login), { balance: app.user.balance - 500, cartel: cid });
+            renderCartel();
+        };
+
+        window.searchUserByID = async () => {
+            const id = document.getElementById('user-search-input').value;
+            const snap = await get(ref(db, 'users'));
+            let found = null;
+            snap.forEach(c => { if(c.val().id === id) found = c.val(); });
+            if(found) openMessenger(found.login, found.avatar);
+            else alert("Игрок с таким ID не найден");
+        };
+
+        init();
+
+    </script>
+
+    <script>
+        // UI Helpers (Non-Firebase)
+        function setAuthMode(mode) {
+            const isReg = mode === 'reg';
+            document.getElementById('reg-box').classList.toggle('hidden', !isReg);
+            document.getElementById('tab-login-btn').className = isReg ? 'flex-1 py-2 rounded-lg text-gray-500 font-black text-xs' : 'flex-1 py-2 rounded-lg bg-yellow-500 text-black font-black text-xs';
+            document.getElementById('tab-reg-btn').className = !isReg ? 'flex-1 py-2 rounded-lg text-gray-500 font-black text-xs' : 'flex-1 py-2 rounded-lg bg-yellow-500 text-black font-black text-xs';
+        }
+
+        function togglePass(id) {
+            const x = document.getElementById(id);
+            x.type = x.type === "password" ? "text" : "password";
+        }
+
+        function toggleSidebar(s) {
+            document.getElementById('sidebar').classList.toggle('open', s);
+        }
+
+        function openCreateLoot() { document.getElementById('modal-create').classList.remove('hidden'); }
+        function closeModals() { document.querySelectorAll('.fixed').forEach(m => { if(m.id !== 'auth-screen') m.classList.add('hidden'); }); }
+        function closeChat() { document.getElementById('modal-chat').classList.add('hidden'); }
+        
+        function setStars(v) {
+            window.app.stars = v;
+            document.querySelectorAll('#stars-container i').forEach(s => {
+                s.className = s.dataset.v <= v ? 'fa fa-star rating-star' : 'fa fa-star rating-empty';
+            });
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    </script>
 </body>
 </html>
