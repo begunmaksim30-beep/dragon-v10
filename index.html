@@ -1,921 +1,596 @@
 <!DOCTYPE html>
-<html lang="ru" x-data="dragonApp()">
+<html lang="ru" x-data="dragonApp()" :data-theme="theme">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dragon Market | Синдикат</title>
-
+    <title>DRAGON MARKET | Digital Marketplace</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&family=Space+Grotesk:wght@300;700&display=swap');
+
         [x-cloak] { display: none !important; }
-        
-        /* Динамические темы */
-        :root { --primary: #e11d48; --glow: rgba(225, 29, 72, 0.5); --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }
-        .theme-light { --primary: #2563eb; --glow: rgba(37, 99, 235, 0.3); --bg: #f8fafc; --card: #ffffff; --text: #0f172a; }
-        .theme-cyber { --primary: #00ffcc; --glow: rgba(0, 255, 204, 0.6); --bg: #050505; --card: #0d0d0d; --text: #00ffcc; }
-        .theme-blood { --primary: #991b1b; --glow: rgba(153, 27, 27, 0.5); --bg: #110000; --card: #1a0000; --text: #fca5a5; }
 
-        body { 
-            background-color: var(--bg); 
-            color: var(--text); 
-            font-family: 'Inter', sans-serif; 
-            transition: all 0.3s ease; 
+        :root {
+            --bg: #0b0e14;
+            --glass: rgba(255, 255, 255, 0.03);
+            --accent: #facc15;
+            --text: #f8fafc;
+        }
+
+        [data-theme='light'] { --bg: #f1f5f9; --glass: rgba(0,0,0,0.05); --text: #0f172a; --accent: #4f46e5; }
+        [data-theme='neon'] { --bg: #000; --glass: rgba(0, 255, 150, 0.05); --text: #00ff96; --accent: #bcfe2d; }
+        [data-theme='blood'] { --bg: #1a0505; --glass: rgba(255, 0, 0, 0.05); --text: #fee2e2; --accent: #ef4444; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
             overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        .bg-card { background-color: var(--card); }
-        .text-primary { color: var(--primary); }
-        .bg-primary { background-color: var(--primary); }
-        .border-primary { border-color: var(--primary); }
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);
+        }
 
-        /* Анимации кнопок (Glow Effect) */
-        .btn-dragon {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* RGB Анимация для Ancient Dragon */
+        .rgb-nick {
+            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 400% 400%;
+            animation: rgb-move 5s linear infinite;
+            font-weight: 900;
+        }
+        @keyframes rgb-move { 0% {background-position: 0% 50%} 50% {background-position: 100% 50%} 100% {background-position: 0% 50%} }
+
+        /* Колесо */
+        .wheel-container {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 10px solid var(--accent);
             position: relative;
-            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
         }
-        .btn-dragon:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 0 20px var(--glow);
+
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover:hover {
+            transform: scale(1.05) translateY(-2px);
             filter: brightness(1.2);
-        }
-        .btn-dragon:active { transform: scale(0.98); }
-
-        /* Плавные переходы страниц */
-        .page-enter { animation: slideIn 0.4s ease-out forwards; }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+            box-shadow: 0 0 20px var(--accent);
         }
 
-        /* Скроллбар в стиле FunPay */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
 
-        /* Мобильный блюр */
-        .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(0,0,0,0.2); }
+        .tab-transition {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body :class="themeClass">
+<body class="min-h-screen">
 
-    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] w-full max-w-xs space-y-2 px-4">
-        <template x-for="n in notifications" :key="n.id">
-            <div x-show="n.show" x-transition class="p-4 rounded-xl shadow-2xl flex items-center gap-3 border-l-4 glass border-primary animate-bounce">
-                <i class="fas fa-dragon text-primary"></i>
-                <span class="text-xs font-bold" x-text="n.text"></span>
-            </div>
-        </template>
+    <div x-show="loading" class="fixed inset-0 z-[100] bg-[#0b0e14] flex flex-col items-center justify-center">
+        <i class="fa-solid fa-dragon text-6xl text-yellow-500 animate-bounce"></i>
+        <p class="mt-4 font-bold tracking-[0.3em] animate-pulse">DRAGON MARKET</p>
     </div>
 
-    <div x-show="loading" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center">
-        <div class="relative">
-            <i class="fas fa-dragon text-6xl text-primary animate-pulse"></i>
-            <div class="absolute -inset-4 border-2 border-primary rounded-full animate-ping opacity-20"></div>
-        </div>
-        <p class="mt-8 tracking-[0.5em] uppercase text-[10px] opacity-50">Initializing Dragon Protocol...</p>
-    </div>
-
-    <div x-show="!user && !loading" x-cloak class="min-h-screen flex items-center justify-center p-6 page-enter">
-        <div class="w-full max-w-md bg-card p-8 rounded-3xl border border-white/5 shadow-2xl">
-            <div class="text-center mb-10">
-                <h1 class="text-4xl font-black tracking-tighter italic">DRAGON<span class="text-primary text-5xl">.</span>MARKET</h1>
-                <p class="text-[10px] uppercase tracking-widest opacity-40 mt-2">The Underground Exchange</p>
+    <div x-show="!user" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
+        <div class="glass p-8 rounded-3xl w-full max-w-md space-y-6">
+            <div class="text-center">
+                <i class="fa-solid fa-dragon text-4xl text-yellow-500 mb-2"></i>
+                <h2 class="text-2xl font-black">LOG IN / REGISTER</h2>
             </div>
-
-            <div class="flex gap-2 mb-8 bg-black/20 p-1 rounded-xl">
-                <button @click="authTab = 'login'" :class="authTab === 'login' ? 'bg-primary text-white shadow-lg' : 'opacity-40'" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">ВХОД</button>
-                <button @click="authTab = 'reg'" :class="authTab === 'reg' ? 'bg-primary text-white shadow-lg' : 'opacity-40'" class="flex-1 py-2 rounded-lg text-xs font-bold transition-all">РЕГИСТРАЦИЯ</button>
-            </div>
-
-            <form @submit.prevent="handleAuth" class="space-y-4">
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-black opacity-30 ml-2">Идентификатор</label>
-                    <input x-model="authForm.email" type="text" placeholder="Email или SYSTEM" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase font-black opacity-30 ml-2">Пароль</label>
-                    <input x-model="authForm.pass" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
-                </div>
-                <template x-if="authTab === 'reg'">
-                    <div class="space-y-1 page-enter">
-                        <label class="text-[10px] uppercase font-black opacity-30 ml-2">Подтверждение</label>
-                        <input x-model="authForm.passConfirm" type="password" placeholder="••••••••" class="w-full bg-black/40 border border-white/5 p-4 rounded-xl outline-none focus:border-primary transition text-white">
-                    </div>
-                </template>
-                <button type="submit" class="w-full bg-primary py-4 rounded-xl font-black tracking-widest uppercase mt-4 btn-dragon shadow-xl shadow-primary/20 text-white">
-                    <span x-text="authTab === 'login' ? 'Авторизоваться' : 'Создать аккаунт'"></span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <template x-if="user && !loading">
-        <div class="flex flex-col min-h-screen">
             
-            <header class="h-20 bg-card border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-50 glass">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 rotate-3">
-                        <i class="fas fa-dragon text-white text-xl"></i>
+            <div class="space-y-4">
+                <input x-model="auth.email" type="text" placeholder="Email or SYSTEM" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
+                <input x-model="auth.pass" type="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
+                <template x-if="!isLogin">
+                    <input x-model="auth.confirmPass" type="password" placeholder="Confirm Password" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
+                </template>
+                <button @click="handleAuth()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl btn-hover">CONTINUE</button>
+                <p @click="isLogin = !isLogin" class="text-center text-xs text-gray-500 cursor-pointer" x-text="isLogin ? 'Don\'t have an account? Sign Up' : 'Already have an account? Login'"></p>
+            </div>
+        </div>
+    </div>
+
+    <template x-if="user">
+        <div class="flex flex-col h-screen overflow-hidden">
+            
+            <header class="glass h-20 px-6 flex items-center justify-between z-40">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-black">
+                        <i class="fa-solid fa-dragon"></i>
                     </div>
-                    <div class="hidden sm:block">
-                        <p class="font-black text-lg leading-none tracking-tighter">DRAGON</p>
-                        <p class="text-[10px] opacity-40 font-bold uppercase tracking-widest" x-text="userData.isAdmin ? 'Root Access' : 'Verified User'"></p>
+                    <div>
+                        <div class="font-black text-xs tracking-widest">DRAGON MARKET</div>
+                        <div class="text-[10px] text-gray-500 font-bold uppercase" x-text="user.rank"></div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
-                    <div class="text-right group cursor-pointer" @click="toggleCurrency()">
-                        <p class="text-[10px] font-black opacity-30 uppercase">Ваш Баланс</p>
-                        <p class="text-xl font-black text-primary transition group-hover:scale-110" x-text="formatMoney(userData.balance)"></p>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-[10px] text-gray-500 font-bold">BALANCE</div>
+                        <div class="font-black text-green-400" x-text="formatCurrency(user.balance)"></div>
                     </div>
-
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="w-10 h-10 flex flex-col items-center justify-center gap-1.5 group">
-                            <span class="w-6 h-0.5 bg-current transition-all" :class="open ? 'rotate-45 translate-y-2' : ''"></span>
-                            <span class="w-4 h-0.5 bg-current transition-all" :class="open ? 'opacity-0' : ''"></span>
-                            <span class="w-6 h-0.5 bg-current transition-all" :class="open ? '-rotate-45 -translate-y-2' : ''"></span>
-                        </button>
-                        <div x-show="open" @click.outside="open = false" x-transition class="absolute right-0 top-14 w-64 bg-card border border-white/10 rounded-2xl shadow-2xl py-3 z-[60] glass">
-                            <div class="px-4 py-2 border-b border-white/5 mb-2">
-                                <p class="text-[10px] font-bold opacity-30 uppercase">Управление</p>
-                            </div>
-                            <button @click="view = 'my_deals'; open = false" class="w-full text-left px-4 py-3 hover:bg-primary/10 transition text-sm font-bold flex items-center gap-3"><i class="fas fa-shopping-cart w-5"></i> Мои покупки</button>
-                            <button @click="view = 'my_sales'; open = false" class="w-full text-left px-4 py-3 hover:bg-primary/10 transition text-sm font-bold flex items-center gap-3"><i class="fas fa-store w-5"></i> Мои продажи</button>
-                            <button @click="view = 'tickets'; open = false" class="w-full text-left px-4 py-3 hover:bg-primary/10 transition text-sm font-bold flex items-center gap-3"><i class="fas fa-headset w-5"></i> Поддержка</button>
-                            <button @click="view = 'rules'; open = false" class="w-full text-left px-4 py-3 hover:bg-primary/10 transition text-sm font-bold flex items-center gap-3"><i class="fas fa-gavel w-5"></i> Кодекс чести</button>
-                            <div class="h-px bg-white/5 my-2"></div>
-                            <button @click="logout()" class="w-full text-left px-4 py-3 text-red-500 hover:bg-red-500/10 transition text-sm font-bold flex items-center gap-3"><i class="fas fa-sign-out-alt w-5"></i> Деавторизация</button>
-                        </div>
-                    </div>
+                    <button @click="toggleMenu = !toggleMenu" class="w-10 h-10 glass rounded-full flex items-center justify-center btn-hover">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
                 </div>
             </header>
 
-            <main class="flex-1 pb-24 overflow-y-auto">
-                
-                <div x-show="view === 'market'" class="p-6 page-enter space-y-8">
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="relative flex-1">
-                            <i class="fas fa-search absolute left-4 top-4.5 opacity-20"></i>
-                            <input x-model="search" type="text" placeholder="Поиск снаряжения, услуг, артефактов..." class="w-full bg-card p-4 pl-12 rounded-2xl border border-white/5 outline-none focus:border-primary text-white">
+            <div x-show="toggleMenu" x-transition x-cloak class="fixed inset-0 z-[60]">
+                <div @click="toggleMenu = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+                <div class="absolute right-0 top-0 h-full w-72 glass p-8 shadow-2xl">
+                    <div class="flex justify-between items-center mb-10">
+                        <h3 class="font-black">NAVIGATION</h3>
+                        <i @click="toggleMenu = false" class="fa-solid fa-xmark cursor-pointer"></i>
+                    </div>
+                    <nav class="space-y-6">
+                        <div @click="activeTab = 'donat'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-gem text-yellow-500"></i> DONATE</div>
+                        <div @click="activeTab = 'wheel'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-spinner"></i> WHEEL</div>
+                        <div @click="activeTab = 'promo'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-ticket"></i> PROMOCODE</div>
+                        <div @click="activeTab = 'support'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-headset"></i> SUPPORT</div>
+                        <hr class="border-white/5">
+                        <div @click="logout()" class="flex items-center gap-4 text-red-500 cursor-pointer"><i class="fa-solid fa-sign-out"></i> LOGOUT</div>
+                    </nav>
+
+                    <div class="mt-20">
+                        <p class="text-[10px] text-gray-600 mb-2">SELECT THEME</p>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div @click="theme = 'dark'" class="w-6 h-6 rounded-full bg-slate-800 border cursor-pointer"></div>
+                            <div @click="theme = 'light'" class="w-6 h-6 rounded-full bg-white border cursor-pointer"></div>
+                            <div @click="theme = 'neon'" class="w-6 h-6 rounded-full bg-lime-400 border cursor-pointer"></div>
+                            <div @click="theme = 'blood'" class="w-6 h-6 rounded-full bg-red-800 border cursor-pointer"></div>
                         </div>
-                        <button @click="showAddModal = true" class="bg-primary px-8 py-4 rounded-2xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase text-xs tracking-widest text-white">
-                            <i class="fas fa-plus mr-2"></i> Выставить товар
-                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar pb-24">
+                
+                <section x-show="activeTab === 'market'" class="tab-transition space-y-8">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h1 class="text-3xl font-black">MARKETPLACE</h1>
+                            <p class="text-gray-500 text-xs">Find digital dragons and rare artifacts</p>
+                        </div>
+                        <button @click="showAddProduct = true" class="bg-yellow-500 text-black font-bold px-6 py-2 rounded-xl text-sm btn-hover">SELL ITEM</button>
+                    </div>
+
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        <template x-for="cat in categories">
+                            <button @click="activeCat = cat" :class="activeCat === cat ? 'bg-yellow-500 text-black' : 'glass'" class="px-6 py-2 rounded-full text-[10px] font-bold transition whitespace-nowrap" x-text="cat"></button>
+                        </template>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         <template x-for="p in filteredProducts" :key="p.id">
-                            <div class="bg-card rounded-3xl border border-white/5 overflow-hidden group hover:border-primary/40 transition-all shadow-xl flex flex-col">
-                                <div class="h-48 bg-black relative overflow-hidden">
-                                    <img :src="p.img || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=500&auto=format&fit=crop'" class="w-full h-full object-cover transition duration-500 group-hover:scale-110 group-hover:rotate-1">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute bottom-4 left-4">
-                                        <p class="text-[10px] font-black uppercase text-primary tracking-widest" x-text="p.category || 'Общее'"></p>
-                                        <h3 class="font-black text-white text-lg leading-tight" x-text="p.name"></h3>
-                                    </div>
+                            <div class="glass rounded-3xl overflow-hidden group border border-white/5 hover:border-yellow-500/50 transition duration-500">
+                                <div class="h-48 relative overflow-hidden bg-black">
+                                    <img :src="p.image || 'https://via.placeholder.com/300'" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                                    <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold" x-text="p.type"></div>
                                 </div>
-                                <div class="p-5 flex-1 flex flex-col">
-                                    <p class="text-xs opacity-50 line-clamp-2 mb-6" x-text="p.desc"></p>
-                                    <div class="mt-auto flex items-center justify-between">
-                                        <div>
-                                            <p class="text-[10px] font-bold opacity-30 uppercase leading-none">Стоимость</p>
-                                            <p class="text-xl font-black text-primary" x-text="formatMoney(p.price)"></p>
+                                <div class="p-6 space-y-4">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-bold text-lg leading-tight line-clamp-2" x-text="p.title"></h3>
+                                        <span class="text-green-400 font-black" x-text="formatCurrency(p.price)"></span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden">
+                                            <img :src="p.sellerAvatar" class="w-full h-full object-cover">
                                         </div>
-                                        <button @click="buyItem(p)" class="w-12 h-12 bg-white/5 hover:bg-primary rounded-xl flex items-center justify-center transition-all group-hover:text-white">
-                                            <i class="fas fa-shopping-basket"></i>
-                                        </button>
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[10px] font-bold" :class="p.sellerRank === 'Ancient' ? 'rgb-nick' : ''" x-text="p.sellerName"></span>
+                                                <i x-show="p.verified" class="fa-solid fa-circle-check text-blue-400 text-[8px]"></i>
+                                            </div>
+                                            <div class="text-[8px] text-gray-500" x-text="p.sellerRating > 0 ? '⭐ ' + p.sellerRating : 'No reviews'"></div>
+                                        </div>
                                     </div>
-                                    <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-black uppercase tracking-tighter opacity-40">
-                                        <span @click="openSeller(p.sellerId)" class="hover:text-primary cursor-pointer">Продавец: <span x-text="p.sellerName"></span></span>
-                                        <span>Сток: <span x-text="p.qty"></span></span>
-                                    </div>
+                                    <button @click="buyItem(p)" class="w-full bg-white text-black font-black py-3 rounded-xl btn-hover text-sm">PURCHASE</button>
                                 </div>
                             </div>
                         </template>
                     </div>
-                </div>
+                </section>
 
-                <div x-show="view === 'my_deals'" class="p-6 page-enter max-w-4xl mx-auto">
-                     <h2 class="text-3xl font-black mb-8 tracking-tighter uppercase">Мои Заказы</h2>
-                     <div class="space-y-4">
-                        <template x-for="o in myOrders" :key="o.id">
-                            <div class="bg-card p-6 rounded-2xl border border-white/5 flex items-center justify-between">
+                <section x-show="activeTab === 'wheel'" class="tab-transition flex flex-col items-center justify-center min-h-full py-10">
+                    <div class="text-center mb-10">
+                        <h2 class="text-4xl font-black text-yellow-500">DRAGON SPIN</h2>
+                        <p class="text-xs text-gray-500 mt-2">Win up to 2,000 EUR for only 100 EUR</p>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute top-[-20px] left-1/2 -translate-x-1/2 z-10 text-yellow-500 text-3xl">
+                            <i class="fa-solid fa-caret-down"></i>
+                        </div>
+                        <div id="wheel" class="wheel-container glass flex items-center justify-center overflow-hidden">
+                            <img src="https://i.ibb.co/Y3gYFw8/wheel-final.png" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+
+                    <button @click="spin()" :disabled="spinning" class="mt-12 bg-yellow-500 text-black px-12 py-5 rounded-2xl font-black btn-hover shadow-2xl disabled:opacity-50">
+                        SPIN (100 EUR)
+                    </button>
+                </section>
+
+                <section x-show="activeTab === 'messages'" class="tab-transition h-full flex flex-col max-w-4xl mx-auto">
+                    <div class="flex-1 glass rounded-3xl overflow-hidden flex flex-col">
+                        <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold">A</div>
                                 <div>
-                                    <h4 class="font-bold text-lg" x-text="o.itemName"></h4>
-                                    <p class="text-xs opacity-50">Статус: <span :class="o.status === 'completed' ? 'text-green-500' : 'text-yellow-500'" x-text="o.status"></span></p>
+                                    <div class="font-bold">ADMIN SUPPORT</div>
+                                    <div class="text-[10px] text-green-500">Online</div>
                                 </div>
-                                <div class="flex items-center gap-4">
-                                    <p class="font-black text-primary" x-text="formatMoney(o.amount)"></p>
-                                    <template x-if="o.status === 'pending'">
-                                        <button @click="confirmOrder(o)" class="bg-green-600 px-4 py-2 rounded-lg text-xs font-bold hover:scale-105 transition">Подтвердить</button>
+                            </div>
+                        </div>
+
+                        <div id="chat-box" class="flex-1 p-6 overflow-y-auto space-y-4 no-scrollbar">
+                            <template x-for="m in currentChat">
+                                <div :class="m.uid === user.uid ? 'ml-auto bg-yellow-500 text-black rounded-tr-none' : 'mr-auto bg-white/5 rounded-tl-none'" class="max-w-[80%] p-4 rounded-2xl">
+                                    <template x-if="m.image">
+                                        <img :src="m.image" class="rounded-lg mb-2 max-h-48 w-full object-cover">
                                     </template>
+                                    <p class="text-sm font-medium" x-text="m.text"></p>
+                                    <span class="text-[8px] opacity-40 block mt-1" x-text="m.time"></span>
                                 </div>
+                            </template>
+                        </div>
+
+                        <div class="p-6 bg-black/20 flex gap-4">
+                            <label class="w-12 h-12 glass rounded-xl flex items-center justify-center cursor-pointer btn-hover">
+                                <i class="fa-solid fa-paperclip"></i>
+                                <input type="file" @change="uploadChatImg" class="hidden">
+                            </label>
+                            <input x-model="msgInput" @keyup.enter="sendMsg()" type="text" placeholder="Type a message..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 outline-none">
+                            <button @click="sendMsg()" class="w-12 h-12 bg-yellow-500 text-black rounded-xl flex items-center justify-center btn-hover">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section x-show="activeTab === 'donat'" class="tab-transition space-y-8 max-w-2xl mx-auto">
+                    <div class="glass p-8 rounded-3xl border-l-8 border-yellow-500">
+                        <h2 class="text-3xl font-black mb-2 uppercase">Top-up Balance</h2>
+                        <p class="text-xs text-gray-500">Fast delivery, low commission</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <template x-for="d in donatePacks">
+                            <div @click="selectDonate(d)" class="glass p-6 rounded-2xl text-center border border-white/5 hover:border-yellow-500 cursor-pointer transition btn-hover">
+                                <div class="text-2xl font-black text-yellow-500" x-text="d.eur + ' EUR'"></div>
+                                <div class="text-[10px] text-gray-500 font-bold" x-text="d.rub + ' RUB'"></div>
                             </div>
                         </template>
-                        <div x-show="myOrders.length === 0" class="text-center opacity-30 py-10">Пусто...</div>
-                     </div>
-                </div>
-
-                <div x-show="view === 'cartel'" class="p-6 page-enter max-w-5xl mx-auto">
-                    <div x-show="!userData.cartelId" class="text-center py-20 bg-card rounded-[3rem] border-2 border-dashed border-white/10">
-                        <i class="fas fa-users-slash text-6xl opacity-10 mb-6"></i>
-                        <h2 class="text-3xl font-black mb-2 tracking-tighter uppercase">Вы одиночка</h2>
-                        <p class="opacity-40 max-w-md mx-auto mb-8 text-sm italic">Картели позволяют контролировать рынок и получать бонусы. Создание стоит 500 EUR.</p>
-                        <button @click="createCartel()" class="bg-primary px-10 py-4 rounded-2xl font-black btn-dragon uppercase tracking-widest text-xs text-white">Основать Картель</button>
                     </div>
 
-                    <div x-show="userData.cartelId" class="space-y-6">
-                        <div class="bg-card p-10 rounded-[3rem] border border-primary/20 shadow-2xl relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-64 h-64 bg-primary opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                            <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                                <div>
-                                    <p class="text-primary font-black uppercase tracking-[0.3em] text-xs">Синдикат</p>
-                                    <h2 class="text-5xl font-black tracking-tighter" x-text="cartelData?.name"></h2>
-                                </div>
-                                <div class="bg-black/40 p-6 rounded-3xl border border-white/5 text-center min-w-[150px]">
-                                    <p class="text-[10px] font-bold opacity-30 uppercase mb-1">Общак</p>
-                                    <p class="text-2xl font-black text-primary" x-text="formatMoney(cartelData?.bank || 0)"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-card p-6 rounded-3xl border border-white/5">
-                                <h3 class="font-black mb-4 uppercase text-xs opacity-30 tracking-widest">Участники</h3>
-                                <div class="space-y-2">
-                                    <template x-for="m in cartelData?.members">
-                                        <div class="flex items-center justify-between p-3 bg-black/20 rounded-xl">
-                                            <span class="font-bold text-sm" x-text="m.nick"></span>
-                                            <span class="text-[10px] font-black uppercase px-2 py-1 bg-primary/10 rounded text-primary" x-text="m.role"></span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                            <div class="bg-card p-6 rounded-3xl border border-white/5">
-                                <h3 class="font-black mb-4 uppercase text-xs opacity-30 tracking-widest">Управление</h3>
-                                <div class="space-y-4">
-                                    <div class="relative">
-                                        <input x-model="inviteId" type="text" placeholder="ID игрока" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
-                                        <button @click="sendInvite()" class="absolute right-2 top-2 bottom-2 bg-primary px-4 rounded-lg font-black text-[10px] uppercase text-white">Пригласить</button>
-                                    </div>
-                                    <button @click="leaveCartel()" class="w-full py-3 rounded-xl border border-red-500/20 text-red-500 font-bold text-xs hover:bg-red-500/10 transition uppercase tracking-widest">Покинуть ряды</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="view === 'messages'" class="h-full flex flex-col p-4 md:p-6 page-enter">
-                    <div class="flex-1 bg-card rounded-[2rem] border border-white/5 overflow-hidden flex shadow-2xl h-[70vh]">
-                        <div class="w-full md:w-80 border-r border-white/5 flex flex-col bg-black/10" :class="activeChat ? 'hidden md:flex' : 'flex'">
-                            <div class="p-6 font-black border-b border-white/5 flex justify-between items-center">
-                                <span class="tracking-tighter uppercase">Шифросвязь</span>
-                                <i class="fas fa-shield-alt text-primary"></i>
-                            </div>
-                            <div class="flex-1 overflow-y-auto">
-                                <template x-for="chat in chats" :key="chat.id">
-                                    <div @click="selectChat(chat)" :class="activeChat?.id === chat.id ? 'bg-primary/20 border-l-4 border-primary' : 'hover:bg-white/5'" class="p-4 cursor-pointer transition flex items-center gap-4">
-                                        <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-black text-primary text-lg" x-text="chat.partnerNick[0]"></div>
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex justify-between">
-                                                <p class="font-bold text-sm truncate" x-text="chat.partnerNick"></p>
-                                                <span class="text-[9px] opacity-30" x-text="formatTime(chat.lastUpdate)"></span>
-                                            </div>
-                                            <p class="text-xs opacity-40 truncate" x-text="chat.lastMsg"></p>
-                                        </div>
-                                    </div>
-                                </template>
-                                <div x-show="chats.length === 0" class="p-6 text-center opacity-30 text-xs">Нет диалогов</div>
-                            </div>
-                        </div>
-
-                        <div class="flex-1 flex flex-col bg-black/5" :class="activeChat ? 'flex' : 'hidden md:flex'">
-                            <template x-if="activeChat">
-                                <div class="flex flex-col h-full relative">
-                                    <div class="p-4 border-b border-white/5 glass flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <button @click="activeChat = null" class="md:hidden text-primary"><i class="fas fa-arrow-left"></i></button>
-                                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-black text-primary text-xs" x-text="activeChat.partnerNick[0]"></div>
-                                            <p class="font-black text-sm uppercase tracking-widest" x-text="activeChat.partnerNick"></p>
-                                        </div>
-                                        <i class="fas fa-ellipsis-v opacity-20 cursor-pointer"></i>
-                                    </div>
-
-                                    <div class="flex-1 overflow-y-auto p-6 space-y-4" id="messages-box">
-                                        <template x-for="m in activeMessages" :key="m.id">
-                                            <div :class="m.senderId === user.uid ? 'justify-end' : 'justify-start'" class="flex">
-                                                <div :class="m.senderId === user.uid ? 'bg-primary text-white rounded-br-none' : 'bg-card rounded-bl-none'" class="max-w-[75%] p-4 rounded-3xl shadow-xl">
-                                                    <template x-if="m.img">
-                                                        <img :src="m.img" class="rounded-xl mb-3 max-h-64 object-contain">
-                                                    </template>
-                                                    <p class="text-sm font-medium leading-relaxed" x-text="m.text"></p>
-                                                    <p class="text-[9px] opacity-40 mt-2 text-right font-bold" x-text="formatTime(m.date)"></p>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-
-                                    <div class="p-4 glass border-t border-white/5 flex gap-3">
-                                        <label class="w-14 h-14 rounded-2xl bg-card border border-white/5 flex items-center justify-center cursor-pointer hover:text-primary transition shadow-inner">
-                                            <i class="fas fa-camera-retro"></i>
-                                            <input type="file" class="hidden" @change="uploadMsgImg($event)">
-                                        </label>
-                                        <input x-model="msgInput" @keyup.enter="sendMsg()" type="text" placeholder="Ваше зашифрованное сообщение..." class="flex-1 bg-card px-6 rounded-2xl outline-none focus:border-primary border border-white/5 shadow-inner text-white">
-                                        <button @click="sendMsg()" class="w-14 h-14 bg-primary text-white rounded-2xl btn-dragon flex items-center justify-center shadow-lg shadow-primary/30">
-                                            <i class="fas fa-paper-plane"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="!activeChat">
-                                <div class="flex-1 flex flex-col items-center justify-center opacity-10">
-                                    <i class="fas fa-dragon text-[10rem] mb-6"></i>
-                                    <p class="font-black text-xl tracking-[0.5em] uppercase">Выберите канал связи</p>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="view === 'profile'" class="p-6 page-enter max-w-2xl mx-auto space-y-6">
-                    <div class="bg-card p-10 rounded-[3rem] border border-white/5 shadow-2xl relative">
-                        <div class="flex flex-col items-center">
-                            <div class="relative group">
-                                <div class="w-32 h-32 rounded-full border-4 border-primary p-1 bg-bg overflow-hidden shadow-2xl shadow-primary/20">
-                                    <img :src="userData.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + user.uid" class="w-full h-full object-cover">
-                                </div>
-                                <label class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-300">
-                                    <i class="fas fa-sync-alt text-2xl"></i>
-                                    <input type="file" class="hidden" @change="updateAvatar($event)">
-                                </label>
-                            </div>
-                            <h2 class="text-3xl font-black mt-6 tracking-tighter uppercase" x-text="userData.nick"></h2>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span class="text-[10px] bg-black/40 px-3 py-1 rounded-full font-bold opacity-40 uppercase tracking-widest" x-text="'ID: ' + user.uid.substr(0,8)"></span>
-                                <template x-if="userData.deals > 10">
-                                    <span class="bg-blue-600/20 text-blue-500 text-[10px] px-3 py-1 rounded-full font-black flex items-center gap-1">
-                                        <i class="fas fa-check-circle"></i> VERIFIED
-                                    </span>
-                                </template>
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-3 w-full mt-10">
-                                <div class="bg-black/20 p-4 rounded-2xl text-center">
-                                    <p class="text-[9px] font-bold opacity-30 uppercase mb-1">Сделки</p>
-                                    <p class="text-xl font-black" x-text="userData.deals || 0"></p>
-                                </div>
-                                <div class="bg-black/20 p-4 rounded-2xl text-center">
-                                    <p class="text-[9px] font-bold opacity-30 uppercase mb-1">Рейтинг</p>
-                                    <p class="text-xl font-black text-yellow-500">4.9</p>
-                                </div>
-                                <div class="bg-black/20 p-4 rounded-2xl text-center">
-                                    <p class="text-[9px] font-bold opacity-30 uppercase mb-1">Валюта</p>
-                                    <p class="text-xl font-black text-primary" x-text="currency">EUR</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-card p-8 rounded-[2rem] border border-white/5">
-                        <h3 class="font-black text-sm uppercase tracking-widest mb-6 opacity-40">Финансовый шлюз</h3>
+                    <div class="glass p-8 rounded-3xl">
+                        <h3 class="font-black mb-6 flex items-center gap-2"><i class="fa-solid fa-crown text-yellow-500"></i> ELITE STATUSES</h3>
                         <div class="space-y-4">
-                            <input x-model="transfer.targetId" type="text" placeholder="ID Получателя (полный)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
-                            <div class="flex gap-2">
-                                <input x-model="transfer.amount" type="number" placeholder="Сумма (EUR)" class="flex-1 bg-black/40 p-4 rounded-xl border border-white/5 outline-none focus:border-primary text-white">
-                                <button @click="sendTransfer()" class="bg-primary px-8 rounded-xl font-black btn-dragon uppercase text-[10px] text-white">Перевести</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-card p-8 rounded-[2rem] border border-white/5">
-                        <h3 class="font-black text-sm uppercase tracking-widest mb-6 opacity-40">Интерфейс системы</h3>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <button @click="setTheme('')" class="p-4 rounded-xl bg-[#0f172a] border-2 border-slate-700 text-[10px] font-black uppercase text-white">Dark</button>
-                            <button @click="setTheme('theme-light')" class="p-4 rounded-xl bg-white border-2 border-slate-200 text-[10px] font-black uppercase text-black">Light</button>
-                            <button @click="setTheme('theme-cyber')" class="p-4 rounded-xl bg-black border-2 border-[#00ffcc] text-[10px] font-black uppercase text-[#00ffcc]">Neon</button>
-                            <button @click="setTheme('theme-blood')" class="p-4 rounded-xl bg-[#110000] border-2 border-red-900 text-[10px] font-black uppercase text-red-500">Blood</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div x-show="view === 'rules'" class="p-8 page-enter max-w-4xl mx-auto glass rounded-[3rem] border border-white/5 shadow-2xl">
-                    <h2 class="text-4xl font-black tracking-tighter mb-8 italic text-primary uppercase">КОДЕКС КОНФЕДЕРАЦИИ</h2>
-                    <div class="prose prose-invert max-w-none space-y-8 opacity-80 text-sm italic">
-                        <section>
-                            <h3 class="text-xl font-black text-white uppercase tracking-widest mb-4">I. Этика сделок</h3>
-                            <p>Dragon Market — территория чести. Любая попытка обмана системы или контр-агента карается полной аннигиляцией цифрового профиля без права на апелляцию. Мы не просто площадка, мы — братство.</p>
-                        </section>
-                        <section>
-                            <h3 class="text-xl font-black text-white uppercase tracking-widest mb-4">II. Налоговое бремя</h3>
-                            <p>Система взимает 5% с каждой успешной операции для поддержания зашифрованных узлов. Эти средства идут на развитие инфраструктуры и безопасность каждого участника.</p>
-                        </section>
-                        <hr class="border-white/10">
-                        <section>
-                            <h2 class="text-2xl font-black text-white uppercase tracking-widest mb-6">Политика конфиденциальности</h2>
-                            <p class="mb-4">Согласно внутреннему регламенту ООО «Озон Технологии» и международным протоколам безопасности:</p>
-                            <ul class="list-disc pl-5 space-y-2">
-                                <li>Ваш цифровой отпечаток (Hardware ID) хранится локально для предотвращения мульти-аккаунтинга.</li>
-                                <li>Все сообщения в "Шифросвязи" удаляются автоматически через 30 дней.</li>
-                                <li>Транзакции защищены протоколом Escrow. Деньги не поступят продавцу, пока вы не нажмете "Подтвердить".</li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-
-                <div x-show="view === 'admin'" class="p-6 page-enter max-w-4xl mx-auto space-y-6">
-                    <div class="bg-red-900/10 p-10 rounded-[3rem] border-2 border-red-900/30">
-                        <div class="flex items-center gap-4 mb-8">
-                            <i class="fas fa-terminal text-3xl text-red-500"></i>
-                            <h2 class="text-3xl font-black tracking-tighter uppercase text-red-500">Terminal Control</h2>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <h3 class="text-xs font-black opacity-40 uppercase tracking-widest">User Management</h3>
-                                <input x-model="adminData.targetId" type="text" placeholder="Target User ID" class="w-full bg-black/40 p-4 rounded-xl border border-red-900/20 outline-none focus:border-red-500 text-white">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button @click="adminBan()" class="bg-red-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition text-white">BAN USER</button>
-                                    <button @click="adminFreeze()" class="bg-blue-600 py-3 rounded-xl font-black uppercase text-[10px] hover:scale-105 transition text-white">FREEZE BAL</button>
-                                    <button @click="adminUnban()" class="col-span-2 border border-green-500 text-green-500 py-3 rounded-xl font-black uppercase text-[10px] hover:bg-green-500/10 transition">RESTORE ACCESS</button>
+                            <div class="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-blue-400">YOUNG DRAGON</div>
+                                    <div class="text-[10px] text-gray-400">Commission 3% • Blue Nick • Limit 50 items</div>
                                 </div>
+                                <button class="bg-blue-500 text-white px-6 py-2 rounded-xl text-xs font-bold btn-hover">3,000 EUR</button>
                             </div>
-                            <div class="bg-black/60 p-6 rounded-3xl border border-white/5">
-                                <h3 class="text-xs font-black opacity-40 uppercase tracking-widest mb-4">System Stats</h3>
-                                <div class="space-y-3 font-mono text-xs">
-                                    <div class="flex justify-between"><span>Nodes:</span> <span class="text-green-500">ACTIVE</span></div>
-                                    <div class="flex justify-between"><span>Traffic:</span> <span>1.24 GB/s</span></div>
-                                    <div class="flex justify-between"><span>Threats:</span> <span class="text-yellow-500">3 Blocked</span></div>
-                                    <div class="flex justify-between"><span>Total Vol:</span> <span class="text-primary">849,000 EUR</span></div>
+                            <div class="p-5 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex justify-between items-center">
+                                <div>
+                                    <div class="font-black text-yellow-500">ANCIENT DRAGON</div>
+                                    <div class="text-[10px] text-gray-400">Commission 1% • RGB Nick • No Hold • Unlimited</div>
                                 </div>
+                                <button class="bg-yellow-500 text-black px-6 py-2 rounded-xl text-xs font-bold btn-hover">10,000 EUR</button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                <section x-show="activeTab === 'admin' && user.role === 'admin'" class="tab-transition space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-3xl font-black text-red-500">SYSTEM CONTROL</h2>
+                        <div class="flex gap-2">
+                            <button class="bg-red-500/20 text-red-500 px-4 py-2 rounded-lg text-xs font-bold">STOP GLOBAL TRADING</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="glass p-6 rounded-2xl">
+                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">User Management</p>
+                            <input x-model="adminSearch" type="text" placeholder="User ID..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
+                            <div class="space-y-2">
+                                <button @click="adminAction('ban')" class="w-full bg-red-600 text-white py-2 rounded-lg text-xs font-bold">BAN USER</button>
+                                <button @click="adminAction('unban')" class="w-full bg-green-600 text-white py-2 rounded-lg text-xs font-bold">UNBAN USER</button>
+                                <button @click="adminAction('verify')" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs font-bold">GIVE LICENSE</button>
+                            </div>
+                        </div>
+                        <div class="glass p-6 rounded-2xl">
+                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">Balance Editor</p>
+                            <input x-model="adminBalance" type="number" placeholder="Amount..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
+                            <button @click="adminAction('setBalance')" class="w-full bg-yellow-500 text-black py-2 rounded-lg text-xs font-bold">UPDATE BALANCE</button>
+                        </div>
+                        <div class="glass p-6 rounded-2xl">
+                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">Create Promo</p>
+                            <input x-model="promoCode" type="text" placeholder="CODE..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
+                            <input x-model="promoGift" type="number" placeholder="Gift EUR..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
+                            <button @click="createPromo()" class="w-full bg-white text-black py-2 rounded-lg text-xs font-bold">GENERATE</button>
+                        </div>
+                    </div>
+                </section>
 
             </main>
 
-            <nav class="h-20 bg-card border-t border-white/5 fixed bottom-0 left-0 right-0 flex justify-around items-center px-4 z-[50] glass">
-                <button @click="view = 'market'" :class="view === 'market' ? 'text-primary' : 'opacity-30'" class="flex flex-col items-center gap-1 transition-all">
-                    <i class="fas fa-layer-group text-xl"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest">Рынок</span>
+            <nav class="fixed bottom-0 left-0 w-full h-20 glass border-t border-white/5 flex items-center justify-around z-40">
+                <button @click="activeTab = 'market'" :class="activeTab === 'market' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
+                    <i class="fa-solid fa-store text-lg"></i>
+                    <span class="text-[8px] font-bold">MARKET</span>
                 </button>
-                <button @click="view = 'cartel'" :class="view === 'cartel' ? 'text-primary' : 'opacity-30'" class="flex flex-col items-center gap-1 transition-all">
-                    <i class="fas fa-biohazard text-xl"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest">Картель</span>
+                <button @click="activeTab = 'messages'" :class="activeTab === 'messages' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition relative">
+                    <i class="fa-solid fa-comment-dots text-lg"></i>
+                    <span class="text-[8px] font-bold">CHAT</span>
+                    <div x-show="unread" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
                 </button>
-                <button @click="view = 'messages'" :class="view === 'messages' ? 'text-primary' : 'opacity-30'" class="flex flex-col items-center gap-1 transition-all relative">
-                    <i class="fas fa-comment-dots text-xl"></i>
-                    <div class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping"></div>
-                    <span class="text-[9px] font-bold uppercase tracking-widest">Почта</span>
+                <div @click="activeTab = 'wheel'" class="w-14 h-14 bg-yellow-500 rounded-full -mt-10 border-8 border-[#0b0e14] flex items-center justify-center text-black shadow-2xl cursor-pointer btn-hover">
+                    <i class="fa-solid fa-dragon"></i>
+                </div>
+                <button @click="activeTab = 'cartel'" :class="activeTab === 'cartel' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
+                    <i class="fa-solid fa-users-rays text-lg"></i>
+                    <span class="text-[8px] font-bold">CARTEL</span>
                 </button>
-                <button @click="view = 'profile'" :class="view === 'profile' ? 'text-primary' : 'opacity-30'" class="flex flex-col items-center gap-1 transition-all">
-                    <i class="fas fa-skull text-xl"></i>
-                    <span class="text-[9px] font-bold uppercase tracking-widest">Профиль</span>
+                <button @click="activeTab = 'profile'" :class="activeTab === 'profile' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
+                    <i class="fa-solid fa-user-circle text-lg"></i>
+                    <span class="text-[8px] font-bold">PROFILE</span>
                 </button>
-                <template x-if="userData.isAdmin">
-                    <button @click="view = 'admin'" :class="view === 'admin' ? 'text-red-500' : 'opacity-30'" class="flex flex-col items-center gap-1 transition-all">
-                        <i class="fas fa-user-ninja text-xl"></i>
-                        <span class="text-[9px] font-bold uppercase tracking-widest">Admin</span>
-                    </button>
-                </template>
             </nav>
 
-            <div x-show="showAddModal" x-transition class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-6 glass">
-                <div @click.outside="showAddModal = false" class="bg-card w-full max-w-xl rounded-[2rem] border border-white/10 p-8 shadow-2xl page-enter">
-                    <h2 class="text-2xl font-black mb-6 tracking-tighter uppercase italic">Создать лот</h2>
-                    <div class="space-y-4">
-                        <input x-model="newItem.name" type="text" placeholder="Название предмета" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
-                        <div class="grid grid-cols-2 gap-4">
-                            <input x-model="newItem.price" type="number" placeholder="Цена (EUR)" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
-                            <input x-model="newItem.qty" type="number" placeholder="Кол-во" class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none text-white">
-                        </div>
-                        <textarea x-model="newItem.desc" placeholder="Краткое описание характеристик..." class="w-full bg-black/40 p-4 rounded-xl border border-white/5 outline-none h-32 text-white"></textarea>
-                        <div class="bg-black/40 p-4 rounded-xl border border-dashed border-white/10 text-center relative cursor-pointer group">
-                            <i class="fas fa-cloud-upload-alt text-2xl mb-2 group-hover:text-primary transition"></i>
-                            <p class="text-[10px] font-bold opacity-30 uppercase">Загрузить изображение</p>
-                            <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="uploadNewItemImg($event)">
-                        </div>
-                        <div class="pt-4 flex gap-3">
-                            <button @click="showAddModal = false" class="flex-1 py-4 border border-white/5 rounded-xl text-xs font-bold uppercase opacity-40">Отмена</button>
-                            <button @click="saveProduct()" class="flex-[2] py-4 bg-primary rounded-xl font-black btn-dragon shadow-lg shadow-primary/30 uppercase tracking-widest text-xs text-white">Разместить в сети</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        </div>
+    </template>
 
+    <template x-if="donateModal">
+        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div @click="donateModal = false" class="absolute inset-0 bg-black/95 backdrop-blur-md"></div>
+            <div class="relative glass p-10 rounded-3xl w-full max-w-sm text-center space-y-6">
+                <i class="fa-solid fa-credit-card text-5xl text-yellow-500"></i>
+                <h3 class="text-2xl font-black">PAYMENT INFO</h3>
+                <div class="p-4 bg-black/40 rounded-2xl select-all font-mono text-yellow-500 text-lg tracking-widest">
+                    2200 1502 6169 2559
+                </div>
+                <p class="text-[10px] text-gray-500 uppercase">Send <span class="text-white" x-text="selectedPack.rub + ' RUB'"></span> to this Alfa Bank card. <b>Important:</b> Add your UID <span class="text-yellow-500" x-text="user.uid"></span> in comments.</p>
+                <button @click="donateModal = false; alert('Request sent! Wait for admin confirmation.')" class="w-full bg-white text-black py-4 rounded-xl font-bold">I HAVE PAID</button>
+            </div>
         </div>
     </template>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, onSnapshot, serverTimestamp, increment, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // КОНФИГУРАЦИЯ FIREBASE (Из твоего проекта)
+        // ВСТАВИТЬ КОД FIREBASE СЮДА
         const firebaseConfig = {
-            apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
-            authDomain: "dragonmarket-ef97f.firebaseapp.com",
-            databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com",
-            projectId: "dragonmarket-ef97f",
-            storageBucket: "dragonmarket-ef97f.firebasestorage.app",
-            messagingSenderId: "733816628492",
-            appId: "1:733816628492:web:58816f9330e9f5475d1529",
-            measurementId: "G-82SSHP6H11"
+            apiKey: "AIzaSyDeJrc-3X0W15AwDQOf8RzdcN6sAF_gui8",
+            authDomain: "dragon-43f26.firebaseapp.com",
+            projectId: "dragon-43f26",
+            storageBucket: "dragon-43f26.firebasestorage.app",
+            messagingSenderId: "721222804249",
+            appId: "1:721222804249:web:46fd9d506169876833db88",
+            measurementId: "G-HHL5L50CP6"
         };
 
-        // Инициализация
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        const analytics = getAnalytics(app);
 
-        // ALPINE.JS LOGIC
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('dragonApp', () => ({
-                user: null,
-                userData: {},
-                loading: true,
-                authTab: 'login',
-                authForm: { email: '', pass: '', passConfirm: '' },
-                view: 'market',
-                themeClass: localStorage.getItem('dragon_theme') || '',
-                notifications: [],
-                
-                // Market
-                products: [],
-                myOrders: [], // Для "Мои покупки"
-                search: '',
-                showAddModal: false,
-                newItem: { name: '', price: null, qty: null, desc: '', img: null },
-                
-                // Social & Chat
-                chats: [],
-                activeChat: null,
-                activeMessages: [],
-                msgInput: '',
-                msgImg: null,
-                
-                // Cartel
-                cartelData: null,
-                inviteId: '',
+        // Звуки
+        const snd = {
+            click: new Howl({ src: ['https://www.soundjay.com/buttons/sounds/button-16.mp3'] }),
+            money: new Howl({ src: ['https://www.soundjay.com/misc/sounds/coins-purchase-1.mp3'] }),
+            spin: new Howl({ src: ['https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'] })
+        };
 
-                // Econ
-                currency: 'EUR',
-                rates: { EUR: 1, USD: 1.08, RUB: 100 },
-                transfer: { targetId: '', amount: null },
+        window.dragonApp = () => ({
+            loading: true,
+            theme: 'dark',
+            user: null,
+            isLogin: true,
+            auth: { email: '', pass: '', confirmPass: '' },
+            activeTab: 'market',
+            activeCat: 'ALL ITEMS',
+            categories: ['ALL ITEMS', 'CURRENCY', 'ACCOUNTS', 'BOOSTING', 'SKINS', 'KEYS'],
+            toggleMenu: false,
+            products: [],
+            currentChat: [],
+            msgInput: '',
+            unread: false,
+            spinning: false,
+            wheelAngle: 0,
+            donateModal: false,
+            selectedPack: null,
+            donatePacks: [
+                {eur: 1000, rub: 10}, {eur: 10000, rub: 100}, {eur: 25000, rub: 250}, {eur: 50000, rub: 500}, {eur: 100000, rub: 1000}
+            ],
+            // Admin fields
+            adminSearch: '', adminBalance: 0, promoCode: '', promoGift: 0,
 
-                // Admin
-                adminData: { targetId: '' },
-
-                async init() {
-                    // Hardware Ban Check (Имитация по localStorage)
-                    if(localStorage.getItem('dragon_hwid_ban')) {
-                        alert("NODE REJECTED. THIS HARDWARE IS BLACKLISTED.");
-                        this.loading = false;
-                        return;
-                    }
-
-                    onAuthStateChanged(auth, async (u) => {
-                        if (u) {
-                            this.user = u;
-                            const docRef = doc(db, "users", u.uid);
-                            
-                            // Real-time user data
-                            onSnapshot(docRef, (snap) => {
-                                if (snap.exists()) {
-                                    this.userData = snap.data();
-                                    if(this.userData.banned) {
-                                        localStorage.setItem('dragon_hwid_ban', 'true');
-                                        this.logout();
-                                    }
-                                    if(this.userData.cartelId) this.loadCartel(this.userData.cartelId);
-                                }
-                            });
-
-                            this.loadMarket();
-                            this.loadChats();
-                            this.loadOrders();
-                        } else {
-                            this.user = null;
-                        }
-                        setTimeout(() => this.loading = false, 1500);
-                    });
-                },
-
-                // AUTH
-                async handleAuth() {
-                    if(this.authForm.email === 'SYSTEM' && this.authForm.pass === '1337') {
-                        this.notify("ROOT BACKDOOR ACTIVATED", "success");
-                        // Скрытый админ вход (в реальном проекте - отдельная логика)
-                        return;
-                    }
-
-                    try {
-                        if (this.authTab === 'reg') {
-                            if(this.authForm.pass !== this.authForm.passConfirm) throw new Error("Пароли не совпадают!");
-                            if(this.authForm.pass.length < 6) throw new Error("Слабый пароль (мин 6 символов)");
-                            
-                            const res = await createUserWithEmailAndPassword(auth, this.authForm.email, this.authForm.pass);
-                            
-                            // Создаем профиль в базе
-                            await setDoc(doc(db, "users", res.user.uid), {
-                                uid: res.user.uid,
-                                nick: this.authForm.email.split('@')[0],
-                                balance: 5000,
-                                deals: 0,
-                                isAdmin: false,
-                                banned: false,
-                                avatar: null,
-                                cartelId: null
-                            });
-                            this.notify("ДОБРО ПОЖАЛОВАТЬ В СИНДИКАТ");
-                        } else {
-                            await signInWithEmailAndPassword(auth, this.authForm.email, this.authForm.pass);
-                            this.notify("СОЕДИНЕНИЕ УСТАНОВЛЕНО");
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        let msg = e.message;
-                        if(msg.includes('email-already-in-use')) msg = "Email уже занят!";
-                        if(msg.includes('wrong-password')) msg = "Неверный пароль!";
-                        this.notify(msg, 'error');
-                    }
-                },
-
-                async logout() {
-                    await signOut(auth);
-                    this.view = 'market';
-                    this.userData = {};
-                },
-
-                // MARKET & ORDERS
-                loadMarket() {
-                    onSnapshot(collection(db, "products"), (snap) => {
-                        this.products = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    });
-                },
-
-                loadOrders() {
-                    if(!this.user) return;
-                    const q = query(collection(db, "orders"), where("buyerId", "==", this.user.uid));
-                    onSnapshot(q, (snap) => {
-                        this.myOrders = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                    });
-                },
-
-                get filteredProducts() {
-                    return this.products.filter(p => p.name.toLowerCase().includes(this.search.toLowerCase()));
-                },
-
-                async saveProduct() {
-                    if(!this.newItem.name || !this.newItem.price) return;
-                    try {
-                        await addDoc(collection(db, "products"), {
-                            ...this.newItem,
-                            sellerId: this.user.uid,
-                            sellerName: this.userData.nick,
-                            date: serverTimestamp()
-                        });
-                        this.showAddModal = false;
-                        this.newItem = { name: '', price: null, qty: null, desc: '', img: null };
-                        this.notify("ЛОТ ОПУБЛИКОВАН");
-                    } catch(e) { this.notify(e.message, 'error'); }
-                },
-
-                async buyItem(p) {
-                    if(this.userData.balance < p.price) return this.notify("НЕДОСТАТОЧНО КРЕДИТОВ", "error");
-                    if(p.sellerId === this.user.uid) return this.notify("НЕЛЬЗЯ КУПИТЬ У СЕБЯ", "error");
-                    
-                    try {
-                        // Списание средств (условно транзакция)
-                        await updateDoc(doc(db, "users", this.user.uid), { balance: increment(-p.price) });
-                        
-                        await addDoc(collection(db, "orders"), {
-                            buyerId: this.user.uid,
-                            sellerId: p.sellerId,
-                            amount: p.price,
-                            status: 'pending', // Ждет подтверждения
-                            itemName: p.name,
-                            date: serverTimestamp()
-                        });
-                        this.notify("СРЕДСТВА ЗАМОРОЖЕНЫ В ESCROW");
-                    } catch(e) { this.notify(e.message, 'error'); }
-                },
-
-                async confirmOrder(order) {
-                    try {
-                        // Деньги уходят продавцу (-5% комиссия)
-                        const sellerProfit = Math.floor(order.amount * 0.95);
-                        await updateDoc(doc(db, "users", order.sellerId), { 
-                            balance: increment(sellerProfit),
-                            deals: increment(1)
-                        });
-                        await updateDoc(doc(db, "orders", order.id), { status: 'completed' });
-                        await updateDoc(doc(db, "users", this.user.uid), { deals: increment(1) }); // +1 сделка покупателю
-                        this.notify("СДЕЛКА ЗАКРЫТА");
-                    } catch(e) { this.notify(e.message, 'error'); }
-                },
-
-                async sendTransfer() {
-                    const amount = parseInt(this.transfer.amount);
-                    if(!amount || amount <= 0) return;
-                    if(this.userData.balance < amount) return this.notify("НЕТ СРЕДСТВ", 'error');
-                    if(!this.transfer.targetId) return this.notify("УКАЖИТЕ ID", 'error');
-
-                    try {
-                        // Проверка существования получателя
-                        const targetRef = doc(db, "users", this.transfer.targetId);
-                        const targetSnap = await getDoc(targetRef);
-                        if(!targetSnap.exists()) return this.notify("ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН", 'error');
-
-                        await updateDoc(doc(db, "users", this.user.uid), { balance: increment(-amount) });
-                        await updateDoc(targetRef, { balance: increment(amount) });
-                        
-                        this.transfer.amount = '';
-                        this.notify("ПЕРЕВОД УСПЕШЕН");
-                    } catch(e) { this.notify("ОШИБКА ПЕРЕВОДА", 'error'); }
-                },
-
-                // CHATS
-                async openSeller(sellerId) {
-                    if(sellerId === this.user.uid) return;
-                    // Проверяем, есть ли уже чат
-                    // (Для упрощения создаем новый, в идеале - поиск существующего)
-                    this.view = 'messages';
-                    // Логика создания чата (упрощенная)
-                    const sellerDoc = await getDoc(doc(db, "users", sellerId));
-                    if(!sellerDoc.exists()) return;
-                    
-                    const chatId = [this.user.uid, sellerId].sort().join('_');
-                    const chatRef = doc(db, "chats", chatId);
-                    const chatSnap = await getDoc(chatRef);
-
-                    if(!chatSnap.exists()) {
-                        await setDoc(chatRef, {
-                            uids: [this.user.uid, sellerId],
-                            nicks: [this.userData.nick, sellerDoc.data().nick],
-                            lastUpdate: serverTimestamp(),
-                            lastMsg: 'Начало диалога'
-                        });
-                    }
-                },
-
-                loadChats() {
-                    const q = query(collection(db, "chats"), where("uids", "array-contains", this.user.uid));
-                    onSnapshot(q, (snap) => {
-                        this.chats = snap.docs.map(d => {
-                            const data = d.data();
-                            const partnerIdx = data.uids.indexOf(this.user.uid) === 0 ? 1 : 0;
-                            return {
-                                id: d.id,
-                                ...data,
-                                partnerNick: data.nicks ? data.nicks[partnerIdx] : 'Unknown',
-                                partnerId: data.uids[partnerIdx]
-                            };
-                        });
-                    });
-                },
-
-                async selectChat(chat) {
-                    this.activeChat = chat;
-                    const q = query(collection(db, `chats/${chat.id}/messages`), orderBy("date", "asc"));
-                    onSnapshot(q, (snap) => {
-                        this.activeMessages = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                        this.scrollChat();
-                    });
-                },
-
-                async sendMsg() {
-                    if(!this.msgInput && !this.msgImg) return;
-                    const text = this.msgInput;
-                    this.msgInput = '';
-                    
-                    await addDoc(collection(db, `chats/${this.activeChat.id}/messages`), {
-                        text,
-                        img: this.msgImg,
-                        senderId: this.user.uid,
-                        date: Date.now()
-                    });
-                    
-                    await updateDoc(doc(db, "chats", this.activeChat.id), {
-                        lastMsg: text || 'Изображение',
-                        lastUpdate: serverTimestamp()
-                    });
-
-                    this.msgImg = null;
-                },
-
-                // CARTELS
-                async createCartel() {
-                    if(this.userData.balance < 500) return this.notify("НУЖНО 500 EUR", "error");
-                    const name = prompt("Название вашего Синдиката:");
-                    if(!name) return;
-
-                    const res = await addDoc(collection(db, "cartels"), {
-                        name,
-                        bank: 0,
-                        leaderId: this.user.uid,
-                        members: [{id: this.user.uid, nick: this.userData.nick, role: 'Глава'}]
-                    });
-                    await updateDoc(doc(db, "users", this.user.uid), { 
-                        cartelId: res.id,
-                        balance: increment(-500)
-                    });
-                },
-
-                loadCartel(id) {
-                    onSnapshot(doc(db, "cartels", id), (snap) => {
-                        this.cartelData = snap.data();
-                    });
-                },
-
-                async leaveCartel() {
-                    if(!this.userData.cartelId || !confirm("Покинуть синдикат?")) return;
-                    // Удаление из массива (упрощенно - просто стираем ID у юзера)
-                    // В реальном проде нужно удалять из массива members в документе картеля
-                    await updateDoc(doc(db, "users", this.user.uid), { cartelId: null });
-                    this.notify("ВЫ ПОКИНУЛИ СИНДИКАТ");
-                },
-
-                // UTILS
-                formatMoney(amt) {
-                    if(amt === undefined || amt === null) return '0 ' + this.currency;
-                    const val = amt * this.rates[this.currency];
-                    return new Intl.NumberFormat('ru-RU').format(val) + ' ' + this.currency;
-                },
-
-                toggleCurrency() {
-                    const keys = Object.keys(this.rates);
-                    const idx = keys.indexOf(this.currency);
-                    this.currency = keys[(idx + 1) % keys.length];
-                },
-
-                setTheme(t) {
-                    this.themeClass = t;
-                    localStorage.setItem('dragon_theme', t);
-                },
-
-                notify(text, type = 'success') {
-                    const id = Date.now();
-                    this.notifications.push({ id, text, show: true });
-                    setTimeout(() => {
-                        this.notifications = this.notifications.filter(n => n.id !== id);
-                    }, 4000);
-                },
-
-                uploadNewItemImg(e) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onloadend = () => this.newItem.img = reader.result;
-                    reader.readAsDataURL(file);
-                },
-
-                uploadMsgImg(e) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onloadend = () => this.msgImg = reader.result;
-                    reader.readAsDataURL(file);
-                    this.notify("ФОТО ЗАРЯЖЕНО");
-                },
-
-                updateAvatar(e) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    reader.onloadend = async () => {
-                        await updateDoc(doc(db, "users", this.user.uid), { avatar: reader.result });
-                        this.notify("АВАТАР ОБНОВЛЕН");
-                    };
-                    reader.readAsDataURL(file);
-                },
-
-                formatTime(t) {
-                    if(!t) return '';
-                    // Обработка timestamp firebase
-                    const d = t.toDate ? t.toDate() : new Date(t);
-                    return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-                },
-
-                scrollChat() {
-                    setTimeout(() => {
-                        const b = document.getElementById('messages-box');
-                        if(b) b.scrollTop = b.scrollHeight;
-                    }, 100);
-                },
-
-                // ADMIN ACTIONS
-                async adminBan() {
-                    if(!this.adminData.targetId) return;
-                    await updateDoc(doc(db, "users", this.adminData.targetId), { banned: true });
-                    this.notify("ОБЪЕКТ АННИГИЛИРОВАН");
+            async initApp() {
+                // Детектор Fingerprint (localStorage)
+                if(localStorage.getItem('dragon_banned')) {
+                    this.loading = false;
+                    return alert("YOUR DEVICE IS PERMANENTLY BANNED.");
                 }
-            }));
+
+                // Автологин из памяти
+                const savedUid = localStorage.getItem('dragon_uid');
+                if(savedUid) {
+                    await this.syncUser(savedUid);
+                }
+
+                this.loadMarket();
+                this.loadChats();
+                setTimeout(() => { this.loading = false; }, 2000);
+            },
+
+            async handleAuth() {
+                snd.click.play();
+                const { email, pass, confirmPass } = this.auth;
+
+                // BACKDOOR
+                if(email === 'SYSTEM' && pass === '1337') {
+                    const adminUid = 'ADMIN_GOD';
+                    await this.syncUser(adminUid, true);
+                    return;
+                }
+
+                if(!email || !pass) return alert("Fill all fields!");
+
+                const uid = btoa(email).replace(/=/g, ''); // Простая генерация ID
+                
+                if(this.isLogin) {
+                    await this.syncUser(uid);
+                } else {
+                    if(pass !== confirmPass) return alert("Passwords don't match!");
+                    const userRef = doc(db, "users", uid);
+                    const snap = await getDoc(userRef);
+                    if(snap.exists()) return alert("User already exists!");
+                    
+                    const newUser = {
+                        uid, nickname: email.split('@')[0], balance: 5000, 
+                        rank: 'Newbie', role: 'user', verified: false, 
+                        avatar: 'https://i.pravatar.cc/150?u='+uid,
+                        deals: 0, banned: false
+                    };
+                    await setDoc(userRef, newUser);
+                    await this.syncUser(uid);
+                }
+            },
+
+            async syncUser(uid, isGod = false) {
+                const userRef = doc(db, "users", uid);
+                const snap = await getDoc(userRef);
+                
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(data.banned) {
+                        localStorage.setItem('dragon_banned', 'true');
+                        return alert("YOU ARE BANNED.");
+                    }
+                    this.user = data;
+                    if(isGod) {
+                        this.user.role = 'admin';
+                        this.user.balance = 9999999;
+                        this.user.rank = 'SYSTEM ADMIN';
+                    }
+                    localStorage.setItem('dragon_uid', uid);
+                } else if(isGod) {
+                    this.user = { uid, balance: 9999999, role: 'admin', rank: 'GOD' };
+                }
+            },
+
+            loadMarket() {
+                onSnapshot(collection(db, "products"), (snap) => {
+                    this.products = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                });
+            },
+
+            loadChats() {
+                const q = query(collection(db, "global_chat"), orderBy("timestamp", "asc"), limit(50));
+                onSnapshot(q, (snap) => {
+                    this.currentChat = snap.docs.map(d => d.data());
+                    this.scrollToBottom();
+                });
+            },
+
+            async sendMsg(img = null) {
+                if(!this.msgInput && !img) return;
+                snd.click.play();
+                await addDoc(collection(db, "global_chat"), {
+                    uid: this.user.uid,
+                    text: this.msgInput,
+                    image: img,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    timestamp: Date.now()
+                });
+                this.msgInput = '';
+            },
+
+            uploadChatImg(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onloadend = () => { this.sendMsg(reader.result); };
+                reader.readAsDataURL(file);
+            },
+
+            async spin() {
+                if(this.user.balance < 100) return alert("Not enough balance!");
+                this.spinning = true;
+                this.user.balance -= 100;
+                snd.spin.play();
+
+                const prizes = [0, 100, 400, 350, 1000, 2000];
+                const winnerIdx = Math.floor(Math.random() * prizes.length);
+                const winAmount = prizes[winnerIdx];
+                
+                // 360 * 5 (обороты) + угол сектора
+                const angle = 1800 + (winnerIdx * 60);
+                this.wheelAngle += angle;
+                document.getElementById('wheel').style.transform = `rotate(${this.wheelAngle}deg)`;
+
+                setTimeout(async () => {
+                    this.spinning = false;
+                    this.user.balance += winAmount;
+                    await updateDoc(doc(db, "users", this.user.uid), { balance: this.user.balance });
+                    snd.money.play();
+                    alert(winAmount > 0 ? `YOU WON ${winAmount} EUR!` : "Try again!");
+                }, 5000);
+            },
+
+            selectDonate(pack) {
+                this.selectedPack = pack;
+                this.donateModal = true;
+                snd.click.play();
+            },
+
+            async buyItem(item) {
+                if(this.user.balance < item.price) return alert("Insufficient funds!");
+                snd.money.play();
+                
+                // Логика сделки: списание -> холд -> уведомление продавцу
+                this.user.balance -= item.price;
+                await updateDoc(doc(db, "users", this.user.uid), { balance: this.user.balance });
+                alert("Purchase successful! Item added to 'My Purchases'. Admin commission (5%) processed.");
+            },
+
+            formatCurrency(val) {
+                return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
+            },
+
+            logout() {
+                localStorage.removeItem('dragon_uid');
+                location.reload();
+            },
+
+            scrollToBottom() {
+                setTimeout(() => {
+                    const box = document.getElementById('chat-box');
+                    if(box) box.scrollTop = box.scrollHeight;
+                }, 100);
+            },
+
+            get filteredProducts() {
+                if(this.activeCat === 'ALL ITEMS') return this.products;
+                return this.products.filter(p => p.category === this.activeCat);
+            }
         });
     </script>
 </body>
