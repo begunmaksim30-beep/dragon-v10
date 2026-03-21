@@ -1,899 +1,876 @@
 <!DOCTYPE html>
-<html lang="ru" x-data="app()" :data-theme="theme"
-  :style="customBg?`background-image:url('${customBg}');background-size:cover;background-attachment:fixed`:''">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>DragonMarket</title>
-<!--
-  FIREBASE RTDB RULES:
-  { "rules": { ".read": true, ".write": true } }
-  ADMIN: system / 1337
--->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Telegram</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%232AABEE'/><text y='.9em' font-size='60' x='18'>✈</text></svg>"/>
 <style>
-:root{--pr:#e11d48;--pr2:#9f1239;--bg:#05050f;--gl:rgba(255,255,255,.06);--glb:rgba(255,255,255,.12)}
-[data-theme=matrix]{--pr:#00ff41;--pr2:#00aa2b}
-[data-theme=blood]{--pr:#ff2020;--pr2:#cc0000}
-[data-theme=gold]{--pr:#ffd700;--pr2:#cc9900}
-[data-theme=silver]{--pr:#b0b8cc;--pr2:#6b7a99}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e2e8f0;min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,#05050f,#0a0520 50%,#05050f);z-index:-2;pointer-events:none}
-body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);background-size:40px 40px;z-index:-1;pointer-events:none}
-.gl{background:var(--gl);backdrop-filter:blur(12px);border:1px solid var(--glb)}
-.gld{background:rgba(0,0,0,.45);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
-.neon{color:var(--pr);text-shadow:0 0 10px var(--pr),0 0 20px var(--pr)}
-.bpr{background:var(--pr);color:#fff;border:1px solid var(--pr);font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;transition:all .2s}
-.bpr:hover:not(:disabled){background:var(--pr2);box-shadow:0 0 14px var(--pr);transform:translateY(-1px)}
-.bpr:disabled{opacity:.45;cursor:not-allowed}
-.bgh{background:transparent;color:var(--pr);border:1px solid var(--pr);font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;transition:all .2s}
-.bgh:hover{background:rgba(225,29,72,.15);box-shadow:0 0 10px var(--pr)}
-.card{transition:all .3s}
-.card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 18px rgba(225,29,72,.2)}
-.orb{font-family:'Orbitron',sans-serif}
-.mono{font-family:'Share Tech Mono',monospace}
-.vc{color:#3b82f6;filter:drop-shadow(0 0 4px #3b82f6)}
-.gold-nick{color:#ffd700;text-shadow:0 0 8px #ffd700}
-.br-b{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block}
-.br-s{background:linear-gradient(135deg,#c0c0c0,#808080);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block}
-.br-e{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block}
-.sb::-webkit-scrollbar{width:3px}
-.sb::-webkit-scrollbar-thumb{background:var(--pr);border-radius:2px}
-.min{animation:mIn .3s cubic-bezier(.34,1.56,.64,1)}
-@keyframes mIn{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:none}}
-.nin{animation:nIn .35s cubic-bezier(.34,1.56,.64,1)}
-@keyframes nIn{from{opacity:0;transform:translateX(110%)}to{opacity:1;transform:none}}
-.pge{animation:pge .25s ease-out}
-@keyframes pge{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
-.son{color:#ffd700}.sof{color:#374151}
-input,textarea,select{font-family:'Rajdhani',sans-serif}
-input:focus,textarea:focus,select:focus{outline:2px solid var(--pr)}
-.cmeb{background:rgba(225,29,72,.25);border:1px solid rgba(225,29,72,.4);border-radius:12px 12px 4px 12px;padding:8px 12px}
-.cthem{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px 12px 12px 4px;padding:8px 12px}
-.wptr{position:absolute;right:-18px;top:50%;transform:translateY(-50%);width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:22px solid var(--pr);filter:drop-shadow(0 0 5px var(--pr))}
-@media(max-width:768px){body{padding-bottom:68px}}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body,#root{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0e1621;color:#f5f5f5;}
+
+/* THEMES */
+:root{
+  --bg:#0e1621;--panel:#17212b;--input:#1d2d3e;--hover:#1d2d3e;
+  --border:rgba(255,255,255,0.08);--text:#f5f5f5;--hint:#708499;
+  --bubble-in:#182533;--bubble-out:#2b5278;--accent:#2AABEE;
+  --accent-dark:#229ED9;--green:#4CAF93;--red:#e74c3c;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+}
+[data-theme=light]{
+  --bg:#f1f1f1;--panel:#fff;--input:#f1f1f1;--hover:#f1f1f1;
+  --border:rgba(0,0,0,0.1);--text:#000;--hint:#999;
+  --bubble-in:#fff;--bubble-out:#effdde;--shadow:0 4px 24px rgba(0,0,0,0.15);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+[data-theme=light]::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);}
+
+/* LAYOUT */
+#root{display:flex;flex-direction:column;}
+.app{display:flex;height:100vh;overflow:hidden;background:var(--bg);}
+
+/* SIDEBAR */
+.sidebar{width:340px;height:100%;display:flex;flex-direction:column;background:var(--panel);border-right:1px solid var(--border);flex-shrink:0;transition:transform 0.25s;}
+.sidebar-header{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.search-wrap{flex:1;position:relative;}
+.search-wrap input{width:100%;background:var(--input);border:none;border-radius:20px;padding:8px 12px 8px 36px;color:var(--text);font-size:14px;outline:none;}
+.search-wrap input::placeholder{color:var(--hint);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--hint);font-size:16px;}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:var(--hint);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background 0.15s;}
+.icon-btn:hover{background:var(--hover);}
+.folder-tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);}
+.folder-tab{padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:var(--hint);transition:all 0.15s;}
+.folder-tab.active{background:var(--accent);color:#fff;}
+.chats-list{flex:1;overflow-y:auto;}
+.chat-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.15s;position:relative;}
+.chat-item:hover{background:var(--hover);}
+.chat-item.active{background:rgba(42,171,238,0.15);}
+.chat-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:0 2px 2px 0;}
+.chat-meta{flex:1;min-width:0;}
+.chat-name-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.chat-name{font-size:15px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chat-time{font-size:12px;color:var(--hint);flex-shrink:0;margin-left:8px;}
+.chat-last-row{display:flex;justify-content:space-between;align-items:center;}
+.chat-last{font-size:13px;color:var(--hint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.badge{background:var(--accent);color:#fff;border-radius:12px;font-size:11px;font-weight:700;padding:2px 7px;min-width:20px;text-align:center;flex-shrink:0;}
+
+/* AVATAR */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;position:relative;overflow:hidden;}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.online-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid var(--panel);}
+
+/* CHAT AREA */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.chat-header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--shadow);}
+.chat-header-info{flex:1;min-width:0;cursor:pointer;}
+.chat-header-name{font-size:15px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chat-header-status{font-size:13px;color:var(--hint);}
+.chat-header-status.online{color:var(--green);}
+.chat-header-status.typing{color:var(--accent);}
+.messages{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:2px;}
+.date-divider{text-align:center;margin:12px 0;}
+.date-divider span{background:rgba(42,171,238,0.15);color:var(--hint);font-size:12px;padding:4px 12px;border-radius:12px;}
+.msg-wrap{display:flex;margin-bottom:2px;}
+.msg-wrap.out{justify-content:flex-end;}
+.msg-wrap.in{justify-content:flex-start;}
+.bubble{max-width:72%;padding:8px 12px;border-radius:16px;position:relative;word-break:break-word;line-height:1.5;}
+.bubble.out{background:var(--bubble-out);border-bottom-right-radius:4px;}
+.bubble.in{background:var(--bubble-in);border-bottom-left-radius:4px;}
+[data-theme=light] .bubble.in{box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+.bubble-text{font-size:14.5px;color:var(--text);white-space:pre-wrap;}
+.bubble-time{display:flex;align-items:center;gap:3px;justify-content:flex-end;margin-top:4px;}
+.bubble-time span{font-size:11px;color:var(--hint);}
+.status-icon{font-size:11px;}
+.status-icon.read{color:var(--accent);}
+.reply-preview{background:rgba(42,171,238,0.15);border-left:3px solid var(--accent);border-radius:6px;padding:6px 8px;margin-bottom:6px;cursor:pointer;}
+.reply-preview-name{font-size:12px;font-weight:600;color:var(--accent);}
+.reply-preview-text{font-size:12px;color:var(--hint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.msg-actions{opacity:0;transition:opacity 0.15s;display:flex;gap:4px;align-items:center;align-self:flex-end;margin:0 4px;}
+.msg-wrap:hover .msg-actions{opacity:1;}
+.msg-action-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--panel);cursor:pointer;color:var(--hint);font-size:14px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);}
+.deleted-msg{font-style:italic;opacity:0.6;}
+.typing-bubble{display:flex;align-items:center;gap:4px;padding:10px 12px;background:var(--bubble-in);border-radius:16px;border-bottom-left-radius:4px;width:fit-content;}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--hint);animation:typingAnim 1.2s infinite;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typingAnim{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+.typing-label{font-size:12px;color:var(--hint);padding:4px 12px;}
+
+/* INPUT */
+.input-area{background:var(--panel);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0;}
+.reply-bar{display:flex;align-items:center;gap:8px;background:var(--input);border-radius:10px;padding:8px 10px;margin-bottom:8px;border-left:3px solid var(--accent);}
+.reply-bar-content{flex:1;min-width:0;}
+.reply-bar-name{font-size:12px;font-weight:600;color:var(--accent);}
+.reply-bar-text{font-size:12px;color:var(--hint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.input-row{display:flex;align-items:flex-end;gap:8px;}
+.input-box{flex:1;background:var(--input);border-radius:20px;padding:10px 14px;display:flex;align-items:flex-end;gap:8px;}
+.input-box textarea{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:15px;resize:none;max-height:120px;font-family:inherit;line-height:1.5;}
+.input-box textarea::placeholder{color:var(--hint);}
+.send-btn{width:44px;height:44px;border-radius:50%;border:none;background:var(--accent);cursor:pointer;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;box-shadow:0 2px 12px rgba(42,171,238,0.4);}
+.send-btn:hover{background:var(--accent-dark);}
+.send-btn:disabled{background:var(--hover);color:var(--hint);box-shadow:none;cursor:default;}
+.emoji-btn{color:var(--hint);font-size:22px;cursor:pointer;background:none;border:none;padding:0 4px;}
+.emoji-picker{position:absolute;bottom:calc(100% + 8px);left:0;background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:10px;display:grid;grid-template-columns:repeat(8,1fr);gap:2px;box-shadow:var(--shadow);z-index:100;}
+.emoji-picker button{background:none;border:none;cursor:pointer;font-size:20px;padding:5px;border-radius:6px;transition:background 0.1s;}
+.emoji-picker button:hover{background:var(--hover);}
+
+/* AUTH */
+.auth-screen{height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:16px;}
+.auth-card{background:var(--panel);border-radius:20px;padding:32px 28px;width:100%;max-width:400px;box-shadow:var(--shadow);}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo-icon{width:80px;height:80px;border-radius:50%;background:var(--accent);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 8px 32px rgba(42,171,238,0.4);}
+.auth-title{font-size:24px;font-weight:800;color:var(--text);}
+.auth-sub{font-size:14px;color:var(--hint);margin-top:4px;}
+.auth-tabs{display:flex;background:var(--input);border-radius:12px;margin-bottom:20px;padding:3px;}
+.auth-tab{flex:1;padding:9px;border:none;border-radius:10px;cursor:pointer;background:transparent;color:var(--hint);font-weight:600;font-size:13px;font-family:inherit;transition:all 0.2s;}
+.auth-tab.active{background:rgba(42,171,238,0.2);color:var(--accent);}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:12px;color:var(--hint);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;font-weight:600;}
+.form-input{width:100%;background:var(--input);border:1.5px solid transparent;border-radius:12px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color 0.2s;}
+.form-input:focus{border-color:rgba(42,171,238,0.5);}
+.form-input::placeholder{color:var(--hint);}
+.form-error{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:10px;padding:10px 12px;color:#FF6B6B;font-size:13px;margin-bottom:14px;}
+.btn-primary{width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.btn-primary:hover{background:var(--accent-dark);}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed;}
+
+/* SETTINGS */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.settings-modal{background:var(--panel);border-radius:20px;width:100%;max-width:640px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow);}
+.settings-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.settings-header h2{font-size:18px;font-weight:700;color:var(--text);}
+.settings-body{display:flex;flex:1;overflow:hidden;}
+.settings-nav{width:180px;border-right:1px solid var(--border);padding:8px 0;flex-shrink:0;background:rgba(0,0,0,0.1);}
+.settings-nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;border:none;border-left:3px solid transparent;background:transparent;cursor:pointer;color:var(--hint);font-size:13px;font-weight:600;font-family:inherit;transition:all 0.15s;text-align:left;}
+.settings-nav-btn:hover{color:var(--text);background:var(--hover);}
+.settings-nav-btn.active{color:var(--accent);border-left-color:var(--accent);background:rgba(42,171,238,0.08);}
+.settings-nav-btn span:first-child{font-size:18px;}
+.settings-content{flex:1;overflow-y:auto;padding:20px;}
+.settings-section{margin-bottom:24px;}
+.settings-section h3{font-size:12px;color:var(--hint);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:12px;}
+.settings-card{background:var(--input);border-radius:14px;padding:16px;margin-bottom:12px;}
+.profile-av-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px;}
+.av-upload-btn{position:relative;cursor:pointer;}
+.av-upload-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.av-edit-badge{position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--panel);}
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.theme-option{padding:14px;border-radius:12px;border:2px solid var(--border);cursor:pointer;transition:all 0.15s;background:transparent;}
+.theme-option:hover{border-color:var(--hint);}
+.theme-option.selected{border-color:var(--accent);background:rgba(42,171,238,0.08);}
+.theme-option-label{font-size:14px;font-weight:600;color:var(--text);}
+.theme-option-sub{font-size:12px;color:var(--hint);margin-top:2px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-row-label{font-size:14px;color:var(--text);}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--accent);position:relative;cursor:pointer;transition:background 0.2s;border:none;}
+.toggle-knob{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:right 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.blocked-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.blocked-item:last-child{border-bottom:none;}
+.unblock-btn{padding:6px 12px;border-radius:8px;border:none;background:rgba(231,76,60,0.1);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.save-btn{padding:11px 22px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
+.save-btn:hover{background:var(--accent-dark);}
+.logout-btn{width:100%;padding:11px;border-radius:12px;border:none;background:rgba(231,76,60,0.1);color:var(--red);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;}
+
+/* CONTEXT MENU */
+.ctx-menu{position:fixed;z-index:200;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;min-width:160px;}
+.ctx-item{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-size:14px;color:var(--text);transition:background 0.1s;border:none;background:none;width:100%;text-align:left;font-family:inherit;}
+.ctx-item:hover{background:var(--hover);}
+.ctx-item.danger{color:var(--red);}
+
+/* EMPTY STATE */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg);}
+.empty-icon{width:100px;height:100px;border-radius:50%;background:rgba(42,171,238,0.1);display:flex;align-items:center;justify-content:center;font-size:44px;}
+.empty-title{font-size:22px;font-weight:700;color:var(--text);}
+.empty-sub{font-size:14px;color:var(--hint);text-align:center;max-width:280px;}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:30;transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:29;display:none;}
+  .mobile-overlay.show{display:block;}
+  .back-btn{display:flex!important;}
+}
+.back-btn{display:none;width:36px;height:36px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:var(--hint);font-size:20px;align-items:center;justify-content:center;}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:scale(0.96);}to{opacity:1;transform:scale(1);}}
+.settings-overlay .settings-modal{animation:fadeIn 0.2s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.msg-wrap{animation:msgIn 0.15s ease;}
 </style>
 </head>
-<body x-init="boot()">
+<body>
+<div id="root"></div>
 
-<!-- LOADER -->
-<div class="fixed inset-0 bg-[#05050f] z-[9999] flex flex-col items-center justify-center gap-5 transition-opacity duration-500"
-     :class="loaded?'opacity-0 pointer-events-none':''">
-  <svg viewBox="0 0 200 90" width="160">
-    <defs><filter id="g0"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <path d="M100,44 L85,8 L60,2 L72,20 L36,12 L60,36 L16,42 L52,53 L42,70 L72,58 L82,72 L98,46" fill="#cc0000" filter="url(#g0)"/>
-    <path d="M100,44 L115,8 L140,2 L128,20 L164,12 L140,36 L184,42 L148,53 L158,70 L128,58 L118,72 L102,46" fill="#cc0000" filter="url(#g0)"/>
-    <ellipse cx="100" cy="42" rx="13" ry="15" fill="#770000"/>
-    <circle cx="94" cy="37" r="3.5" fill="#ff4400"/><circle cx="106" cy="37" r="3.5" fill="#ff4400"/>
-  </svg>
-  <p class="orb text-2xl neon tracking-widest">DRAGONMARKET</p>
-  <div class="flex gap-1.5">
-    <span class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:0s"></span>
-    <span class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:.15s"></span>
-    <span class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:.3s"></span>
-  </div>
-  <p x-show="loadErr" class="text-red-400 text-xs max-w-xs text-center px-4" x-text="loadErr"></p>
-</div>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, collection, query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion, arrayRemove, writeBatch, limit } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-<!-- TOASTS -->
-<div class="fixed top-3 right-3 z-50 flex flex-col gap-2" style="max-width:310px">
-  <template x-for="n in toasts" :key="n.id">
-    <div class="nin gld rounded-xl p-3 flex items-start gap-2.5 shadow-2xl"
-         :class="n.t==='ok'?'border-l-4 border-green-500':n.t==='err'?'border-l-4 border-red-500':'border-l-4 border-yellow-500'">
-      <i class="fas text-sm mt-0.5" :class="n.t==='ok'?'fa-check-circle text-green-400':n.t==='err'?'fa-times-circle text-red-400':'fa-info-circle text-yellow-400'"></i>
-      <p class="text-sm flex-1" x-text="n.msg"></p>
-      <button @click="rmToast(n.id)" class="text-gray-400 hover:text-white text-xs ml-1"><i class="fas fa-times"></i></button>
+// ══════════════════════════════════════
+// FIREBASE INIT
+// ══════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
+  authDomain: "dragonmarket-ef97f.firebaseapp.com",
+  projectId: "dragonmarket-ef97f",
+  storageBucket: "dragonmarket-ef97f.firebasestorage.app",
+  messagingSenderId: "733816628492",
+  appId: "1:733816628492:web:0565b0334dd253b45d1529"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let state = {
+  user: null, profile: null, authLoading: true,
+  chats: [], activeChatId: null, activeChat: null,
+  messages: [], loadingMsgs: false,
+  searchResults: [], searchQ: "",
+  folder: "all", theme: localStorage.getItem("tg_theme") || "dark",
+  settingsOpen: false, settingsTab: "profile",
+  replyTo: null, emojiOpen: false,
+  ctxMenu: null, typingUsers: [],
+  sidebarOpen: false,
+  profileForm: { displayName: "", bio: "", phone: "" },
+  saving: false, saveOk: false, authError: "", authLoading2: false,
+  authTab: "login", authForm: { email: "", password: "", username: "" },
+};
+
+let unsubChats = null, unsubMsgs = null, unsubTyping = null;
+let typingTimer = null;
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+const AVATAR_COLORS = ["#E17055","#6C5CE7","#00B894","#0984E3","#FDCB6E","#E84393","#00CEC9","#2AABEE"];
+const getColor = name => AVATAR_COLORS[(name?.charCodeAt(0)||0) % AVATAR_COLORS.length];
+const fmtTime = ts => {
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 86400000) return d.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"});
+  if (diff < 604800000) return d.toLocaleDateString("ru",{weekday:"short"});
+  return d.toLocaleDateString("ru",{day:"numeric",month:"short"});
+};
+const fmtDate = ts => {
+  if (!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString("ru",{day:"numeric",month:"long",year:"numeric"});
+};
+const groupByDate = msgs => {
+  const groups = {};
+  msgs.forEach(m => {
+    if (m.deletedFor?.includes(state.user?.uid)) return;
+    const d = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString("ru",{day:"numeric",month:"long",year:"numeric"}) : "Сегодня";
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(m);
+  });
+  return groups;
+};
+const EMOJIS = ["😀","😂","😍","🥰","😎","🤔","😅","🙏","🔥","✅","❤️","👍","👎","🎉","💯","🚀","💡","⭐","🎯","💪","🤝","👋","✨","🌟","😭","💎","🌈","⚡","🎮","🍕","😤","🥳","😊","🤩","🫡","🫶","😴","🤑","😈","👑"];
+
+// ══════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════
+function setState(partial) {
+  Object.assign(state, partial);
+  render();
+}
+
+function render() {
+  const root = document.getElementById("root");
+  if (!root) return;
+  // Apply theme
+  document.documentElement.setAttribute("data-theme", state.theme === "light" ? "light" : "");
+  root.innerHTML = buildApp();
+  attachEvents();
+}
+
+// ══════════════════════════════════════
+// HTML BUILDERS
+// ══════════════════════════════════════
+function buildAvatar(name, photo, size=46, showOnline=false) {
+  const color = getColor(name);
+  const s = `width:${size}px;height:${size}px;font-size:${Math.round(size*0.38)}px;background:${color};`;
+  const inner = photo
+    ? `<img src="${photo}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;"/>`
+    : `<span>${(name||"?")[0].toUpperCase()}</span>`;
+  const dot = showOnline ? `<div class="online-dot" style="width:${Math.round(size*0.23)}px;height:${Math.round(size*0.23)}px;"></div>` : "";
+  return `<div class="av" style="${s}">${inner}${dot}</div>`;
+}
+
+function buildApp() {
+  if (state.authLoading) return `<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);flex-direction:column;gap:16px;"><div class="av" style="width:80px;height:80px;font-size:36px;background:var(--accent);animation:typingAnim 1s infinite;">✈</div><div style="color:var(--hint);font-size:14px;">Загрузка...</div></div>`;
+  if (!state.user) return buildAuth();
+  return `
+    <div class="app">
+      <div class="mobile-overlay ${state.sidebarOpen?"show":""}" onclick="closeSidebar()"></div>
+      ${buildSidebar()}
+      ${state.activeChatId ? buildChatArea() : buildEmptyState()}
     </div>
-  </template>
-</div>
+    ${state.settingsOpen ? buildSettings() : ""}
+    ${state.ctxMenu ? buildCtxMenu() : ""}
+  `;
+}
 
-<!-- HEADER -->
-<header class="gld fixed top-0 inset-x-0 z-40 border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-3 md:px-6 h-14 flex items-center justify-between gap-3">
-    <button @click="go('home')" class="flex items-center gap-2 shrink-0">
-      <svg viewBox="0 0 120 52" width="78">
-        <defs><filter id="g1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-        <path d="M60,26 L51,5 L36,1 L44,16 L20,9 L36,24 L12,28 L36,36 L28,46 L48,38 L55,48 L59,30" fill="var(--pr)" filter="url(#g1)"/>
-        <path d="M60,26 L69,5 L84,1 L76,16 L100,9 L84,24 L108,28 L84,36 L92,46 L72,38 L65,48 L61,30" fill="var(--pr)" filter="url(#g1)"/>
-        <ellipse cx="60" cy="25" rx="9" ry="10" fill="#770000"/>
-        <circle cx="56" cy="22" r="2.2" fill="#ff4400"/><circle cx="64" cy="22" r="2.2" fill="#ff4400"/>
-      </svg>
-      <span class="orb text-sm font-bold neon hidden sm:block">DRAGON<span class="text-white">MKT</span></span>
-    </button>
-    <nav class="hidden md:flex gap-0.5 text-sm font-semibold">
-      <button @click="go('home')"    :class="pg==='home'?'neon':'text-gray-400 hover:text-white'"    class="px-3 py-1.5 rounded transition">Главная</button>
-      <button @click="go('market')"  :class="pg==='market'?'neon':'text-gray-400 hover:text-white'"  class="px-3 py-1.5 rounded transition">Маркет</button>
-      <button @click="needAuth('messenger')" :class="pg==='messenger'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition relative">
-        Чат<span x-show="unread>0" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center mono" x-text="unread"></span>
-      </button>
-      <button @click="go('wheel')"   :class="pg==='wheel'?'neon':'text-gray-400 hover:text-white'"   class="px-3 py-1.5 rounded transition">Колесо</button>
-      <button @click="go('premium')" :class="pg==='premium'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition">Premium</button>
-      <button x-show="me&&me.isAdmin" @click="go('admin')" :class="pg==='admin'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition">Admin</button>
-    </nav>
-    <div class="flex items-center gap-2 shrink-0">
-      <template x-if="!me">
-        <button @click="openAuth('login')" class="bpr px-4 py-1.5 rounded-lg text-sm">Войти</button>
-      </template>
-      <template x-if="me">
-        <div class="flex items-center gap-2">
-          <div class="hidden sm:flex items-center gap-1.5 gl rounded-lg px-3 py-1.5">
-            <i class="fas fa-euro-sign text-green-400 text-xs"></i>
-            <span class="mono text-sm font-bold text-green-400" x-text="fmt(me.balance)"></span>
-          </div>
-          <button @click="go('profile')" class="hover:opacity-80 transition">
-            <div class="w-8 h-8 rounded-full border-2 overflow-hidden flex items-center justify-center text-xs font-bold"
-                 :class="me.premium==='elite'?'border-yellow-500':me.verified?'border-blue-500':'border-red-700'">
-              <img x-show="me.avatar" :src="me.avatar" class="w-full h-full object-cover">
-              <span x-show="!me.avatar" class="neon" x-text="(me.username||'?')[0].toUpperCase()"></span>
-            </div>
-          </button>
-          <button @click="go('settings')" class="text-gray-400 hover:text-white p-1.5"><i class="fas fa-cog text-sm"></i></button>
-        </div>
-      </template>
-    </div>
-  </div>
-</header>
-
-<!-- MOBILE NAV -->
-<nav class="fixed bottom-0 inset-x-0 z-40 gld border-t border-white/10 md:hidden">
-  <div class="flex justify-around h-16">
-    <button @click="go('home')"    :class="pg==='home'?'neon':'text-gray-500'"    class="flex flex-col items-center gap-0.5 py-2 px-3"><i class="fas fa-home text-base"></i><span class="text-[10px] font-semibold">Главная</span></button>
-    <button @click="go('market')"  :class="pg==='market'?'neon':'text-gray-500'"  class="flex flex-col items-center gap-0.5 py-2 px-3"><i class="fas fa-store text-base"></i><span class="text-[10px] font-semibold">Маркет</span></button>
-    <button @click="needAuth('messenger')" :class="pg==='messenger'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3 relative">
-      <i class="fas fa-comments text-base"></i><span class="text-[10px] font-semibold">Чат</span>
-      <span x-show="unread>0" class="absolute top-1 right-1 bg-red-600 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center mono" x-text="unread"></span>
-    </button>
-    <button @click="go('wheel')"   :class="pg==='wheel'?'neon':'text-gray-500'"   class="flex flex-col items-center gap-0.5 py-2 px-3"><i class="fas fa-dharmachakra text-base"></i><span class="text-[10px] font-semibold">Колесо</span></button>
-    <button @click="go('profile')" :class="pg==='profile'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3"><i class="fas fa-user text-base"></i><span class="text-[10px] font-semibold">Профиль</span></button>
-  </div>
-</nav>
-
-<main class="pt-16 max-w-7xl mx-auto px-3 md:px-6 pb-6">
-
-  <!-- HOME -->
-  <div x-show="pg==='home'" class="pge">
-    <div class="gl rounded-2xl p-6 md:p-10 mt-4 relative overflow-hidden text-center">
-      <div class="absolute inset-0 opacity-10 pointer-events-none" style="background:radial-gradient(ellipse,var(--pr),transparent 70%)"></div>
-      <div class="relative z-10">
-        <p class="orb text-3xl md:text-5xl font-black mb-2"><span class="neon">DRAGON</span><span class="text-white">MARKET</span></p>
-        <p class="text-gray-300 text-lg mb-6">Безопасные сделки · Escrow защита · Real-time</p>
-        <div class="flex flex-wrap gap-3 justify-center">
-          <button @click="go('market')" class="bpr px-6 py-2.5 rounded-xl"><i class="fas fa-store mr-2"></i>Смотреть лоты</button>
-          <button x-show="!me" @click="openAuth('register')" class="bgh px-6 py-2.5 rounded-xl"><i class="fas fa-user-plus mr-2"></i>Регистрация</button>
-          <button x-show="me" @click="openAddProd()" class="bgh px-6 py-2.5 rounded-xl"><i class="fas fa-plus mr-2"></i>Добавить лот</button>
-        </div>
+function buildAuth() {
+  const {authTab,authForm,authError,authLoading2} = state;
+  return `
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">✈</div>
+        <div class="auth-title">Telegram</div>
+        <div class="auth-sub">${authTab==="login"?"Войдите в аккаунт":"Создайте аккаунт"}</div>
       </div>
-    </div>
-    <div class="grid grid-cols-3 gap-3 mt-4">
-      <div class="gl rounded-xl p-4 text-center"><p class="orb text-2xl font-bold neon" x-text="prods.filter(p=>p.status==='active').length"></p><p class="text-xs text-gray-400 mt-1">Активных лотов</p></div>
-      <div class="gl rounded-xl p-4 text-center"><p class="orb text-2xl font-bold text-green-400" x-text="usersArr.length"></p><p class="text-xs text-gray-400 mt-1">Пользователей</p></div>
-      <div class="gl rounded-xl p-4 text-center"><p class="orb text-2xl font-bold text-blue-400" x-text="txs.filter(t=>t.status==='completed').length"></p><p class="text-xs text-gray-400 mt-1">Сделок</p></div>
-    </div>
-    <h2 class="orb text-lg font-bold mt-6 mb-3 neon"><i class="fas fa-fire mr-2"></i>Последние лоты</h2>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <template x-for="p in prods.filter(x=>x.status==='active').slice(0,8)" :key="p.id">
-        <div class="gl card rounded-xl overflow-hidden cursor-pointer" @click="openProd(p)">
-          <div class="h-32 flex items-center justify-center bg-gradient-to-br from-red-900/30 to-purple-900/30 relative overflow-hidden">
-            <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-80">
-            <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
-            <div class="absolute top-2 right-2"><span class="text-xs gl rounded px-1.5 py-0.5" x-text="catLbl(p.category)"></span></div>
-            <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full gl flex items-center justify-center hover:scale-110 transition"
-                    :class="isFav(p.id)?'text-red-500':'text-gray-400'"><i class="fas fa-heart text-xs"></i></button>
-          </div>
-          <div class="p-3">
-            <p class="font-semibold text-sm truncate" x-text="p.title"></p>
-            <div class="flex items-center justify-between mt-2">
-              <span class="mono font-bold text-green-400 text-sm">€<span x-text="fmt(p.price)"></span></span>
-              <button @click.stop="quickBuy(p)" class="bpr text-xs px-2.5 py-1 rounded-lg">Купить</button>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-    <div x-show="prods.filter(x=>x.status==='active').length===0" class="text-center py-12 text-gray-500">
-      <i class="fas fa-store text-4xl mb-3 block opacity-20"></i><p>Пока нет лотов — будьте первым!</p>
-    </div>
-  </div>
-
-  <!-- MARKET -->
-  <div x-show="pg==='market'" class="pge">
-    <div class="flex flex-col md:flex-row gap-3 mt-4 mb-4">
-      <div class="flex-1 relative">
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-        <input x-model="srch" placeholder="Поиск..." class="w-full gl rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 border border-white/10">
+      <div class="auth-tabs">
+        <button class="auth-tab ${authTab==="login"?"active":""}" onclick="setAuthTab('login')">Войти</button>
+        <button class="auth-tab ${authTab==="register"?"active":""}" onclick="setAuthTab('register')">Регистрация</button>
       </div>
-      <div class="flex gap-2 overflow-x-auto pb-1">
-        <template x-for="c in cats" :key="c.id">
-          <button @click="selCat=c.id" class="shrink-0 px-3 py-2 rounded-xl text-xs font-semibold border transition"
-                  :class="selCat===c.id?'bpr border-transparent':'gl border-white/10 text-gray-400 hover:text-white'">
-            <i class="fas mr-1" :class="c.icon"></i><span x-text="c.label"></span>
-          </button>
-        </template>
-      </div>
+      ${authTab==="register"?`<div class="form-group"><label class="form-label">Имя пользователя</label><input class="form-input" id="f-username" value="${authForm.username}" oninput="updAuthForm('username',this.value)" placeholder="username"/></div>`:""}
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-email" type="email" value="${authForm.email}" oninput="updAuthForm('email',this.value)" placeholder="you@example.com" onkeydown="if(event.key==='Enter')submitAuth()"/></div>
+      <div class="form-group"><label class="form-label">Пароль</label><input class="form-input" id="f-password" type="password" value="${authForm.password}" oninput="updAuthForm('password',this.value)" placeholder="••••••••" onkeydown="if(event.key==='Enter')submitAuth()"/></div>
+      ${authError?`<div class="form-error">${authError}</div>`:""}
+      <button class="btn-primary" onclick="submitAuth()" ${authLoading2?"disabled":""}>${authLoading2?"Загрузка...":authTab==="login"?"Войти":"Создать аккаунт"}</button>
     </div>
-    <div class="flex items-center justify-between mb-4">
-      <span class="text-sm text-gray-400"><span x-text="filteredProds.length"></span> лотов</span>
-      <div class="flex gap-2">
-        <select x-model="sortBy" class="gl rounded-lg px-3 py-1.5 text-xs text-gray-300 border border-white/10 bg-transparent">
-          <option value="new">⬇ Новые</option><option value="cheap">💲 Дешевле</option><option value="exp">💲 Дороже</option>
-        </select>
-        <button x-show="me" @click="openAddProd()" class="bpr px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-plus mr-1"></i>Добавить</button>
+  </div>`;
+}
+
+function buildSidebar() {
+  const {chats,activeChatId,searchQ,searchResults,folder,user,profile} = state;
+  let list = searchQ ? searchResults : chats;
+  if (!searchQ) {
+    if (folder==="dm") list = list.filter(c=>c.type==="dm");
+    if (folder==="groups") list = list.filter(c=>c.type==="group");
+  }
+  const name = profile?.displayName || user?.displayName || user?.email || "";
+  const photo = profile?.photoURL || user?.photoURL || "";
+  return `
+  <div class="sidebar ${state.sidebarOpen?"open":""}" id="sidebar">
+    <div class="sidebar-header">
+      <button class="icon-btn" onclick="toggleMenu()" id="menu-btn" style="font-size:20px;">☰</button>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input value="${searchQ}" oninput="handleSearch(this.value)" placeholder="Поиск" id="search-inp"/>
       </div>
+      <button class="icon-btn" onclick="openSettings('profile')" title="Настройки">⚙️</button>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <template x-for="p in filteredProds" :key="p.id">
-        <div class="gl card rounded-xl overflow-hidden cursor-pointer" @click="openProd(p)">
-          <div class="h-32 flex items-center justify-center bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative overflow-hidden">
-            <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-80">
-            <i x-show="!p.image" class="fas text-5xl opacity-20" :class="catIcon(p.category)"></i>
-            <div x-show="p.status!=='active'" class="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <span class="orb text-xs font-bold" :class="p.status==='sold'?'text-red-400':'text-yellow-400'" x-text="stLbl(p.status)"></span>
-            </div>
-            <div class="absolute top-2 right-2"><span class="text-xs gl rounded px-1.5 py-0.5" x-text="catLbl(p.category)"></span></div>
-            <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full gl flex items-center justify-center hover:scale-110 transition"
-                    :class="isFav(p.id)?'text-red-500':'text-gray-400'"><i class="fas fa-heart text-xs"></i></button>
-          </div>
-          <div class="p-3">
-            <p class="font-semibold text-sm truncate" x-text="p.title"></p>
-            <p class="text-xs text-gray-400 mt-0.5 truncate" x-text="p.description"></p>
-            <div class="flex items-center justify-between mt-2">
-              <span class="mono font-bold text-green-400">€<span x-text="fmt(p.price)"></span></span>
-              <button x-show="p.status==='active'" @click.stop="quickBuy(p)" class="bpr text-xs px-2.5 py-1 rounded-lg">Купить</button>
-            </div>
-            <button @click.stop="openPubProf(p.sellerId)" class="text-xs text-gray-400 hover:text-blue-400 mt-1.5 block transition truncate">
-              <i class="fas fa-user text-xs mr-1"></i><span x-text="p.sellerName||'?'"></span>
-              <i x-show="uVerified(p.sellerId)" class="fas fa-check-circle vc text-xs ml-1"></i>
-            </button>
-          </div>
-        </div>
-      </template>
+    <div id="hamburger-menu" style="display:none;position:absolute;top:60px;left:8px;z-index:100;background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;min-width:200px;">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);">
+        ${buildAvatar(name,photo,40)}
+        <div><div style="font-weight:700;font-size:14px;color:var(--text);">${esc(name)}</div><div style="font-size:12px;color:var(--hint);">${esc(user?.email||"")}</div></div>
+      </div>
+      <button class="ctx-item" onclick="openSettings('profile')">👤 Профиль</button>
+      <button class="ctx-item" onclick="openSettings('appearance')">🎨 Оформление</button>
+      <button class="ctx-item" onclick="openSettings('privacy')">🔒 Приватность</button>
+      <button class="ctx-item" onclick="toggleTheme()">🌙 Сменить тему</button>
+      <button class="ctx-item danger" onclick="doLogout()">🚪 Выйти</button>
     </div>
-    <div x-show="filteredProds.length===0" class="text-center py-16 text-gray-500"><i class="fas fa-search text-4xl mb-3 block opacity-20"></i><p>Ничего не найдено</p></div>
-  </div>
-
-  <!-- PROFILE -->
-  <div x-show="pg==='profile'" class="pge">
-    <div x-show="!me" class="text-center py-20 text-gray-400">
-      <i class="fas fa-lock text-5xl mb-4 block opacity-30 neon"></i>
-      <p class="mb-4">Необходима авторизация</p>
-      <button @click="openAuth('login')" class="bpr px-8 py-2.5 rounded-xl">Войти</button>
+    <div class="folder-tabs">
+      ${["all","dm","groups"].map(f=>`<button class="folder-tab ${folder===f?"active":""}" onclick="setFolder('${f}')">${f==="all"?"Все":f==="dm"?"Личные":"Группы"}</button>`).join("")}
     </div>
-    <template x-if="me">
-      <div class="mt-4">
-        <div class="gl rounded-2xl p-5 relative overflow-hidden">
-          <div class="absolute inset-0 opacity-5" style="background:radial-gradient(ellipse at top left,var(--pr),transparent 60%)"></div>
-          <div class="relative flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-            <div class="relative shrink-0">
-              <div class="w-20 h-20 rounded-2xl border-2 overflow-hidden flex items-center justify-center text-2xl font-bold bg-gray-900"
-                   :class="me.premium==='elite'?'border-yellow-500':me.verified?'border-blue-500':'border-red-700'">
-                <img x-show="me.avatar" :src="me.avatar" class="w-full h-full object-cover">
-                <span x-show="!me.avatar" class="neon" x-text="(me.username||'?')[0].toUpperCase()"></span>
-              </div>
-              <label class="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-red-700 flex items-center justify-center cursor-pointer hover:bg-red-600 transition">
-                <i class="fas fa-camera text-xs"></i><input type="file" accept="image/*" class="hidden" @change="uploadAvatar($event)">
-              </label>
-            </div>
-            <div class="flex-1 text-center sm:text-left">
-              <div class="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                <h1 class="text-2xl font-bold" :class="me.premium==='silver'||me.premium==='elite'?'gold-nick':''" x-text="me.username"></h1>
-                <i x-show="me.verified" class="fas fa-check-circle vc text-lg"></i>
-                <span x-show="me.premium==='bronze'" class="br-b">BRONZE</span>
-                <span x-show="me.premium==='silver'" class="br-s">SILVER</span>
-                <span x-show="me.premium==='elite'" class="br-e">ELITE</span>
-              </div>
-              <p class="text-gray-400 text-sm mono mt-0.5">ID: #<span x-text="me.shortId||me.uid?.slice(-5)"></span></p>
-              <p class="text-gray-400 text-xs mt-1">Зарегистрирован: <span x-text="fmtD(me.joinDate)"></span></p>
-              <div class="flex flex-wrap gap-3 mt-3 justify-center sm:justify-start">
-                <div class="gl rounded-lg px-4 py-2 text-center"><p class="mono font-bold text-green-400">€<span x-text="fmt(me.balance)"></span></p><p class="text-xs text-gray-400">Баланс</p></div>
-                <div class="gl rounded-lg px-4 py-2 text-center"><p class="font-bold neon" x-text="myProds.length"></p><p class="text-xs text-gray-400">Лотов</p></div>
-                <div class="gl rounded-lg px-4 py-2 text-center">
-                  <div class="flex items-center gap-1 justify-center"><i class="fas fa-star son text-sm"></i><span class="font-bold" x-text="selRating(me.uid).toFixed(1)"></span></div>
-                  <p class="text-xs text-gray-400">Рейтинг</p>
-                </div>
-              </div>
-            </div>
-            <div class="flex flex-col gap-2">
-              <button @click="go('settings')" class="bgh px-4 py-1.5 rounded-xl text-sm"><i class="fas fa-cog mr-1"></i>Настройки</button>
-              <button @click="logout()" class="gl border border-red-800/50 text-red-400 hover:bg-red-900/30 px-4 py-1.5 rounded-xl text-sm transition"><i class="fas fa-sign-out-alt mr-1"></i>Выйти</button>
-            </div>
-          </div>
-        </div>
+    <div class="chats-list">
+      ${searchQ && !searchResults.length ? `<div style="padding:24px;text-align:center;color:var(--hint);font-size:14px;">Ничего не найдено</div>` : ""}
+      ${searchQ && searchResults.length ? searchResults.map(u=>buildSearchResult(u)).join("") : list.map(c=>buildChatItem(c,activeChatId,user?.uid)).join("")}
+      ${!searchQ && !list.length ? `<div style="padding:40px 16px;text-align:center;"><div style="font-size:40px;margin-bottom:12px;">💬</div><div style="color:var(--hint);font-size:14px;">Найдите друзей через поиск</div></div>` : ""}
+    </div>
+  </div>`;
+}
 
-        <div class="flex gap-1 mt-4 gl rounded-xl p-1">
-          <button @click="profTab='lots'"  :class="profTab==='lots'?'bpr':'text-gray-400 hover:text-white'"  class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Мои лоты</button>
-          <button @click="profTab='buys'"  :class="profTab==='buys'?'bpr':'text-gray-400 hover:text-white'"  class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Покупки</button>
-          <button @click="profTab='sells'" :class="profTab==='sells'?'bpr':'text-gray-400 hover:text-white'" class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Продажи</button>
-          <button @click="profTab='favs'"  :class="profTab==='favs'?'bpr':'text-gray-400 hover:text-white'"  class="flex-1 py-2 rounded-lg text-sm font-semibold transition">Избранное</button>
-        </div>
+function buildSearchResult(u) {
+  const name = u.displayName || u.username || u.email;
+  return `
+  <div class="chat-item" onclick="openDM('${u.id}','${esc(u.displayName||u.username||"")}','${esc(u.email||"")}','${esc(u.photoURL||"")}')">
+    ${buildAvatar(name, u.photoURL, 46)}
+    <div class="chat-meta">
+      <div class="chat-name-row"><span class="chat-name">${esc(name)}</span></div>
+      <div class="chat-last">${esc(u.email||"")}</div>
+    </div>
+  </div>`;
+}
 
-        <div x-show="profTab==='lots'" class="mt-4">
-          <div class="flex justify-end mb-3"><button @click="openAddProd()" class="bpr px-4 py-1.5 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i>Добавить лот</button></div>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <template x-for="p in myProds" :key="p.id">
-              <div class="gl rounded-xl overflow-hidden">
-                <div class="h-28 flex items-center justify-center bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative overflow-hidden">
-                  <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
-                  <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
-                  <div x-show="p.status!=='active'" class="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span class="font-bold text-xs" :class="p.status==='sold'?'text-red-400':'text-yellow-400'" x-text="stLbl(p.status)"></span>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <p class="font-semibold text-sm truncate" x-text="p.title"></p>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="mono text-green-400 text-sm font-bold">€<span x-text="fmt(p.price)"></span></span>
-                    <button @click="delProd(p.id)" class="text-red-400 hover:text-red-300 text-xs"><i class="fas fa-trash"></i></button>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-          <div x-show="myProds.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-box-open text-3xl mb-2 block opacity-30"></i><p class="text-sm">Нет лотов</p></div>
-        </div>
-
-        <div x-show="profTab==='buys'" class="mt-4 space-y-3">
-          <template x-for="tx in myBuys" :key="tx.id">
-            <div class="gl rounded-xl p-4">
-              <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <div>
-                  <p class="font-semibold" x-text="tx.productTitle||'Удалённый лот'"></p>
-                  <p class="text-xs text-gray-400">Продавец: <button @click="openPubProf(tx.sellerId)" class="text-blue-400 hover:underline" x-text="tx.sellerName||'?'"></button></p>
-                  <p class="text-xs text-gray-400 mono" x-text="fmtD(tx.createdAt)"></p>
-                </div>
-                <div class="flex items-center gap-3">
-                  <span class="mono font-bold text-red-400">-€<span x-text="fmt(tx.amount)"></span></span>
-                  <span class="text-xs px-2 py-1 rounded font-bold"
-                        :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
-                        x-text="stLbl(tx.status)"></span>
-                </div>
-              </div>
-              <div x-show="tx.status==='pending'" class="flex gap-2 mt-3">
-                <button @click="openChat(tx.sellerId)" class="bgh flex-1 py-1.5 rounded-xl text-xs"><i class="fas fa-comments mr-1"></i>Написать</button>
-                <button @click="confirmTx(tx)" class="bpr flex-1 py-1.5 rounded-xl text-xs"><i class="fas fa-check mr-1"></i>Подтвердить</button>
-                <button @click="refundTx(tx)" class="gl border border-yellow-600/40 text-yellow-400 hover:bg-yellow-900/30 px-3 py-1.5 rounded-xl text-xs transition"><i class="fas fa-undo"></i></button>
-              </div>
-              <div x-show="tx.status==='completed'&&!hasRev(tx.id)" class="mt-3">
-                <button @click="openRev(tx)" class="bgh px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-star mr-1"></i>Оставить отзыв</button>
-              </div>
-            </div>
-          </template>
-          <div x-show="myBuys.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-shopping-cart text-3xl mb-2 block opacity-30"></i><p class="text-sm">Нет покупок</p></div>
-        </div>
-
-        <div x-show="profTab==='sells'" class="mt-4 space-y-3">
-          <template x-for="tx in mySells" :key="tx.id">
-            <div class="gl rounded-xl p-4">
-              <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <div>
-                  <p class="font-semibold" x-text="tx.productTitle||'Удалённый лот'"></p>
-                  <p class="text-xs text-gray-400">Покупатель: <button @click="openPubProf(tx.buyerId)" class="text-blue-400 hover:underline" x-text="tx.buyerName||'?'"></button></p>
-                  <p class="text-xs text-gray-400 mono" x-text="fmtD(tx.createdAt)"></p>
-                </div>
-                <div class="flex items-center gap-3">
-                  <span class="mono font-bold" :class="tx.status==='completed'?'text-green-400':tx.status==='pending'?'text-yellow-400':'text-red-400'">
-                    <span x-text="tx.status==='completed'?'+':''"></span>€<span x-text="fmt(tx.amount)"></span>
-                  </span>
-                  <span class="text-xs px-2 py-1 rounded font-bold"
-                        :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
-                        x-text="stLbl(tx.status)"></span>
-                </div>
-              </div>
-              <div x-show="tx.status==='pending'" class="mt-3">
-                <button @click="openChat(tx.buyerId)" class="bgh px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-comments mr-1"></i>Написать</button>
-              </div>
-            </div>
-          </template>
-          <div x-show="mySells.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-chart-line text-3xl mb-2 block opacity-30"></i><p class="text-sm">Нет продаж</p></div>
-        </div>
-
-        <div x-show="profTab==='favs'" class="mt-4">
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <template x-for="p in favProds" :key="p.id">
-              <div class="gl card rounded-xl overflow-hidden cursor-pointer" @click="openProd(p)">
-                <div class="h-28 flex items-center justify-center bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative overflow-hidden">
-                  <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
-                  <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
-                  <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full gl flex items-center justify-center text-red-500"><i class="fas fa-heart text-xs"></i></button>
-                </div>
-                <div class="p-3">
-                  <p class="font-semibold text-sm truncate" x-text="p.title"></p>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="mono text-green-400 text-sm font-bold">€<span x-text="fmt(p.price)"></span></span>
-                    <button x-show="p.status==='active'" @click.stop="quickBuy(p)" class="bpr text-xs px-2.5 py-1 rounded-lg">Купить</button>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-          <div x-show="favProds.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-heart text-3xl mb-2 block opacity-30"></i><p class="text-sm">Нет избранного</p></div>
-        </div>
+function buildChatItem(chat, activeChatId, myUid) {
+  const isActive = chat.id === activeChatId;
+  const other = chat.type==="dm" ? chat.otherUser : null;
+  const name = chat.type==="dm" ? (other?.displayName||other?.username||"Пользователь") : (chat.name||"Группа");
+  const photo = chat.type==="dm" ? other?.photoURL : chat.photoURL;
+  const last = chat.lastMessage;
+  const isMine = last?.senderId === myUid;
+  const unread = chat.unreadCount?.[myUid] || 0;
+  const icon = chat.type==="group" ? "👥 " : "";
+  return `
+  <div class="chat-item ${isActive?"active":""}" onclick="selectChat('${chat.id}')">
+    ${buildAvatar(name, photo, 48, chat.type==="dm" && other?.online)}
+    <div class="chat-meta">
+      <div class="chat-name-row">
+        <span class="chat-name">${icon}${esc(name)}</span>
+        <span class="chat-time">${last?fmtTime(last.createdAt):""}</span>
       </div>
-    </template>
-  </div>
-
-  <!-- MESSENGER -->
-  <div x-show="pg==='messenger'" class="pge mt-4">
-    <div x-show="!me" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p>Необходима авторизация</p></div>
-    <template x-if="me">
-      <div class="flex gap-3 h-[calc(100vh-160px)]">
-        <div class="w-full md:w-72 shrink-0 gl rounded-2xl overflow-hidden flex flex-col" :class="activeChat?'hidden md:flex':'flex'">
-          <div class="p-4 border-b border-white/10"><h2 class="orb font-bold">Чаты</h2></div>
-          <div class="flex-1 overflow-y-auto sb">
-            <template x-for="c in myChats" :key="c.key">
-              <div @click="setChat(c)" class="flex items-center gap-3 p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition"
-                   :class="activeChat&&activeChat.key===c.key?'bg-white/10':''">
-                <div class="w-10 h-10 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm shrink-0"
-                     :class="c.other?.verified?'border-blue-500':'border-red-700'">
-                  <img x-show="c.other?.avatar" :src="c.other?.avatar" class="w-full h-full object-cover">
-                  <span x-show="!c.other?.avatar" class="neon" x-text="(c.other?.username||'?')[0].toUpperCase()"></span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1"><p class="font-semibold text-sm truncate" x-text="c.other?.username||'?'"></p><i x-show="c.other?.verified" class="fas fa-check-circle vc text-xs"></i></div>
-                  <p class="text-xs text-gray-400 truncate" x-text="c.lastMsg||'Нет сообщений'"></p>
-                </div>
-                <span x-show="c.unread>0" class="w-5 h-5 bg-red-600 rounded-full text-xs flex items-center justify-center font-bold" x-text="c.unread"></span>
-              </div>
-            </template>
-            <div x-show="myChats.length===0" class="text-center py-10 text-gray-500 text-sm"><i class="fas fa-comment-slash text-2xl mb-2 block opacity-30"></i><p>Нет диалогов</p></div>
-          </div>
-        </div>
-        <div class="flex-1 gl rounded-2xl overflow-hidden flex flex-col" :class="activeChat?'flex':'hidden md:flex'">
-          <template x-if="activeChat">
-            <div class="flex flex-col h-full">
-              <div class="p-4 border-b border-white/10 flex items-center gap-3">
-                <button @click="activeChat=null;chatMsgs=[]" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i></button>
-                <div class="w-9 h-9 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm"
-                     :class="activeChat.other?.verified?'border-blue-500':'border-red-700'">
-                  <img x-show="activeChat.other?.avatar" :src="activeChat.other?.avatar" class="w-full h-full object-cover">
-                  <span x-show="!activeChat.other?.avatar" class="neon" x-text="(activeChat.other?.username||'?')[0].toUpperCase()"></span>
-                </div>
-                <div>
-                  <p class="font-semibold flex items-center gap-1">
-                    <span :class="activeChat.other?.premium==='silver'||activeChat.other?.premium==='elite'?'gold-nick':''" x-text="activeChat.other?.username||'?'"></span>
-                    <i x-show="activeChat.other?.verified" class="fas fa-check-circle vc text-xs"></i>
-                  </p>
-                  <p class="text-xs text-gray-400 mono">ID: #<span x-text="activeChat.other?.shortId||activeChat.otherId?.slice(-5)"></span></p>
-                </div>
-              </div>
-              <div class="flex-1 overflow-y-auto p-4 space-y-3 sb" id="chatBox">
-                <template x-for="msg in chatMsgs" :key="msg.id">
-                  <div :class="msg.senderId===meKey?'flex justify-end':'flex justify-start'">
-                    <div class="max-w-[78%]" :class="msg.senderId===meKey?'cmeb':'cthem'">
-                      <img x-show="msg.image" :src="msg.image" class="rounded-lg max-w-full mb-1 cursor-pointer" @click="showImg(msg.image)" style="max-height:200px;object-fit:contain">
-                      <p x-show="msg.text" class="text-sm" x-text="msg.text"></p>
-                      <p class="text-xs text-gray-500 mt-1" x-text="fmtT(msg.ts)"></p>
-                    </div>
-                  </div>
-                </template>
-                <div x-show="chatMsgs.length===0" class="text-center text-gray-500 text-sm py-8"><i class="fas fa-comment-dots text-3xl mb-2 block opacity-20"></i><p>Начните диалог...</p></div>
-              </div>
-              <div class="p-3 border-t border-white/10 flex gap-2">
-                <label class="w-9 h-9 shrink-0 rounded-xl gl border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10">
-                  <i class="fas fa-image text-sm text-gray-400"></i><input type="file" accept="image/*" class="hidden" @change="sendImg($event)">
-                </label>
-                <input x-model="chatInput" @keydown.enter="sendMsg()" placeholder="Сообщение..." class="flex-1 gl rounded-xl px-4 py-2 text-sm border border-white/10">
-                <button @click="sendMsg()" class="bpr w-9 h-9 shrink-0 rounded-xl flex items-center justify-center"><i class="fas fa-paper-plane text-sm"></i></button>
-              </div>
-            </div>
-          </template>
-          <template x-if="!activeChat">
-            <div class="flex-1 flex items-center justify-center flex-col gap-3 text-gray-500"><i class="fas fa-comments text-5xl opacity-20"></i><p>Выберите чат</p></div>
-          </template>
-        </div>
-      </div>
-    </template>
-  </div>
-
-  <!-- WHEEL -->
-  <div x-show="pg==='wheel'" class="pge mt-4" x-init="$watch('pg',v=>{if(v==='wheel')$nextTick(()=>drawW(wAngle))})">
-    <div x-show="!me" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p>Необходима авторизация</p></div>
-    <template x-if="me">
-      <div class="flex flex-col items-center gap-6">
-        <div class="text-center"><h2 class="orb text-2xl font-bold neon">Колесо Фортуны</h2><p class="text-gray-400 text-sm mt-1">Крутите раз в день!</p></div>
-        <div class="gl rounded-2xl p-6 md:p-10 text-center">
-          <div class="relative inline-block mb-6">
-            <canvas id="wCanvas" width="280" height="280" style="border-radius:50%;box-shadow:0 0 30px var(--pr),0 0 60px rgba(225,29,72,.3)"></canvas>
-            <div class="wptr"></div>
-          </div>
-          <div x-show="wRes!==null" class="mb-4 gl rounded-xl p-4"><p class="text-lg font-bold">Вы выиграли</p><p class="orb text-4xl font-black text-green-400 mt-1">€<span x-text="wRes"></span></p></div>
-          <button x-show="canSpin" @click="spinW()" :disabled="spinning" class="bpr px-10 py-3 rounded-xl orb text-lg font-bold">
-            <i class="fas fa-sync-alt mr-2" :class="spinning?'animate-spin':''"></i><span x-text="spinning?'Кружится...':'Крутить!'"></span>
-          </button>
-          <div x-show="!canSpin" class="gl rounded-xl p-4 text-center">
-            <i class="fas fa-clock text-yellow-400 text-2xl mb-2 block"></i>
-            <p class="text-gray-400">Вы уже крутили сегодня.</p><p class="text-yellow-400 font-semibold mt-1">Возвращайтесь завтра!</p>
-          </div>
-        </div>
-        <div class="gl rounded-xl p-4 w-full max-w-xs">
-          <h3 class="font-semibold text-center mb-3">Призы</h3>
-          <div class="grid grid-cols-4 gap-2">
-            <template x-for="p in wPrizes" :key="p"><div class="gl rounded-lg py-2 text-center"><span class="text-xs mono text-green-400 font-bold">€<span x-text="p"></span></span></div></template>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-
-  <!-- PREMIUM -->
-  <div x-show="pg==='premium'" class="pge mt-4">
-    <div class="text-center mb-6">
-      <h2 class="orb text-2xl font-bold">Premium</h2>
-      <p class="text-gray-400 text-sm mt-1">Разблокируйте эксклюзивные возможности</p>
-      <div class="flex gap-2 justify-center mt-3">
-        <button @click="pCur='eur'" :class="pCur==='eur'?'bpr':'bgh'" class="px-4 py-1.5 rounded-xl text-sm">€ EUR</button>
-        <button @click="pCur='usd'" :class="pCur==='usd'?'bpr':'bgh'" class="px-4 py-1.5 rounded-xl text-sm">$ USD</button>
-        <button @click="pCur='rub'" :class="pCur==='rub'?'bpr':'bgh'" class="px-4 py-1.5 rounded-xl text-sm">₽ RUB</button>
+      <div class="chat-last-row">
+        <span class="chat-last">${isMine?'<span style="color:var(--accent)">Вы: </span>':""}${esc((last?.text||"Нет сообщений").replace(/\n/g," "))}</span>
+        ${unread>0?`<span class="badge">${unread>99?"99+":unread}</span>`:""}
       </div>
     </div>
-    <div class="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-      <div class="gl card rounded-2xl p-6 border border-yellow-800/40">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto" style="background:linear-gradient(135deg,#cd7f32,#8b4513)"><i class="fas fa-medal text-2xl text-white"></i></div>
-        <h3 class="orb text-xl font-bold text-center" style="color:#cd7f32">BRONZE</h3>
-        <div class="text-center my-4"><span class="orb text-3xl font-black neon" x-text="pCur==='eur'?'€10':pCur==='usd'?'$12':'₽1000'"></span></div>
-        <ul class="space-y-2 text-sm mb-6">
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Синяя галочка верификации</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Значок продавца</li>
-          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i>Золотой ник</li>
-          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i>0% комиссия</li>
-        </ul>
-        <button @click="buyPrem('bronze',10)" class="w-full bpr py-2.5 rounded-xl font-semibold" :disabled="me&&me.premium==='bronze'">
-          <span x-text="me&&me.premium==='bronze'?'Текущий план':'Подписаться'"></span></button>
+  </div>`;
+}
+
+function buildEmptyState() {
+  return `
+  <div class="empty-state">
+    <div class="empty-icon">✈</div>
+    <div class="empty-title">Telegram Web</div>
+    <div class="empty-sub">Выберите чат слева или найдите пользователя через поиск</div>
+  </div>`;
+}
+
+function buildChatArea() {
+  const {activeChat,messages,user,replyTo,emojiOpen,typingUsers,loadingMsgs} = state;
+  if (!activeChat) return buildEmptyState();
+  const other = activeChat.type==="dm" ? activeChat.otherUser : null;
+  const name = activeChat.type==="dm" ? (other?.displayName||other?.username||"Пользователь") : (activeChat.name||"Группа");
+  const photo = activeChat.type==="dm" ? other?.photoURL : activeChat.photoURL;
+  const isOnline = other?.online;
+  const statusTxt = typingUsers.length ? `${typingUsers.join(", ")} печатает...` : isOnline ? "в сети" : "не в сети";
+  const statusClass = typingUsers.length ? "typing" : isOnline ? "online" : "";
+  const grouped = groupByDate(messages);
+
+  return `
+  <div class="chat-area">
+    <div class="chat-header">
+      <button class="back-btn" onclick="closeSidebar()" style="display:flex;">◀</button>
+      ${buildAvatar(name,photo,40,other?.online)}
+      <div class="chat-header-info" onclick="openSettings('profile')">
+        <div class="chat-header-name">${esc(name)}</div>
+        <div class="chat-header-status ${statusClass}">${esc(statusTxt)}</div>
       </div>
-      <div class="gl card rounded-2xl p-6 border border-gray-400/40" style="box-shadow:0 0 18px rgba(168,178,200,.15)">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto" style="background:linear-gradient(135deg,#c0c0c0,#808080)"><i class="fas fa-crown text-2xl text-white"></i></div>
-        <h3 class="orb text-xl font-bold text-center text-gray-300">SILVER</h3>
-        <div class="text-center my-4"><span class="orb text-3xl font-black neon" x-text="pCur==='eur'?'€25':pCur==='usd'?'$28':'₽2500'"></span></div>
-        <ul class="space-y-2 text-sm mb-6">
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Синяя галочка</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Золотой ник в чате</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Эксклюзивные темы</li>
-          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i>0% комиссия</li>
-        </ul>
-        <button @click="buyPrem('silver',25)" class="w-full bpr py-2.5 rounded-xl font-semibold">
-          <span x-text="me&&me.premium==='silver'?'Текущий план':'Подписаться'"></span></button>
-      </div>
-      <div class="gl card rounded-2xl p-6 relative overflow-hidden" style="border:1px solid rgba(255,215,0,.4);box-shadow:0 0 22px rgba(255,215,0,.15)">
-        <div class="absolute inset-0 opacity-5 pointer-events-none" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"></div>
-        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto relative z-10" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"><i class="fas fa-gem text-2xl text-black"></i></div>
-        <h3 class="orb text-xl font-bold text-center relative z-10" style="color:#ffd700">ELITE</h3>
-        <div class="text-center my-4 relative z-10"><span class="orb text-3xl font-black" style="color:#ffd700" x-text="pCur==='eur'?'€50':pCur==='usd'?'$55':'₽5000'"></span></div>
-        <ul class="space-y-2 text-sm mb-6 relative z-10">
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Синяя галочка</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Золотой ник</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>Эксклюзивные темы</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i>0% комиссия</li>
-          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span class="br-e">PRIORITY STATUS</span></li>
-        </ul>
-        <button @click="buyPrem('elite',50)" class="w-full py-2.5 rounded-xl font-semibold relative z-10 cursor-pointer" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000">
-          <span x-text="me&&me.premium==='elite'?'Текущий план':'Подписаться'"></span></button>
+      <button class="icon-btn" onclick="openSettings('profile')">🔍</button>
+      <button class="icon-btn" onclick="openSettings('profile')">☎️</button>
+    </div>
+    <div class="messages" id="msgs-container">
+      ${loadingMsgs ? buildSkeleton() : Object.entries(grouped).map(([date,msgs])=>`
+        <div class="date-divider"><span>${date}</span></div>
+        ${msgs.map(m=>buildMessage(m,m.senderId===user?.uid)).join("")}
+      `).join("")}
+      ${typingUsers.length ? `<div class="msg-wrap in"><div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div><div class="typing-label">${esc(typingUsers[0])} печатает</div>` : ""}
+    </div>
+    <div class="input-area" style="position:relative;">
+      ${replyTo ? `<div class="reply-bar"><div class="reply-bar-content"><div class="reply-bar-name">${esc(replyTo.senderName)}</div><div class="reply-bar-text">${esc(replyTo.text)}</div></div><button onclick="clearReply()" style="background:none;border:none;cursor:pointer;color:var(--hint);font-size:16px;">✕</button></div>` : ""}
+      ${emojiOpen ? buildEmojiPicker() : ""}
+      <div class="input-row">
+        <button class="emoji-btn" onclick="toggleEmoji()">😊</button>
+        <div class="input-box">
+          <textarea id="msg-input" placeholder="Сообщение" rows="1" oninput="autoResize(this);handleTyping()" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="sendMsg()">▶</button>
       </div>
     </div>
-  </div>
+  </div>`;
+}
 
-  <!-- SETTINGS -->
-  <div x-show="pg==='settings'" class="pge mt-4">
-    <div x-show="!me" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p>Необходима авторизация</p></div>
-    <template x-if="me">
-      <div class="max-w-xl mx-auto space-y-4">
-        <h2 class="orb text-xl font-bold neon mb-4">Настройки</h2>
-        <div class="gl rounded-xl p-4">
-          <h3 class="font-semibold mb-3"><i class="fas fa-palette mr-2 neon"></i>Тема оформления</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <template x-for="th in themes" :key="th.id">
-              <button @click="setTheme(th.id)" class="gl rounded-xl p-3 border-2 text-sm font-semibold transition"
-                      :class="theme===th.id?'border-red-600':'border-white/10 hover:border-white/30'"
-                      :disabled="th.prem&&!(me.premium==='silver'||me.premium==='elite')">
-                <i class="fas mr-1" :class="th.icon"></i><span x-text="th.name"></span>
-                <span x-show="th.prem&&!(me.premium==='silver'||me.premium==='elite')" class="block text-xs text-yellow-500 mt-0.5">Silver+</span>
-              </button>
-            </template>
-          </div>
-        </div>
-        <div class="gl rounded-xl p-4">
-          <h3 class="font-semibold mb-3"><i class="fas fa-image mr-2 neon"></i>Фон сайта</h3>
-          <div class="flex gap-3">
-            <label class="bgh px-4 py-2 rounded-xl text-sm cursor-pointer"><i class="fas fa-upload mr-1"></i>Загрузить фон<input type="file" accept="image/*" class="hidden" @change="uploadBg($event)"></label>
-            <button x-show="customBg" @click="rmBg()" class="gl border border-red-800/40 text-red-400 hover:bg-red-900/20 px-4 py-2 rounded-xl text-sm transition">Убрать</button>
-          </div>
-        </div>
-        <div class="gl rounded-xl p-4">
-          <h3 class="font-semibold mb-3"><i class="fas fa-ticket-alt mr-2 neon"></i>Промокод</h3>
-          <div class="flex gap-2">
-            <input x-model="promoIn" placeholder="Введите промокод" class="flex-1 gl rounded-xl px-4 py-2 text-sm border border-white/10 uppercase">
-            <button @click="usePromo()" class="bpr px-4 py-2 rounded-xl text-sm">Применить</button>
-          </div>
-        </div>
-        <div class="gl rounded-xl p-4">
-          <h3 class="font-semibold mb-3"><i class="fas fa-exchange-alt mr-2 neon"></i>Перевод средств</h3>
-          <div class="space-y-2">
-            <input x-model="xTo" placeholder="Ник или ID получателя" class="w-full gl rounded-xl px-4 py-2 text-sm border border-white/10">
-            <div class="flex gap-2">
-              <input x-model.number="xAmt" type="number" placeholder="Сумма" class="flex-1 gl rounded-xl px-4 py-2 text-sm border border-white/10">
-              <button @click="doTransfer()" class="bpr px-4 py-2 rounded-xl text-sm">Отправить</button>
-            </div>
-          </div>
-        </div>
-        <div class="gl rounded-xl p-4 border border-red-900/40">
-          <h3 class="font-semibold mb-3 text-red-400"><i class="fas fa-skull-crossbones mr-2"></i>Опасная зона</h3>
-          <button @click="logout()" class="gl border border-red-800/50 text-red-400 hover:bg-red-900/30 px-4 py-2 rounded-xl text-sm transition"><i class="fas fa-sign-out-alt mr-1"></i>Выйти из аккаунта</button>
-        </div>
-      </div>
-    </template>
-  </div>
+function buildMessage(msg, isOwn) {
+  const deleted = msg.deleted;
+  const time = fmtTime(msg.createdAt);
+  const status = isOwn ? (msg.status==="read"?`<span class="status-icon read">✓✓</span>`:msg.status==="delivered"?`<span class="status-icon">✓✓</span>`:`<span class="status-icon">✓</span>`) : "";
+  const replyHtml = msg.replyTo ? `<div class="reply-preview"><div class="reply-preview-name">${esc(msg.replyTo.senderName)}</div><div class="reply-preview-text">${esc(msg.replyTo.text)}</div></div>` : "";
+  const actions = isOwn
+    ? `<div class="msg-actions">${!deleted?`<button class="msg-action-btn" onclick="replyToMsg('${msg.id}')" title="Ответить">↩</button>`:""}<button class="msg-action-btn" onclick="showMsgCtx(event,'${msg.id}',true)" title="Ещё">⋯</button></div>`
+    : `<div class="msg-actions"><button class="msg-action-btn" onclick="replyToMsg('${msg.id}')" title="Ответить">↩</button><button class="msg-action-btn" onclick="showMsgCtx(event,'${msg.id}',false)" title="Ещё">⋯</button></div>`;
 
-  <!-- ADMIN -->
-  <div x-show="pg==='admin'" class="pge mt-4">
-    <div x-show="!(me&&me.isAdmin)" class="text-center py-20 text-gray-400"><i class="fas fa-shield-alt text-4xl mb-3 block opacity-30 neon"></i><p>Нет доступа</p></div>
-    <template x-if="me&&me.isAdmin">
-      <div>
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-9 h-9 rounded-full bg-red-700 flex items-center justify-center"><i class="fas fa-shield-alt"></i></div>
-          <h2 class="orb text-xl font-bold neon">Панель администратора</h2>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div class="gl rounded-xl p-3 text-center"><p class="orb text-2xl font-bold neon" x-text="usersArr.length"></p><p class="text-xs text-gray-400">Пользователей</p></div>
-          <div class="gl rounded-xl p-3 text-center"><p class="orb text-2xl font-bold text-green-400" x-text="prods.length"></p><p class="text-xs text-gray-400">Лотов</p></div>
-          <div class="gl rounded-xl p-3 text-center"><p class="orb text-2xl font-bold text-yellow-400" x-text="txs.filter(t=>t.status==='pending').length"></p><p class="text-xs text-gray-400">В обработке</p></div>
-          <div class="gl rounded-xl p-3 text-center"><p class="orb text-2xl font-bold text-blue-400" x-text="promos.length"></p><p class="text-xs text-gray-400">Промокодов</p></div>
-        </div>
-        <div class="flex gap-1 gl rounded-xl p-1 mb-4 overflow-x-auto">
-          <button @click="adTab='users'"  :class="adTab==='users'?'bpr':'text-gray-400 hover:text-white'"  class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition">Пользователи</button>
-          <button @click="adTab='promos'" :class="adTab==='promos'?'bpr':'text-gray-400 hover:text-white'" class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition">Промокоды</button>
-          <button @click="adTab='txs'"    :class="adTab==='txs'?'bpr':'text-gray-400 hover:text-white'"    class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition">Сделки</button>
-        </div>
-
-        <!-- Users tab -->
-        <div x-show="adTab==='users'" class="space-y-2">
-          <template x-for="u in usersArr.filter(x=>!x.isAdmin)" :key="u.uid">
-            <div class="gl rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between"
-                 :class="u.banned?'border border-red-900/50':u.frozen?'border border-yellow-900/50':''">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm"
-                     :class="u.verified?'border-blue-500 text-blue-400':'border-red-700 neon'">
-                  <img x-show="u.avatar" :src="u.avatar" class="w-full h-full object-cover">
-                  <span x-show="!u.avatar" x-text="(u.username||'?')[0].toUpperCase()"></span>
-                </div>
-                <div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-semibold" :class="u.premium==='silver'||u.premium==='elite'?'gold-nick':''" x-text="u.username"></span>
-                    <i x-show="u.verified" class="fas fa-check-circle vc text-xs"></i>
-                    <span x-show="u.banned" class="bg-red-900/60 text-red-400 text-xs px-1.5 rounded font-bold">БАН</span>
-                    <span x-show="u.frozen" class="bg-yellow-900/60 text-yellow-400 text-xs px-1.5 rounded font-bold">ЗАМОРОЖЕН</span>
-                  </div>
-                  <p class="text-xs text-gray-400 mono">ID: #<span x-text="u.shortId||u.uid?.slice(-5)"></span> | €<span x-text="fmt(u.balance)"></span></p>
-                </div>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button @click="adBan(u)"
-                        :class="u.banned?'border-green-700/60 text-green-400 hover:bg-green-900/20':'border-red-700/60 text-red-400 hover:bg-red-900/20'"
-                        class="gl border text-xs px-3 py-1.5 rounded-xl font-semibold transition"
-                        x-text="u.banned?'Разбан':'Бан'"></button>
-                <button @click="adFreeze(u)"
-                        :class="u.frozen?'border-green-700/60 text-green-400 hover:bg-green-900/20':'border-yellow-700/60 text-yellow-400 hover:bg-yellow-900/20'"
-                        class="gl border text-xs px-3 py-1.5 rounded-xl font-semibold transition"
-                        x-text="u.frozen?'Разморозить':'Заморозить'"></button>
-                <button @click="adVerify(u)"
-                        :class="u.verified?'border-gray-600/60 text-gray-400 hover:bg-gray-900/20':'border-blue-700/60 text-blue-400 hover:bg-blue-900/20'"
-                        class="gl border text-xs px-3 py-1.5 rounded-xl font-semibold transition"
-                        x-text="u.verified?'Убрать ✓':'Галочка ✓'"></button>
-                <button @click="adDelete(u)"
-                        class="gl border border-red-900/60 text-red-500 hover:bg-red-900/30 text-xs px-3 py-1.5 rounded-xl font-semibold transition">Удалить</button>
-              </div>
-            </div>
-          </template>
-          <div x-show="usersArr.filter(x=>!x.isAdmin).length===0" class="text-center py-12 text-gray-500"><i class="fas fa-users text-3xl mb-2 block opacity-30"></i><p>Нет пользователей</p></div>
-        </div>
-
-        <!-- Promos tab -->
-        <div x-show="adTab==='promos'">
-          <div class="gl rounded-xl p-4 mb-4">
-            <h3 class="font-semibold mb-3 neon">Создать промокод</h3>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input x-model="nPromoCode" placeholder="КОД" class="flex-1 gl rounded-xl px-4 py-2 text-sm border border-white/10 uppercase">
-              <input x-model.number="nPromoAmt" type="number" placeholder="Сумма" class="w-28 gl rounded-xl px-4 py-2 text-sm border border-white/10">
-              <button @click="createPromo()" class="bpr px-4 py-2 rounded-xl text-sm">Создать</button>
-            </div>
-          </div>
-          <div class="space-y-2">
-            <template x-for="p in promos" :key="p.code">
-              <div class="gl rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <span class="mono font-bold text-yellow-400 text-lg" x-text="p.code"></span>
-                  <p class="text-sm text-gray-400">€<span x-text="p.amount"></span> · Использован: <span x-text="Object.keys(p.usedBy||{}).length"></span> раз</p>
-                </div>
-                <button @click="delPromo(p.code)" class="text-red-400 hover:text-red-300 transition"><i class="fas fa-trash"></i></button>
-              </div>
-            </template>
-            <div x-show="promos.length===0" class="text-center py-6 text-gray-500 text-sm">Нет промокодов</div>
-          </div>
-        </div>
-
-        <!-- Txs tab -->
-        <div x-show="adTab==='txs'" class="space-y-2">
-          <template x-for="tx in [...txs].slice(0,50)" :key="tx.id">
-            <div class="gl rounded-xl p-3 flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
-              <div class="text-sm">
-                <p class="font-semibold" x-text="tx.productTitle||'Удалённый лот'"></p>
-                <p class="text-xs text-gray-400 mono"><span x-text="tx.buyerName||'?'"></span> → <span x-text="tx.sellerName||'?'"></span></p>
-                <p class="text-xs text-gray-400" x-text="fmtD(tx.createdAt)"></p>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="mono font-bold text-green-400">€<span x-text="fmt(tx.amount)"></span></span>
-                <span class="text-xs px-2 py-1 rounded font-bold"
-                      :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
-                      x-text="stLbl(tx.status)"></span>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
-    </template>
-  </div>
-
-</main>
-
-<!-- AUTH MODAL -->
-<div x-show="showAuth" @click.self="showAuth=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="min gld rounded-2xl p-6 w-full max-w-sm border border-white/10">
-    <div class="flex items-center justify-between mb-5">
-      <h2 class="orb text-xl font-bold neon" x-text="authMode==='login'?'Войти':'Регистрация'"></h2>
-      <button @click="showAuth=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full gl flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+  return `
+  <div class="msg-wrap ${isOwn?"out":"in"}" data-id="${msg.id}">
+    ${isOwn?actions:""}
+    <div class="bubble ${isOwn?"out":"in"}">
+      ${replyHtml}
+      <div class="bubble-text ${deleted?"deleted-msg":""}">${deleted?"Сообщение удалено":esc(msg.text)}</div>
+      <div class="bubble-time"><span>${time}</span>${status}</div>
     </div>
-    <div class="space-y-3">
-      <div><label class="text-xs text-gray-400 mb-1 block">Никнейм</label>
-        <input x-model="af.user" placeholder="Никнейм" @keydown.enter="authMode==='login'?doLogin():doReg()" class="w-full gl rounded-xl px-4 py-2.5 text-sm border border-white/10"></div>
-      <div><label class="text-xs text-gray-400 mb-1 block">Пароль</label>
-        <div class="relative">
-          <input x-model="af.pass" :type="showPwd?'text':'password'" @keydown.enter="authMode==='login'?doLogin():doReg()" placeholder="Пароль" class="w-full gl rounded-xl px-4 py-2.5 text-sm border border-white/10 pr-10">
-          <button @click="showPwd=!showPwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas" :class="showPwd?'fa-eye-slash':'fa-eye'"></i></button>
-        </div>
-      </div>
-      <div x-show="authMode==='register'"><label class="text-xs text-gray-400 mb-1 block">Подтвердить пароль</label>
-        <input x-model="af.conf" type="password" @keydown.enter="doReg()" placeholder="Подтвердить пароль" class="w-full gl rounded-xl px-4 py-2.5 text-sm border border-white/10"></div>
-      <div x-show="authErr" class="text-red-400 text-xs gl rounded-xl px-3 py-2 border border-red-900/50" x-text="authErr"></div>
-      <div x-show="authBusy" class="text-center text-gray-400 text-sm"><i class="fas fa-spinner animate-spin mr-2"></i>Загрузка...</div>
-      <button @click="authMode==='login'?doLogin():doReg()" :disabled="authBusy" class="w-full bpr py-2.5 rounded-xl font-semibold" x-text="authMode==='login'?'Войти':'Зарегистрироваться'"></button>
-      <p class="text-center text-sm text-gray-400">
-        <span x-text="authMode==='login'?'Нет аккаунта?':'Уже есть аккаунт?'"></span>
-        <button @click="authMode=authMode==='login'?'register':'login';authErr=''" class="text-red-400 hover:underline ml-1" x-text="authMode==='login'?'Регистрация':'Войти'"></button>
-      </p>
-      <div x-show="authMode==='login'" class="text-center text-xs text-gray-500 border-t border-white/10 pt-3">Admin: <span class="text-red-400 mono">system / 1337</span></div>
+    ${!isOwn?actions:""}
+  </div>`;
+}
+
+function buildSkeleton() {
+  return Array.from({length:6}).map((_,i)=>`
+    <div class="msg-wrap ${i%2===0?"out":"in"}">
+      <div style="height:40px;border-radius:16px;background:var(--hover);width:${Math.random()*25+15}%;animation:typingAnim 1.5s infinite;"></div>
+    </div>`).join("");
+}
+
+function buildEmojiPicker() {
+  return `<div class="emoji-picker">${EMOJIS.map(e=>`<button onclick="addEmoji('${e}')">${e}</button>`).join("")}</div>`;
+}
+
+function buildSettings() {
+  const {settingsTab,profile,user,theme,saving,saveOk,profileForm} = state;
+  const name = profileForm.displayName || profile?.displayName || user?.displayName || "";
+  const photo = profile?.photoURL || user?.photoURL || "";
+  const tabs = [["profile","👤","Профиль"],["appearance","🎨","Оформление"],["privacy","🔒","Приватность"],["notifications","🔔","Уведомления"]];
+
+  let content = "";
+  if (settingsTab==="profile") {
+    content = `
+    <div class="profile-av-wrap">
+      <label class="av-upload-btn">
+        ${buildAvatar(name,photo,80)}
+        <div class="av-edit-badge">📷</div>
+        <input type="file" accept="image/*" onchange="uploadAvatar(this)"/>
+      </label>
+      <div style="font-size:13px;color:var(--hint);">Нажмите для смены фото</div>
     </div>
-  </div>
-</div>
-
-<!-- PRODUCT DETAIL MODAL -->
-<div x-show="showProd&&selProd" @click.self="showProd=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-  <div class="min gld rounded-2xl w-full max-w-lg border border-white/10 my-4" x-show="selProd">
-    <template x-if="selProd">
-      <div>
-        <div class="h-48 rounded-t-2xl bg-gradient-to-br from-slate-900 to-purple-900 relative overflow-hidden flex items-center justify-center">
-          <img x-show="selProd.image" :src="selProd.image" class="w-full h-full object-cover opacity-80">
-          <i x-show="!selProd.image" class="fas text-6xl opacity-20" :class="catIcon(selProd.category)"></i>
-          <button @click="showProd=false" class="absolute top-3 right-3 w-8 h-8 rounded-full gl flex items-center justify-center text-gray-300 hover:text-white"><i class="fas fa-times text-sm"></i></button>
-          <div class="absolute top-3 left-3"><span class="gl text-xs px-2 py-1 rounded" x-text="catLbl(selProd.category)"></span></div>
-        </div>
-        <div class="p-5">
-          <h2 class="text-xl font-bold mb-1" x-text="selProd.title"></h2>
-          <p class="text-gray-400 text-sm mb-4" x-text="selProd.description"></p>
-          <div class="flex items-center justify-between mb-4">
-            <button @click="showProd=false;openPubProf(selProd.sellerId)" class="flex items-center gap-2 hover:opacity-80 transition">
-              <div class="w-9 h-9 rounded-full border overflow-hidden flex items-center justify-center text-xs font-bold"
-                   :class="uVerified(selProd.sellerId)?'border-blue-500 text-blue-400':'border-red-700 neon'">
-                <img x-show="getUser(selProd.sellerId)?.avatar" :src="getUser(selProd.sellerId)?.avatar" class="w-full h-full object-cover">
-                <span x-show="!getUser(selProd.sellerId)?.avatar" x-text="(selProd.sellerName||'?')[0].toUpperCase()"></span>
-              </div>
-              <div class="text-left">
-                <div class="flex items-center gap-1">
-                  <span class="text-sm font-semibold" :class="getUser(selProd.sellerId)?.premium==='silver'||getUser(selProd.sellerId)?.premium==='elite'?'gold-nick':''" x-text="selProd.sellerName||'?'"></span>
-                  <i x-show="uVerified(selProd.sellerId)" class="fas fa-check-circle vc text-xs"></i>
-                </div>
-                <div class="flex items-center gap-0.5">
-                  <template x-for="s in 5" :key="s"><i class="fas fa-star text-xs" :class="s<=Math.round(selRating(selProd.sellerId))?'son':'sof'"></i></template>
-                  <span class="text-xs text-gray-400 ml-1">(<span x-text="selRvCnt(selProd.sellerId)"></span>)</span>
-                </div>
-              </div>
-            </button>
-            <div class="text-right">
-              <p class="mono font-black text-2xl text-green-400">€<span x-text="fmt(selProd.price)"></span></p>
-              <p class="text-xs text-gray-400">Escrow защита</p>
-            </div>
-          </div>
-          <div x-show="selProd.status==='active'" class="flex gap-3">
-            <button @click="toggleFav(selProd.id)" class="gl border border-white/20 py-2.5 px-4 rounded-xl hover:bg-white/10 transition" :class="isFav(selProd.id)?'text-red-500 border-red-500/50':'text-gray-400'"><i class="fas fa-heart"></i></button>
-            <button @click="openChat(selProd.sellerId);showProd=false" class="bgh flex-1 py-2.5 rounded-xl text-sm font-semibold"><i class="fas fa-comments mr-2"></i>Написать</button>
-            <button @click="doBuy(selProd)" class="bpr flex-1 py-2.5 rounded-xl text-sm font-semibold"><i class="fas fa-shopping-cart mr-2"></i>Купить</button>
-          </div>
-          <div x-show="selProd.status!=='active'" class="text-center py-3">
-            <span class="font-bold text-lg" :class="selProd.status==='sold'?'text-red-400':'text-yellow-400'" x-text="stLbl(selProd.status)"></span>
-          </div>
-          <div x-show="prodRvs(selProd.id).length>0" class="mt-5">
-            <h3 class="font-semibold text-sm mb-3 text-gray-300"><i class="fas fa-star mr-1 son"></i>Отзывы (<span x-text="prodRvs(selProd.id).length"></span>)</h3>
-            <div class="space-y-2 max-h-48 overflow-y-auto sb">
-              <template x-for="r in prodRvs(selProd.id)" :key="r.id">
-                <div class="gl rounded-xl p-3">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs font-semibold" x-text="r.reviewerName||'?'"></span>
-                    <div class="flex gap-0.5"><template x-for="s in 5" :key="s"><i class="fas fa-star text-xs" :class="s<=r.stars?'son':'sof'"></i></template></div>
-                  </div>
-                  <p class="text-xs text-gray-400" x-text="r.text"></p>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
+    <div class="settings-section">
+      <h3>Личные данные</h3>
+      <div class="settings-card">
+        <div class="form-group"><label class="form-label">Отображаемое имя</label><input class="form-input" value="${esc(profileForm.displayName)}" oninput="updProfileForm('displayName',this.value)" maxlength="64" placeholder="Ваше имя"/></div>
+        <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" oninput="updProfileForm('bio',this.value)" maxlength="200" rows="3" placeholder="Расскажите о себе..." style="resize:none;">${esc(profileForm.bio)}</textarea></div>
+        <div class="form-group" style="margin-bottom:0;"><label class="form-label">Email</label><input class="form-input" value="${esc(user?.email||"")}" disabled style="opacity:0.5;"/></div>
       </div>
-    </template>
-  </div>
-</div>
-
-<!-- PUBLIC PROFILE MODAL -->
-<div x-show="showPubProf&&pubUser" @click.self="showPubProf=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-  <div class="min gld rounded-2xl w-full max-w-lg border border-white/10 my-4" x-show="pubUser">
-    <template x-if="pubUser">
-      <div class="p-5">
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-14 h-14 rounded-xl border-2 overflow-hidden flex items-center justify-center text-lg font-bold" :class="pubUser.verified?'border-blue-500':'border-red-700'">
-              <img x-show="pubUser.avatar" :src="pubUser.avatar" class="w-full h-full object-cover">
-              <span x-show="!pubUser.avatar" class="neon" x-text="(pubUser.username||'?')[0].toUpperCase()"></span>
-            </div>
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-lg font-bold" :class="pubUser.premium==='silver'||pubUser.premium==='elite'?'gold-nick':''" x-text="pubUser.username"></h2>
-                <i x-show="pubUser.verified" class="fas fa-check-circle vc"></i>
-                <span x-show="pubUser.premium==='bronze'" class="br-b">BRONZE</span>
-                <span x-show="pubUser.premium==='silver'" class="br-s">SILVER</span>
-                <span x-show="pubUser.premium==='elite'" class="br-e">ELITE</span>
-              </div>
-              <p class="text-xs text-gray-400 mono">ID: #<span x-text="pubUser.shortId||pubUser.uid?.slice(-5)"></span></p>
-              <div class="flex items-center gap-0.5 mt-1">
-                <template x-for="s in 5" :key="s"><i class="fas fa-star text-xs" :class="s<=Math.round(selRating(pubUser.uid))?'son':'sof'"></i></template>
-                <span class="text-xs text-gray-400 ml-1">(<span x-text="selRvCnt(pubUser.uid)"></span>)</span>
-              </div>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <button x-show="me&&meKey!==pubUser.uid" @click="showPubProf=false;openChat(pubUser.uid)" class="bgh px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-comments mr-1"></i>Написать</button>
-            <button @click="showPubProf=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full gl flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
-          </div>
-        </div>
-        <h3 class="font-semibold text-sm mb-3">Активные лоты</h3>
-        <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto sb">
-          <template x-for="p in selProds(pubUser.uid)" :key="p.id">
-            <div @click="showPubProf=false;openProd(p)" class="gl rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition">
-              <div class="h-20 flex items-center justify-center bg-gradient-to-br from-slate-900 to-purple-900 overflow-hidden">
-                <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
-                <i x-show="!p.image" class="fas text-2xl opacity-20" :class="catIcon(p.category)"></i>
-              </div>
-              <div class="p-2"><p class="text-xs font-semibold truncate" x-text="p.title"></p><p class="text-xs mono text-green-400">€<span x-text="fmt(p.price)"></span></p></div>
-            </div>
-          </template>
-        </div>
-        <div x-show="selProds(pubUser.uid).length===0" class="text-center py-6 text-gray-500 text-sm">Нет активных лотов</div>
-      </div>
-    </template>
-  </div>
-</div>
-
-<!-- ADD PRODUCT MODAL -->
-<div x-show="showAddProdM" @click.self="showAddProdM=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-  <div class="min gld rounded-2xl p-5 w-full max-w-md border border-white/10 my-4">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="orb text-lg font-bold neon">Добавить лот</h2>
-      <button @click="showAddProdM=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full gl flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+      <button class="save-btn" onclick="saveProfile()" ${saving?"disabled":""}>${saving?"⏳ Сохранение...":saveOk?"✅ Сохранено!":"💾 Сохранить"}</button>
     </div>
-    <div class="space-y-3">
-      <div>
-        <label class="text-xs text-gray-400 mb-1 block">Название *</label>
-        <input x-model="np.title" placeholder="Название товара" class="w-full gl rounded-xl px-4 py-2.5 text-sm border border-white/10">
+    <button class="logout-btn" onclick="doLogout()">🚪 Выйти из аккаунта</button>`;
+  }
+  if (settingsTab==="appearance") {
+    content = `
+    <div class="settings-section">
+      <h3>Тема оформления</h3>
+      <div class="theme-grid">
+        <div class="theme-option ${theme==="dark"?"selected":""}" onclick="changeTheme('dark')">
+          <div class="theme-option-label">🌙 Тёмная</div>
+          <div class="theme-option-sub">Тёмный фон</div>
+          ${theme==="dark"?"<div style='color:var(--accent);margin-top:6px;font-size:13px;'>✓ Активна</div>":""}
+        </div>
+        <div class="theme-option ${theme==="light"?"selected":""}" onclick="changeTheme('light')">
+          <div class="theme-option-label">☀️ Светлая</div>
+          <div class="theme-option-sub">Светлый фон</div>
+          ${theme==="light"?"<div style='color:var(--accent);margin-top:6px;font-size:13px;'>✓ Активна</div>":""}
+        </div>
       </div>
-      <div>
-        <label class="text-xs text-gray-400 mb-1 block">Описание</label>
-        <textarea x-model="np.desc" placeholder="Подробное описание..." rows="3" class="w-full gl rounded-xl px-4 py-2.5 text-sm border border-white/10
+    </div>
+    <div class="settings-section">
+      <h3>Интерфейс</h3>
+      <div class="settings-card">
+        <div class="toggle-row"><span class="toggle-row-label">Компактный режим</span><button class="toggle"><div class="toggle-knob"></div></button></div>
+        <div class="toggle-row"><span class="toggle-row-label">Анимации</span><button class="toggle"><div class="toggle-knob"></div></button></div>
+      </div>
+    </div>`;
+  }
+  if (settingsTab==="privacy") {
+    const blocked = state.profile?.blockedUsers || [];
+    content = `
+    <div class="settings-section">
+      <h3>Заблокированные (${blocked.length})</h3>
+      <div class="settings-card">
+        ${blocked.length===0?`<div style="text-align:center;padding:16px;color:var(--hint);font-size:14px;">🔒 Нет заблокированных</div>`:blocked.map(uid=>`<div class="blocked-item"><div style="flex:1;color:var(--text);font-size:14px;">${uid}</div><button class="unblock-btn" onclick="doUnblock('${uid}')">Разблокировать</button></div>`).join("")}
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Безопасность</h3>
+      <div class="settings-card" style="font-size:13px;color:var(--hint);line-height:1.8;">
+        🔐 Firebase Authentication<br>
+        🔒 Шифрование данных<br>
+        🛡️ Защита от брутфорса<br>
+        📱 Сессии по токенам
+      </div>
+    </div>`;
+  }
+  if (settingsTab==="notifications") {
+    content = `
+    <div class="settings-section">
+      <h3>Уведомления</h3>
+      <div class="settings-card">
+        <div class="toggle-row"><span class="toggle-row-label">Push-уведомления</span><button class="toggle" onclick="reqNotif()"><div class="toggle-knob"></div></button></div>
+        <div class="toggle-row"><span class="toggle-row-label">Звук сообщений</span><button class="toggle"><div class="toggle-knob"></div></button></div>
+        <div class="toggle-row"><span class="toggle-row-label">Превью в уведомлении</span><button class="toggle"><div class="toggle-knob"></div></button></div>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="settings-overlay" onclick="closeSettings()">
+    <div class="settings-modal" onclick="event.stopPropagation()">
+      <div class="settings-header">
+        <h2>⚙️ Настройки</h2>
+        <button class="icon-btn" onclick="closeSettings()">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-nav">
+          ${tabs.map(([id,icon,label])=>`<button class="settings-nav-btn ${settingsTab===id?"active":""}" onclick="setSettingsTab('${id}')"><span>${icon}</span><span>${label}</span></button>`).join("")}
+        </div>
+        <div class="settings-content">${content}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildCtxMenu() {
+  const {ctxMenu} = state;
+  return `
+  <div class="ctx-menu" style="top:${ctxMenu.y}px;left:${ctxMenu.x}px;" id="ctx-menu">
+    <button class="ctx-item" onclick="replyToMsg('${ctxMenu.msgId}');closeCtx()">↩ Ответить</button>
+    ${ctxMenu.isOwn?`<button class="ctx-item danger" onclick="deleteMsg('${ctxMenu.msgId}',true);closeCtx()">🗑 Удалить у всех</button>`:""}
+    <button class="ctx-item danger" onclick="deleteMsg('${ctxMenu.msgId}',false);closeCtx()">🗑 Удалить у себя</button>
+  </div>`;
+}
+
+function esc(str) {
+  return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ══════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════
+function attachEvents() {
+  // Focus message input
+  const inp = document.getElementById("msg-input");
+  if (inp) inp.focus();
+  // Close ctx on outside click
+  document.addEventListener("click", e => {
+    if (state.ctxMenu && !document.getElementById("ctx-menu")?.contains(e.target)) {
+      setState({ctxMenu:null});
+    }
+    if (!e.target.closest("#menu-btn") && !e.target.closest("#hamburger-menu")) {
+      const menu = document.getElementById("hamburger-menu");
+      if (menu) menu.style.display = "none";
+    }
+  }, {once:true});
+}
+
+// ══════════════════════════════════════
+// GLOBAL FUNCTIONS (called from HTML)
+// ══════════════════════════════════════
+window.setAuthTab = tab => setState({authTab:tab,authError:""});
+window.updAuthForm = (k,v) => { state.authForm[k]=v; };
+window.updProfileForm = (k,v) => { state.profileForm[k]=v; };
+window.setFolder = f => setState({folder:f});
+window.toggleTheme = () => { const t = state.theme==="dark"?"light":"dark"; changeTheme(t); };
+window.changeTheme = t => { localStorage.setItem("tg_theme",t); setState({theme:t}); };
+window.openSettings = tab => {
+  state.profileForm = { displayName: state.profile?.displayName||state.user?.displayName||"", bio: state.profile?.bio||"", phone: state.profile?.phone||"" };
+  setState({settingsOpen:true, settingsTab:tab||"profile"});
+};
+window.closeSettings = () => setState({settingsOpen:false});
+window.setSettingsTab = tab => setState({settingsTab:tab});
+window.clearReply = () => setState({replyTo:null});
+window.toggleEmoji = () => setState({emojiOpen:!state.emojiOpen});
+window.addEmoji = e => { const inp=document.getElementById("msg-input"); if(inp){inp.value+=e;inp.focus();} setState({emojiOpen:false}); };
+window.closeCtx = () => setState({ctxMenu:null});
+window.closeSidebar = () => setState({sidebarOpen:false});
+window.toggleMenu = () => { const m=document.getElementById("hamburger-menu"); if(m) m.style.display=m.style.display==="none"||!m.style.display?"block":"none"; };
+
+window.autoResize = el => {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight,120)+"px";
+};
+
+window.reqNotif = async () => {
+  if ("Notification" in window) await Notification.requestPermission();
+};
+
+window.submitAuth = async () => {
+  const {authTab,authForm} = state;
+  setState({authError:"",authLoading2:true});
+  try {
+    if (authTab==="register") {
+      if (!authForm.username.trim()) throw {message:"Введите имя пользователя"};
+      if (authForm.password.length<6) throw {message:"Пароль минимум 6 символов"};
+      const cred = await createUserWithEmailAndPassword(auth,authForm.email,authForm.password);
+      await updateProfile(cred.user,{displayName:authForm.username});
+      await setDoc(doc(db,"users",cred.user.uid),{uid:cred.user.uid,email:authForm.email,username:authForm.username,displayName:authForm.username,photoURL:null,bio:"",createdAt:serverTimestamp(),lastSeen:serverTimestamp(),online:true,blockedUsers:[]});
+    } else {
+      await signInWithEmailAndPassword(auth,authForm.email,authForm.password);
+    }
+  } catch(e) {
+    const msgs = {"auth/email-already-in-use":"Email уже используется","auth/invalid-email":"Неверный email","auth/weak-password":"Пароль минимум 6 символов","auth/user-not-found":"Пользователь не найден","auth/wrong-password":"Неверный пароль","auth/invalid-credential":"Неверный email или пароль"};
+    setState({authError:msgs[e.code]||e.message,authLoading2:false});
+  }
+};
+
+window.doLogout = async () => {
+  if (unsubChats) unsubChats();
+  if (unsubMsgs) unsubMsgs();
+  if (unsubTyping) unsubTyping();
+  await signOut(auth);
+  setState({user:null,profile:null,chats:[],messages:[],activeChatId:null,activeChat:null,settingsOpen:false});
+};
+
+window.handleSearch = async q => {
+  state.searchQ = q;
+  if (!q.trim()) { setState({searchResults:[]}); return; }
+  const q1 = query(collection(db,"users"),where("email",">=",q),where("email","<=",q+"\uf8ff"),limit(10));
+  const q2 = query(collection(db,"users"),where("username",">=",q),where("username","<=",q+"\uf8ff"),limit(10));
+  const [s1,s2] = await Promise.all([getDocs(q1),getDocs(q2)]);
+  const map = new Map();
+  [...s1.docs,...s2.docs].forEach(d=>{ if(d.id!==state.user?.uid) map.set(d.id,{id:d.id,...d.data()}); });
+  setState({searchResults:Array.from(map.values())});
+};
+
+window.openDM = async (uid,name,email,photo) => {
+  state.searchQ=""; state.searchResults=[];
+  const existing = state.chats.find(c=>c.type==="dm"&&c.members?.includes(uid));
+  if (existing) { selectChat(existing.id); return; }
+  const chatRef = await addDoc(collection(db,"chats"),{type:"dm",members:[state.user.uid,uid],createdAt:serverTimestamp(),updatedAt:serverTimestamp(),lastMessage:null,unreadCount:{}});
+  await selectChat(chatRef.id);
+};
+
+window.selectChat = async id => {
+  if (unsubMsgs) unsubMsgs();
+  if (unsubTyping) unsubTyping();
+  const chat = state.chats.find(c=>c.id===id);
+  setState({activeChatId:id,activeChat:chat,messages:[],loadingMsgs:true,replyTo:null,emojiOpen:false,sidebarOpen:false});
+  // Messages
+  const q = query(collection(db,"chats",id,"messages"),orderBy("createdAt","asc"));
+  unsubMsgs = onSnapshot(q,snap=>{
+    const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    setState({messages:msgs,loadingMsgs:false});
+    scrollToBottom();
+    // mark read
+    const unread = msgs.filter(m=>m.senderId!==state.user?.uid&&m.status!=="read");
+    if (unread.length) {
+      const batch = writeBatch(db);
+      unread.forEach(m=>batch.update(doc(db,"chats",id,"messages",m.id),{status:"read"}));
+      batch.commit();
+    }
+  });
+  // Typing
+  unsubTyping = onSnapshot(doc(db,"chats",id),snap=>{
+    const data = snap.data();
+    if (!data?.typing){setState({typingUsers:[]});return;}
+    const now = Date.now();
+    const active = Object.entries(data.typing).filter(([uid,v])=>uid!==state.user?.uid&&v&&(now-v.at?.toMillis?.()<4000)).map(([,v])=>v.name);
+    setState({typingUsers:active});
+  });
+};
+
+window.sendMsg = async () => {
+  const inp = document.getElementById("msg-input");
+  const text = inp?.value?.trim();
+  if (!text || !state.activeChatId) return;
+  inp.value=""; inp.style.height="auto";
+  const {activeChatId,user,replyTo} = state;
+  setState({replyTo:null,emojiOpen:false});
+  const msgData = {text,senderId:user.uid,senderName:user.displayName||user.email,senderPhoto:user.photoURL||null,createdAt:serverTimestamp(),status:"sent",replyTo:replyTo?{id:replyTo.id,text:replyTo.text,senderName:replyTo.senderName}:null,deletedFor:[],deleted:false};
+  const msgRef = await addDoc(collection(db,"chats",activeChatId,"messages"),msgData);
+  await updateDoc(doc(db,"chats",activeChatId),{lastMessage:{text,senderId:user.uid,createdAt:new Date()},updatedAt:serverTimestamp()});
+  setTimeout(async()=>{await updateDoc(doc(db,"chats",activeChatId,"messages",msgRef.id),{status:"delivered"});},600);
+  // stop typing
+  await updateDoc(doc(db,"chats",activeChatId),{[`typing.${user.uid}`]:null}).catch(()=>{});
+};
+
+window.handleTyping = async () => {
+  if (!state.activeChatId || !state.user) return;
+  await updateDoc(doc(db,"chats",state.activeChatId),{[`typing.${state.user.uid}`]:{name:state.user.displayName||state.user.email,at:serverTimestamp()}}).catch(()=>{});
+  if (typingTimer) clearTimeout(typingTimer);
+  typingTimer = setTimeout(async()=>{
+    await updateDoc(doc(db,"chats",state.activeChatId),{[`typing.${state.user.uid}`]:null}).catch(()=>{});
+  },3000);
+};
+
+window.replyToMsg = id => {
+  const msg = state.messages.find(m=>m.id===id);
+  if (msg) setState({replyTo:msg,ctxMenu:null});
+  setTimeout(()=>document.getElementById("msg-input")?.focus(),50);
+};
+
+window.deleteMsg = async (id, forAll) => {
+  if (!state.activeChatId) return;
+  const ref = doc(db,"chats",state.activeChatId,"messages",id);
+  if (forAll) await updateDoc(ref,{text:"Сообщение удалено",deleted:true,deletedFor:[]});
+  else await updateDoc(ref,{deletedFor:arrayUnion(state.user.uid)});
+};
+
+window.showMsgCtx = (e, msgId, isOwn) => {
+  e.preventDefault(); e.stopPropagation();
+  const x = Math.min(e.clientX, window.innerWidth-180);
+  const y = Math.min(e.clientY, window.innerHeight-120);
+  setState({ctxMenu:{x,y,msgId,isOwn}});
+};
+
+window.saveProfile = async () => {
+  if (!state.user) return;
+  setState({saving:true});
+  const {displayName,bio} = state.profileForm;
+  await updateProfile(auth.currentUser,{displayName:displayName.trim()});
+  await updateDoc(doc(db,"users",state.user.uid),{displayName:displayName.trim(),bio:bio.trim()});
+  setState({saving:false,saveOk:true,profile:{...state.profile,displayName:displayName.trim(),bio:bio.trim()}});
+  setTimeout(()=>setState({saveOk:false}),2500);
+};
+
+window.uploadAvatar = async input => {
+  const file = input.files?.[0];
+  if (!file||!state.user) return;
+  setState({saving:true});
+  try {
+    const storageRef = ref(storage,`avatars/${state.user.uid}`);
+    await uploadBytes(storageRef,file);
+    const url = await getDownloadURL(storageRef);
+    await updateProfile(auth.currentUser,{photoURL:url});
+    await updateDoc(doc(db,"users",state.user.uid),{photoURL:url});
+    setState({saving:false,profile:{...state.profile,photoURL:url}});
+  } catch(e) { setState({saving:false}); alert("Ошибка загрузки: "+e.message); }
+};
+
+window.doUnblock = async uid => {
+  await updateDoc(doc(db,"users",state.user.uid),{blockedUsers:arrayRemove(uid)});
+  setState({profile:{...state.profile,blockedUsers:(state.profile?.blockedUsers||[]).filter(u=>u!==uid)}});
+};
+
+function scrollToBottom() {
+  setTimeout(()=>{const c=document.getElementById("msgs-container");if(c)c.scrollTop=c.scrollHeight;},50);
+}
+
+// ══════════════════════════════════════
+// FIREBASE AUTH LISTENER
+// ══════════════════════════════════════
+onAuthStateChanged(auth, async firebaseUser => {
+  if (firebaseUser) {
+    // Update online status
+    await updateDoc(doc(db,"users",firebaseUser.uid),{online:true,lastSeen:serverTimestamp()}).catch(()=>{});
+    const snap = await getDoc(doc(db,"users",firebaseUser.uid));
+    const profile = snap.exists() ? snap.data() : null;
+    setState({user:firebaseUser,profile,authLoading:false,authLoading2:false,
+      profileForm:{displayName:profile?.displayName||firebaseUser.displayName||"",bio:profile?.bio||"",phone:profile?.phone||""}
+    });
+    // Subscribe to chats
+    if (unsubChats) unsubChats();
+    const q = query(collection(db,"chats"),where("members","array-contains",firebaseUser.uid),orderBy("updatedAt","desc"));
+    unsubChats = onSnapshot(q, async snap2 => {
+      const list = await Promise.all(snap2.docs.map(async d=>{
+        const data={id:d.id,...d.data()};
+        if (data.type==="dm") {
+          const otherId = data.members.find(m=>m!==firebaseUser.uid);
+          if (otherId) {
+            const us = await getDoc(doc(db,"users",otherId));
+            if (us.exists()) data.otherUser=us.data();
+          }
+        }
+        return data;
+      }));
+      setState({chats:list});
+    });
+    // Set offline on page close
+    window.addEventListener("beforeunload",()=>{
+      updateDoc(doc(db,"users",firebaseUser.uid),{online:false,lastSeen:serverTimestamp()}).catch(()=>{});
+    });
+  } else {
+    if (unsubChats) unsubChats();
+    setState({user:null,profile:null,authLoading:false,chats:[],messages:[],activeChatId:null,activeChat:null});
+  }
+});
+
+// Initial render
+render();
+</script>
+</body>
+</html>
