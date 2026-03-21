@@ -1,597 +1,2188 @@
 <!DOCTYPE html>
-<html lang="ru" x-data="dragonApp()" :data-theme="theme">
+<html lang="ru"
+      x-data="appData()"
+      :data-theme="theme"
+      :style="customBg ? `background-image:url('${customBg}');background-size:cover;background-attachment:fixed;background-position:center;` : ''">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DRAGON MARKET | Digital Marketplace</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&family=Space+Grotesk:wght@300;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DragonMarket — Cyberpunk Marketplace</title>
 
-        [x-cloak] { display: none !important; }
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  DRAGONMARKET — Firebase Realtime Database Edition           ║
+  ║                                                              ║
+  ║  ⚠️  FIREBASE RTDB SECURITY RULES (для разработки):          ║
+  ║  {                                                           ║
+  ║    "rules": { ".read": true, ".write": true }               ║
+  ║  }                                                           ║
+  ║                                                              ║
+  ║  ADMIN: login: system  |  password: 1337                     ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
 
-        :root {
-            --bg: #0b0e14;
-            --glass: rgba(255, 255, 255, 0.03);
-            --accent: #facc15;
-            --text: #f8fafc;
-        }
+<!-- Firebase compat SDK v10 -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-        [data-theme='light'] { --bg: #f1f5f9; --glass: rgba(0,0,0,0.05); --text: #0f172a; --accent: #4f46e5; }
-        [data-theme='neon'] { --bg: #000; --glass: rgba(0, 255, 150, 0.05); --text: #00ff96; --accent: #bcfe2d; }
-        [data-theme='blood'] { --bg: #1a0505; --glass: rgba(255, 0, 0, 0.05); --text: #fee2e2; --accent: #ef4444; }
+<!-- Alpine.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Montserrat', sans-serif;
-            transition: all 0.3s ease;
-            overflow-x: hidden;
-        }
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
 
-        .glass {
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);
-        }
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-        /* RGB Анимация для Ancient Dragon */
-        .rgb-nick {
-            background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 400% 400%;
-            animation: rgb-move 5s linear infinite;
-            font-weight: 900;
-        }
-        @keyframes rgb-move { 0% {background-position: 0% 50%} 50% {background-position: 100% 50%} 100% {background-position: 0% 50%} }
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
-        /* Колесо */
-        .wheel-container {
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            border: 10px solid var(--accent);
-            position: relative;
-            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1);
-        }
-
-        .btn-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-hover:hover {
-            transform: scale(1.05) translateY(-2px);
-            filter: brightness(1.2);
-            box-shadow: 0 0 20px var(--accent);
-        }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        .tab-transition {
-            animation: fadeIn 0.4s ease-out;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+<style>
+:root{--pr:#e11d48;--pr-d:#9f1239;--ac:#38bdf8;--gl:rgba(255,255,255,0.06);--gl-b:rgba(255,255,255,0.12);--bg:#05050f;}
+[data-theme="matrix"]{--pr:#00ff41;--pr-d:#00aa2b;--ac:#00ffcc;}
+[data-theme="blood"]{--pr:#ff1a1a;--pr-d:#cc0000;--ac:#ff6666;}
+[data-theme="gold"]{--pr:#ffd700;--pr-d:#cc9900;--ac:#ffaa00;}
+[data-theme="silver"]{--pr:#a8b2c8;--pr-d:#6b7a99;--ac:#e2e8f0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#e2e8f0;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,#05050f 0%,#0a0520 50%,#05050f 100%);z-index:-2;pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:40px 40px;z-index:-1;pointer-events:none;animation:gridMove 20s linear infinite;}
+@keyframes gridMove{0%{background-position:0 0;}100%{background-position:40px 40px;}}
+.glass{background:var(--gl);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--gl-b);}
+.glass-dark{background:rgba(0,0,0,0.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);}
+.neon{color:var(--pr);text-shadow:0 0 10px var(--pr),0 0 20px var(--pr);}
+.btn-pr{background:var(--pr);color:#fff;border:1px solid var(--pr);transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:.05em;cursor:pointer;}
+.btn-pr:hover:not(:disabled){background:var(--pr-d);box-shadow:0 0 15px var(--pr);transform:translateY(-1px);}
+.btn-pr:disabled{opacity:.5;cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--pr);border:1px solid var(--pr);transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:600;cursor:pointer;}
+.btn-ghost:hover{background:rgba(225,29,72,0.15);box-shadow:0 0 10px var(--pr);}
+.card-hover{transition:all .3s;}
+.card-hover:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 20px rgba(225,29,72,.2);}
+.font-orb{font-family:'Orbitron',sans-serif;}
+.font-mono{font-family:'Share Tech Mono',monospace;}
+.verified{color:#3b82f6;filter:drop-shadow(0 0 4px #3b82f6);}
+.badge-bronze{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;}
+.badge-silver{background:linear-gradient(135deg,#c0c0c0,#808080);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;}
+.badge-elite{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;}
+.gold-nick{color:#ffd700;text-shadow:0 0 8px #ffd700;}
+.scrollbar-thin::-webkit-scrollbar{width:4px;}
+.scrollbar-thin::-webkit-scrollbar-track{background:rgba(0,0,0,.2);}
+.scrollbar-thin::-webkit-scrollbar-thumb{background:var(--pr);border-radius:2px;}
+.modal-enter{animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes modalIn{0%{opacity:0;transform:scale(.85) translateY(20px);}100%{opacity:1;transform:scale(1) translateY(0);}}
+.page-enter{animation:fadeSlide .3s ease-out;}
+@keyframes fadeSlide{0%{opacity:0;transform:translateX(8px);}100%{opacity:1;transform:translateX(0);}}
+.shake{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.star-filled{color:#ffd700;}
+.star-empty{color:#374151;}
+input,textarea,select{font-family:'Rajdhani',sans-serif;}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--pr);}
+.loading-screen{position:fixed;inset:0;background:#05050f;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .6s;}
+.chat-me{background:rgba(225,29,72,.25);border:1px solid rgba(225,29,72,.4);border-radius:12px 12px 4px 12px;}
+.chat-them{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px 12px 12px 4px;}
+.notif-in{animation:nIn .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes nIn{0%{opacity:0;transform:translateX(120%);}100%{opacity:1;transform:translateX(0);}}
+.wheel-pointer{position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:24px solid var(--pr);filter:drop-shadow(0 0 6px var(--pr));}
+@media(max-width:768px){body{padding-bottom:70px;}}
+</style>
 </head>
-<body class="min-h-screen">
 
-    <div x-show="loading" class="fixed inset-0 z-[100] bg-[#0b0e14] flex flex-col items-center justify-center">
-        <i class="fa-solid fa-dragon text-6xl text-yellow-500 animate-bounce"></i>
-        <p class="mt-4 font-bold tracking-[0.3em] animate-pulse">DRAGON MARKET</p>
+<body x-init="init()">
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" :class="{'opacity-0 pointer-events-none': !loading}">
+  <svg viewBox="0 0 180 80" width="150" xmlns="http://www.w3.org/2000/svg">
+    <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <path d="M90,38 L76,8 L54,2 L65,22 L32,14 L54,34 L18,40 L52,50 L42,66 L70,56 L80,68 L88,42" fill="#cc0000" filter="url(#glow)"/>
+    <path d="M90,38 L104,8 L126,2 L115,22 L148,14 L126,34 L162,40 L128,50 L138,66 L110,56 L100,68 L92,42" fill="#cc0000" filter="url(#glow)"/>
+    <ellipse cx="90" cy="36" rx="12" ry="14" fill="#770000"/>
+    <circle cx="85" cy="32" r="3" fill="#ff4400"/><circle cx="95" cy="32" r="3" fill="#ff4400"/>
+  </svg>
+  <div class="font-orb text-2xl neon tracking-widest">DRAGONMARKET</div>
+  <div class="flex gap-1.5">
+    <div class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:0s"></div>
+    <div class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:.15s"></div>
+    <div class="w-2 h-2 rounded-full bg-red-500 animate-bounce" style="animation-delay:.3s"></div>
+  </div>
+  <p x-show="dbError" class="text-red-400 text-xs max-w-xs text-center px-4" x-text="dbError"></p>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-2" style="max-width:320px;">
+  <template x-for="n in notifications" :key="n.id">
+    <div class="notif-in glass-dark rounded-xl p-3 flex items-start gap-3 shadow-2xl"
+         :class="n.type==='success'?'border-l-4 border-green-500':n.type==='error'?'border-l-4 border-red-500':'border-l-4 border-yellow-500'">
+      <i class="fas mt-0.5 text-sm" :class="n.type==='success'?'fa-check-circle text-green-400':n.type==='error'?'fa-times-circle text-red-400':'fa-info-circle text-yellow-400'"></i>
+      <p class="text-sm flex-1" x-text="n.text"></p>
+      <button @click="removeNotif(n.id)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-times"></i></button>
     </div>
+  </template>
+</div>
 
-    <div x-show="!user" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
-        <div class="glass p-8 rounded-3xl w-full max-w-md space-y-6">
-            <div class="text-center">
-                <i class="fa-solid fa-dragon text-4xl text-yellow-500 mb-2"></i>
-                <h2 class="text-2xl font-black">LOG IN / REGISTER</h2>
+<!-- HEADER -->
+<header class="glass-dark fixed top-0 left-0 right-0 z-40 border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-3 md:px-6 h-14 flex items-center justify-between gap-3">
+    <button @click="page='home'" class="flex items-center gap-2 flex-shrink-0">
+      <svg viewBox="0 0 120 50" width="80" xmlns="http://www.w3.org/2000/svg">
+        <defs><filter id="gl1"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <path d="M60,25 L51,5 L36,1 L43,15 L21,9 L36,23 L12,27 L35,34 L28,44 L47,38 L54,46 L59,28" fill="var(--pr)" filter="url(#gl1)"/>
+        <path d="M60,25 L69,5 L84,1 L77,15 L99,9 L84,23 L108,27 L85,34 L92,44 L73,38 L66,46 L61,28" fill="var(--pr)" filter="url(#gl1)"/>
+        <ellipse cx="60" cy="24" rx="8" ry="9" fill="#880000"/>
+        <circle cx="56.5" cy="21" r="2" fill="#ff4400"/><circle cx="63.5" cy="21" r="2" fill="#ff4400"/>
+      </svg>
+      <span class="font-orb text-sm font-bold neon hidden sm:block">DRAGON<span class="text-white">MARKET</span></span>
+    </button>
+
+    <nav class="hidden md:flex items-center gap-0.5 text-sm font-semibold">
+      <button @click="page='home'" :class="page==='home'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition" x-text="t('home')"></button>
+      <button @click="page='market'" :class="page==='market'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition" x-text="t('market')"></button>
+      <button @click="gotoPage('messenger')" :class="page==='messenger'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition relative">
+        <span x-text="t('chat')"></span>
+        <span x-show="unreadCount>0" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-mono" x-text="unreadCount"></span>
+      </button>
+      <button @click="page='wheel'" :class="page==='wheel'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition" x-text="t('wheel')"></button>
+      <button @click="page='premium'" :class="page==='premium'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition">Premium</button>
+      <template x-if="currentUser && currentUser.isAdmin">
+        <button @click="page='admin'" :class="page==='admin'?'neon':'text-gray-400 hover:text-white'" class="px-3 py-1.5 rounded transition" x-text="t('admin')"></button>
+      </template>
+    </nav>
+
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <template x-if="!currentUser">
+        <button @click="openAuth('login')" class="btn-pr px-4 py-1.5 rounded-lg text-sm" x-text="t('login')"></button>
+      </template>
+      <template x-if="currentUser">
+        <div class="flex items-center gap-2">
+          <div class="hidden sm:flex items-center gap-1.5 glass rounded-lg px-3 py-1.5">
+            <i class="fas fa-euro-sign text-green-400 text-xs"></i>
+            <span class="font-mono text-sm font-bold text-green-400" x-text="fNum(currentUser.balance)"></span>
+          </div>
+          <button @click="page='profile'" class="flex items-center gap-1.5 hover:opacity-80 transition">
+            <div class="w-8 h-8 rounded-full border-2 overflow-hidden flex items-center justify-center text-xs font-bold"
+                 :class="currentUser.premium==='elite'?'border-yellow-500':currentUser.premium==='silver'?'border-gray-400':currentUser.verified?'border-blue-500':'border-red-700'">
+              <img x-show="currentUser.avatar" :src="currentUser.avatar" class="w-full h-full object-cover">
+              <span x-show="!currentUser.avatar" class="neon" x-text="(currentUser.username||'?')[0].toUpperCase()"></span>
             </div>
-            
-            <div class="space-y-4">
-                <input x-model="auth.email" type="text" placeholder="Email or SYSTEM" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
-                <input x-model="auth.pass" type="password" placeholder="Password" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
-                <template x-if="!isLogin">
-                    <input x-model="auth.confirmPass" type="password" placeholder="Confirm Password" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl outline-none focus:border-yellow-500">
-                </template>
-                <button @click="handleAuth()" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl btn-hover">CONTINUE</button>
-                <p @click="isLogin = !isLogin" class="text-center text-xs text-gray-500 cursor-pointer" x-text="isLogin ? 'Don\'t have an account? Sign Up' : 'Already have an account? Login'"></p>
-            </div>
+          </button>
+          <button @click="page='settings'" class="text-gray-400 hover:text-white p-1.5 rounded"><i class="fas fa-cog text-sm"></i></button>
         </div>
+      </template>
+    </div>
+  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 glass-dark border-t border-white/10 md:hidden">
+  <div class="flex items-center justify-around h-16">
+    <button @click="page='home'" :class="page==='home'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3">
+      <i class="fas fa-home text-base"></i><span class="text-xs font-semibold" x-text="t('home')"></span>
+    </button>
+    <button @click="page='market'" :class="page==='market'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3">
+      <i class="fas fa-store text-base"></i><span class="text-xs font-semibold" x-text="t('market')"></span>
+    </button>
+    <button @click="gotoPage('messenger')" :class="page==='messenger'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3 relative">
+      <i class="fas fa-comments text-base"></i><span class="text-xs font-semibold" x-text="t('chat')"></span>
+      <span x-show="unreadCount>0" class="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-mono" x-text="unreadCount"></span>
+    </button>
+    <button @click="page='wheel'" :class="page==='wheel'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3">
+      <i class="fas fa-dharmachakra text-base"></i><span class="text-xs font-semibold" x-text="t('wheel')"></span>
+    </button>
+    <button @click="page='profile'" :class="page==='profile'?'neon':'text-gray-500'" class="flex flex-col items-center gap-0.5 py-2 px-3">
+      <i class="fas fa-user text-base"></i><span class="text-xs font-semibold" x-text="t('profile')"></span>
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="pt-16 max-w-7xl mx-auto px-3 md:px-6 pb-6">
+
+  <!-- HOME PAGE -->
+  <div x-show="page==='home'" class="page-enter">
+    <div class="glass rounded-2xl p-6 md:p-10 mt-4 relative overflow-hidden text-center">
+      <div class="absolute inset-0 opacity-10" style="background:radial-gradient(ellipse at center,var(--pr) 0%,transparent 70%);"></div>
+      <div class="relative z-10">
+        <div class="font-orb text-3xl md:text-5xl font-black mb-2"><span class="neon">DRAGON</span><span class="text-white">MARKET</span></div>
+        <p class="text-gray-300 text-lg mb-6" x-text="t('heroSub')"></p>
+        <div class="flex flex-wrap gap-3 justify-center">
+          <button @click="page='market'" class="btn-pr px-6 py-2.5 rounded-xl text-base"><i class="fas fa-store mr-2"></i><span x-text="t('browse')"></span></button>
+          <button x-show="!currentUser" @click="openAuth('register')" class="btn-ghost px-6 py-2.5 rounded-xl text-base"><i class="fas fa-user-plus mr-2"></i><span x-text="t('register')"></span></button>
+          <button x-show="currentUser" @click="openAddProduct()" class="btn-ghost px-6 py-2.5 rounded-xl text-base"><i class="fas fa-plus mr-2"></i><span x-text="t('addLot')"></span></button>
+        </div>
+      </div>
     </div>
 
-    <template x-if="user">
-        <div class="flex flex-col h-screen overflow-hidden">
-            
-            <header class="glass h-20 px-6 flex items-center justify-between z-40">
+    <div class="grid grid-cols-3 gap-3 mt-4">
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="font-orb text-2xl font-bold neon" x-text="products.filter(p=>p.status==='active').length"></div>
+        <div class="text-xs text-gray-400 mt-1" x-text="t('activeLots')"></div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="font-orb text-2xl font-bold text-green-400" x-text="usersArr.length"></div>
+        <div class="text-xs text-gray-400 mt-1" x-text="t('users')"></div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="font-orb text-2xl font-bold text-blue-400" x-text="transactions.filter(t=>t.status==='completed').length"></div>
+        <div class="text-xs text-gray-400 mt-1" x-text="t('deals')"></div>
+      </div>
+    </div>
+
+    <h2 class="font-orb text-lg font-bold mt-6 mb-3 neon"><i class="fas fa-fire mr-2"></i><span x-text="t('latest')"></span></h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <template x-for="p in products.filter(x=>x.status==='active').slice(0,8)" :key="p.id">
+        <div class="glass card-hover rounded-xl overflow-hidden cursor-pointer" @click="openProduct(p)">
+          <div class="h-32 bg-gradient-to-br from-red-900/30 to-purple-900/30 relative overflow-hidden flex items-center justify-center">
+            <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-80">
+            <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
+            <div class="absolute top-2 right-2"><span class="text-xs glass rounded px-1.5 py-0.5 capitalize" x-text="t(p.category)||p.category"></span></div>
+            <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full glass flex items-center justify-center transition hover:scale-110"
+                    :class="isFav(p.id)?'text-red-500':'text-gray-400'"><i class="fas fa-heart text-xs"></i></button>
+          </div>
+          <div class="p-3">
+            <p class="font-semibold text-sm truncate" x-text="p.title"></p>
+            <div class="flex items-center justify-between mt-2">
+              <span class="font-mono font-bold text-green-400 text-sm">€<span x-text="fNum(p.price)"></span></span>
+              <button @click.stop="quickBuy(p)" class="btn-pr text-xs px-2.5 py-1 rounded-lg" x-text="t('buy')"></button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div x-show="products.filter(x=>x.status==='active').length===0" class="text-center py-12 text-gray-500">
+      <i class="fas fa-store text-4xl mb-3 block opacity-20"></i>
+      <p x-text="t('noLots')"></p>
+    </div>
+    <div x-show="products.filter(x=>x.status==='active').length>8" class="text-center mt-4">
+      <button @click="page='market'" class="btn-ghost px-8 py-2 rounded-xl" x-text="t('viewAll')"></button>
+    </div>
+  </div>
+
+  <!-- MARKET PAGE -->
+  <div x-show="page==='market'" class="page-enter">
+    <div class="flex flex-col md:flex-row gap-3 mt-4 mb-4">
+      <div class="flex-1 relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input x-model="searchQ" :placeholder="t('search')" class="w-full glass rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-gray-500 border border-white/10">
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <template x-for="c in cats" :key="c">
+          <button @click="selCat=c" class="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold border transition"
+                  :class="selCat===c?'btn-pr border-transparent':'glass border-white/10 text-gray-400 hover:text-white'">
+            <i class="fas mr-1" :class="catIcon(c)"></i><span x-text="t(c)||c"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-sm text-gray-400"><span x-text="filteredProducts.length"></span> <span x-text="t('lots')"></span></span>
+      <div class="flex items-center gap-2">
+        <select x-model="sortBy" class="glass rounded-lg px-3 py-1.5 text-xs text-gray-300 border border-white/10 bg-transparent">
+          <option value="newest">⬇ <span x-text="t('newest')"></span></option>
+          <option value="price_asc">💲 Дешевле</option>
+          <option value="price_desc">💲 Дороже</option>
+        </select>
+        <button x-show="currentUser" @click="openAddProduct()" class="btn-pr px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-plus mr-1"></i><span x-text="t('addLot')"></span></button>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <template x-for="p in filteredProducts" :key="p.id">
+        <div class="glass card-hover rounded-xl overflow-hidden cursor-pointer" @click="openProduct(p)">
+          <div class="h-32 bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative overflow-hidden flex items-center justify-center">
+            <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-80">
+            <i x-show="!p.image" class="fas text-5xl opacity-20" :class="catIcon(p.category)"></i>
+            <div x-show="p.status!=='active'" class="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <span class="font-orb text-xs font-bold" :class="p.status==='sold'?'text-red-400':'text-yellow-400'" x-text="t(p.status)"></span>
+            </div>
+            <div class="absolute top-2 right-2"><span class="text-xs glass rounded px-1.5 py-0.5 capitalize" x-text="t(p.category)||p.category"></span></div>
+            <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full glass flex items-center justify-center hover:scale-110 transition"
+                    :class="isFav(p.id)?'text-red-500':'text-gray-400'"><i class="fas fa-heart text-xs"></i></button>
+          </div>
+          <div class="p-3">
+            <p class="font-semibold text-sm truncate" x-text="p.title"></p>
+            <p class="text-xs text-gray-400 mt-0.5 truncate" x-text="p.description"></p>
+            <div class="flex items-center justify-between mt-2">
+              <span class="font-mono font-bold text-green-400">€<span x-text="fNum(p.price)"></span></span>
+              <button x-show="p.status==='active'" @click.stop="quickBuy(p)" class="btn-pr text-xs px-2.5 py-1 rounded-lg" x-text="t('buy')"></button>
+            </div>
+            <button @click.stop="openPublicProfile(p.sellerId)" class="text-xs text-gray-400 hover:text-blue-400 mt-1.5 block transition truncate">
+              <i class="fas fa-user text-xs mr-1"></i><span x-text="p.sellerName||'?'"></span>
+              <span x-show="isVerified(p.sellerId)"><i class="fas fa-check-circle verified text-xs ml-1"></i></span>
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div x-show="filteredProducts.length===0" class="text-center py-16 text-gray-500">
+      <i class="fas fa-search text-4xl mb-3 block opacity-20"></i><p x-text="t('noResults')"></p>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div x-show="page==='profile'" class="page-enter">
+    <div x-show="!currentUser" class="text-center py-20 text-gray-400">
+      <i class="fas fa-lock text-5xl mb-4 block opacity-30 neon"></i>
+      <p class="mb-4" x-text="t('loginReq')"></p>
+      <button @click="openAuth('login')" class="btn-pr px-8 py-2.5 rounded-xl" x-text="t('login')"></button>
+    </div>
+    <template x-if="currentUser">
+      <div class="mt-4">
+        <div class="glass rounded-2xl p-6 relative overflow-hidden">
+          <div class="absolute inset-0 opacity-5" style="background:radial-gradient(ellipse at top left,var(--pr),transparent 60%);"></div>
+          <div class="relative flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+            <div class="relative flex-shrink-0">
+              <div class="w-20 h-20 rounded-2xl border-2 overflow-hidden flex items-center justify-center text-2xl font-bold bg-gray-900"
+                   :class="currentUser.premium==='elite'?'border-yellow-500':currentUser.verified?'border-blue-500':'border-red-700'">
+                <img x-show="currentUser.avatar" :src="currentUser.avatar" class="w-full h-full object-cover">
+                <span x-show="!currentUser.avatar" class="neon" x-text="(currentUser.username||'?')[0].toUpperCase()"></span>
+              </div>
+              <label class="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-red-700 flex items-center justify-center cursor-pointer hover:bg-red-600 transition">
+                <i class="fas fa-camera text-xs"></i>
+                <input type="file" accept="image/*" class="hidden" @change="uploadAvatar($event)">
+              </label>
+            </div>
+            <div class="flex-1 text-center sm:text-left">
+              <div class="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                <h1 class="text-2xl font-bold" :class="currentUser.premium==='silver'||currentUser.premium==='elite'?'gold-nick':''" x-text="currentUser.username"></h1>
+                <span x-show="currentUser.verified"><i class="fas fa-check-circle verified text-lg"></i></span>
+                <span x-show="currentUser.premium==='bronze'" class="badge-bronze">BRONZE</span>
+                <span x-show="currentUser.premium==='silver'" class="badge-silver">SILVER</span>
+                <span x-show="currentUser.premium==='elite'" class="badge-elite">ELITE</span>
+              </div>
+              <p class="text-gray-400 text-sm mt-0.5 font-mono">ID: #<span x-text="currentUser.shortId||currentUser.id.slice(-5)"></span></p>
+              <p class="text-gray-400 text-xs mt-1" x-text="t('joined')+': '+fDate(currentUser.joinDate)"></p>
+              <div class="flex flex-wrap gap-3 mt-3 justify-center sm:justify-start">
+                <div class="glass rounded-lg px-4 py-2 text-center">
+                  <div class="font-mono font-bold text-green-400">€<span x-text="fNum(currentUser.balance)"></span></div>
+                  <div class="text-xs text-gray-400" x-text="t('balance')"></div>
+                </div>
+                <div class="glass rounded-lg px-4 py-2 text-center">
+                  <div class="font-bold neon" x-text="myProducts.length"></div>
+                  <div class="text-xs text-gray-400" x-text="t('lots')"></div>
+                </div>
+                <div class="glass rounded-lg px-4 py-2 text-center">
+                  <div class="flex items-center gap-1 justify-center">
+                    <i class="fas fa-star star-filled text-sm"></i>
+                    <span class="font-bold" x-text="sellerRating(currentUser.id).toFixed(1)"></span>
+                  </div>
+                  <div class="text-xs text-gray-400" x-text="t('rating')"></div>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button @click="page='settings'" class="btn-ghost px-4 py-1.5 rounded-xl text-sm"><i class="fas fa-cog mr-1"></i><span x-text="t('settings')"></span></button>
+              <button @click="logout()" class="glass border border-red-800/50 text-red-400 hover:bg-red-900/30 px-4 py-1.5 rounded-xl text-sm transition"><i class="fas fa-sign-out-alt mr-1"></i><span x-text="t('logout')"></span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-1 mt-4 glass rounded-xl p-1">
+          <button @click="profTab='listings'" :class="profTab==='listings'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-1 py-2 rounded-lg text-sm font-semibold transition" x-text="t('myLots')"></button>
+          <button @click="profTab='purchases'" :class="profTab==='purchases'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-1 py-2 rounded-lg text-sm font-semibold transition" x-text="t('purchases')"></button>
+          <button @click="profTab='sales'" :class="profTab==='sales'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-1 py-2 rounded-lg text-sm font-semibold transition" x-text="t('sales')"></button>
+          <button @click="profTab='favs'" :class="profTab==='favs'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-1 py-2 rounded-lg text-sm font-semibold transition" x-text="t('favs')"></button>
+        </div>
+
+        <!-- My listings -->
+        <div x-show="profTab==='listings'" class="mt-4">
+          <div class="flex justify-end mb-3">
+            <button @click="openAddProduct()" class="btn-pr px-4 py-1.5 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i><span x-text="t('addLot')"></span></button>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <template x-for="p in myProducts" :key="p.id">
+              <div class="glass rounded-xl overflow-hidden">
+                <div class="h-28 bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative flex items-center justify-center overflow-hidden">
+                  <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
+                  <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
+                  <div x-show="p.status!=='active'" class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <span class="font-bold text-xs" :class="p.status==='sold'?'text-red-400':'text-yellow-400'" x-text="t(p.status)"></span>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <p class="font-semibold text-sm truncate" x-text="p.title"></p>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="font-mono text-green-400 text-sm font-bold">€<span x-text="fNum(p.price)"></span></span>
+                    <button @click="deleteProduct(p)" class="text-red-400 hover:text-red-300 text-xs transition"><i class="fas fa-trash"></i></button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div x-show="myProducts.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-box-open text-3xl mb-2 block opacity-30"></i><p class="text-sm" x-text="t('noLots')"></p></div>
+        </div>
+
+        <!-- Purchases -->
+        <div x-show="profTab==='purchases'" class="mt-4 space-y-3">
+          <template x-for="tx in myPurchases" :key="tx.id">
+            <div class="glass rounded-xl p-4">
+              <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div>
+                  <p class="font-semibold" x-text="tx.productTitle||t('deletedLot')"></p>
+                  <p class="text-xs text-gray-400 mt-0.5"><span x-text="t('seller')"></span>: <button @click="openPublicProfile(tx.sellerId)" class="text-blue-400 hover:underline" x-text="tx.sellerName||'?'"></button></p>
+                  <p class="text-xs text-gray-400" x-text="fDate(tx.createdAt)"></p>
+                </div>
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-black">
-                        <i class="fa-solid fa-dragon"></i>
-                    </div>
-                    <div>
-                        <div class="font-black text-xs tracking-widest">DRAGON MARKET</div>
-                        <div class="text-[10px] text-gray-500 font-bold uppercase" x-text="user.rank"></div>
-                    </div>
+                  <span class="font-mono font-bold text-red-400">-€<span x-text="fNum(tx.amount)"></span></span>
+                  <span class="text-xs px-2 py-1 rounded font-bold"
+                        :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
+                        x-text="t(tx.status)"></span>
                 </div>
-
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="text-[10px] text-gray-500 font-bold">BALANCE</div>
-                        <div class="font-black text-green-400" x-text="formatCurrency(user.balance)"></div>
-                    </div>
-                    <button @click="toggleMenu = !toggleMenu" class="w-10 h-10 glass rounded-full flex items-center justify-center btn-hover">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                </div>
-            </header>
-
-            <div x-show="toggleMenu" x-transition x-cloak class="fixed inset-0 z-[60]">
-                <div @click="toggleMenu = false" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-                <div class="absolute right-0 top-0 h-full w-72 glass p-8 shadow-2xl">
-                    <div class="flex justify-between items-center mb-10">
-                        <h3 class="font-black">NAVIGATION</h3>
-                        <i @click="toggleMenu = false" class="fa-solid fa-xmark cursor-pointer"></i>
-                    </div>
-                    <nav class="space-y-6">
-                        <div @click="activeTab = 'donat'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-gem text-yellow-500"></i> DONATE</div>
-                        <div @click="activeTab = 'wheel'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-spinner"></i> WHEEL</div>
-                        <div @click="activeTab = 'promo'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-ticket"></i> PROMOCODE</div>
-                        <div @click="activeTab = 'support'; toggleMenu = false" class="flex items-center gap-4 cursor-pointer hover:text-yellow-500 transition"><i class="fa-solid fa-headset"></i> SUPPORT</div>
-                        <hr class="border-white/5">
-                        <div @click="logout()" class="flex items-center gap-4 text-red-500 cursor-pointer"><i class="fa-solid fa-sign-out"></i> LOGOUT</div>
-                    </nav>
-
-                    <div class="mt-20">
-                        <p class="text-[10px] text-gray-600 mb-2">SELECT THEME</p>
-                        <div class="grid grid-cols-4 gap-2">
-                            <div @click="theme = 'dark'" class="w-6 h-6 rounded-full bg-slate-800 border cursor-pointer"></div>
-                            <div @click="theme = 'light'" class="w-6 h-6 rounded-full bg-white border cursor-pointer"></div>
-                            <div @click="theme = 'neon'" class="w-6 h-6 rounded-full bg-lime-400 border cursor-pointer"></div>
-                            <div @click="theme = 'blood'" class="w-6 h-6 rounded-full bg-red-800 border cursor-pointer"></div>
-                        </div>
-                    </div>
-                </div>
+              </div>
+              <div x-show="tx.status==='pending'" class="flex gap-2 mt-3">
+                <button @click="openChat(tx.sellerId)" class="btn-ghost px-3 py-1.5 rounded-xl text-xs flex-1"><i class="fas fa-comments mr-1"></i><span x-text="t('chat')"></span></button>
+                <button @click="confirmPurchase(tx)" class="btn-pr px-3 py-1.5 rounded-xl text-xs flex-1"><i class="fas fa-check mr-1"></i><span x-text="t('confirm')"></span></button>
+                <button @click="refundPurchase(tx)" class="glass border border-yellow-600/40 text-yellow-400 hover:bg-yellow-900/30 px-3 py-1.5 rounded-xl text-xs transition"><i class="fas fa-undo mr-1"></i><span x-text="t('refund')"></span></button>
+              </div>
+              <div x-show="tx.status==='completed' && !hasReview(tx.id)" class="mt-3">
+                <button @click="openReview(tx)" class="btn-ghost px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-star mr-1"></i><span x-text="t('leaveReview')"></span></button>
+              </div>
             </div>
-
-            <main class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar pb-24">
-                
-                <section x-show="activeTab === 'market'" class="tab-transition space-y-8">
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <h1 class="text-3xl font-black">MARKETPLACE</h1>
-                            <p class="text-gray-500 text-xs">Find digital dragons and rare artifacts</p>
-                        </div>
-                        <button @click="showAddProduct = true" class="bg-yellow-500 text-black font-bold px-6 py-2 rounded-xl text-sm btn-hover">SELL ITEM</button>
-                    </div>
-
-                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                        <template x-for="cat in categories">
-                            <button @click="activeCat = cat" :class="activeCat === cat ? 'bg-yellow-500 text-black' : 'glass'" class="px-6 py-2 rounded-full text-[10px] font-bold transition whitespace-nowrap" x-text="cat"></button>
-                        </template>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        <template x-for="p in filteredProducts" :key="p.id">
-                            <div class="glass rounded-3xl overflow-hidden group border border-white/5 hover:border-yellow-500/50 transition duration-500">
-                                <div class="h-48 relative overflow-hidden bg-black">
-                                    <img :src="p.image || 'https://via.placeholder.com/300'" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                                    <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold" x-text="p.type"></div>
-                                </div>
-                                <div class="p-6 space-y-4">
-                                    <div class="flex justify-between items-start">
-                                        <h3 class="font-bold text-lg leading-tight line-clamp-2" x-text="p.title"></h3>
-                                        <span class="text-green-400 font-black" x-text="formatCurrency(p.price)"></span>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden">
-                                            <img :src="p.sellerAvatar" class="w-full h-full object-cover">
-                                        </div>
-                                        <div class="flex flex-col">
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-[10px] font-bold" :class="p.sellerRank === 'Ancient' ? 'rgb-nick' : ''" x-text="p.sellerName"></span>
-                                                <i x-show="p.verified" class="fa-solid fa-circle-check text-blue-400 text-[8px]"></i>
-                                            </div>
-                                            <div class="text-[8px] text-gray-500" x-text="p.sellerRating > 0 ? '⭐ ' + p.sellerRating : 'No reviews'"></div>
-                                        </div>
-                                    </div>
-                                    <button @click="buyItem(p)" class="w-full bg-white text-black font-black py-3 rounded-xl btn-hover text-sm">PURCHASE</button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </section>
-
-                <section x-show="activeTab === 'wheel'" class="tab-transition flex flex-col items-center justify-center min-h-full py-10">
-                    <div class="text-center mb-10">
-                        <h2 class="text-4xl font-black text-yellow-500">DRAGON SPIN</h2>
-                        <p class="text-xs text-gray-500 mt-2">Win up to 2,000 EUR for only 100 EUR</p>
-                    </div>
-
-                    <div class="relative">
-                        <div class="absolute top-[-20px] left-1/2 -translate-x-1/2 z-10 text-yellow-500 text-3xl">
-                            <i class="fa-solid fa-caret-down"></i>
-                        </div>
-                        <div id="wheel" class="wheel-container glass flex items-center justify-center overflow-hidden">
-                            <img src="https://i.ibb.co/Y3gYFw8/wheel-final.png" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-
-                    <button @click="spin()" :disabled="spinning" class="mt-12 bg-yellow-500 text-black px-12 py-5 rounded-2xl font-black btn-hover shadow-2xl disabled:opacity-50">
-                        SPIN (100 EUR)
-                    </button>
-                </section>
-
-                <section x-show="activeTab === 'messages'" class="tab-transition h-full flex flex-col max-w-4xl mx-auto">
-                    <div class="flex-1 glass rounded-3xl overflow-hidden flex flex-col">
-                        <div class="p-6 border-b border-white/5 flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold">A</div>
-                                <div>
-                                    <div class="font-bold">ADMIN SUPPORT</div>
-                                    <div class="text-[10px] text-green-500">Online</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="chat-box" class="flex-1 p-6 overflow-y-auto space-y-4 no-scrollbar">
-                            <template x-for="m in currentChat">
-                                <div :class="m.uid === user.uid ? 'ml-auto bg-yellow-500 text-black rounded-tr-none' : 'mr-auto bg-white/5 rounded-tl-none'" class="max-w-[80%] p-4 rounded-2xl">
-                                    <template x-if="m.image">
-                                        <img :src="m.image" class="rounded-lg mb-2 max-h-48 w-full object-cover">
-                                    </template>
-                                    <p class="text-sm font-medium" x-text="m.text"></p>
-                                    <span class="text-[8px] opacity-40 block mt-1" x-text="m.time"></span>
-                                </div>
-                            </template>
-                        </div>
-
-                        <div class="p-6 bg-black/20 flex gap-4">
-                            <label class="w-12 h-12 glass rounded-xl flex items-center justify-center cursor-pointer btn-hover">
-                                <i class="fa-solid fa-paperclip"></i>
-                                <input type="file" @change="uploadChatImg" class="hidden">
-                            </label>
-                            <input x-model="msgInput" @keyup.enter="sendMsg()" type="text" placeholder="Type a message..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-6 outline-none">
-                            <button @click="sendMsg()" class="w-12 h-12 bg-yellow-500 text-black rounded-xl flex items-center justify-center btn-hover">
-                                <i class="fa-solid fa-paper-plane"></i>
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                <section x-show="activeTab === 'donat'" class="tab-transition space-y-8 max-w-2xl mx-auto">
-                    <div class="glass p-8 rounded-3xl border-l-8 border-yellow-500">
-                        <h2 class="text-3xl font-black mb-2 uppercase">Top-up Balance</h2>
-                        <p class="text-xs text-gray-500">Fast delivery, low commission</p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <template x-for="d in donatePacks">
-                            <div @click="selectDonate(d)" class="glass p-6 rounded-2xl text-center border border-white/5 hover:border-yellow-500 cursor-pointer transition btn-hover">
-                                <div class="text-2xl font-black text-yellow-500" x-text="d.eur + ' EUR'"></div>
-                                <div class="text-[10px] text-gray-500 font-bold" x-text="d.rub + ' RUB'"></div>
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class="glass p-8 rounded-3xl">
-                        <h3 class="font-black mb-6 flex items-center gap-2"><i class="fa-solid fa-crown text-yellow-500"></i> ELITE STATUSES</h3>
-                        <div class="space-y-4">
-                            <div class="p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex justify-between items-center">
-                                <div>
-                                    <div class="font-bold text-blue-400">YOUNG DRAGON</div>
-                                    <div class="text-[10px] text-gray-400">Commission 3% • Blue Nick • Limit 50 items</div>
-                                </div>
-                                <button class="bg-blue-500 text-white px-6 py-2 rounded-xl text-xs font-bold btn-hover">3,000 EUR</button>
-                            </div>
-                            <div class="p-5 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex justify-between items-center">
-                                <div>
-                                    <div class="font-black text-yellow-500">ANCIENT DRAGON</div>
-                                    <div class="text-[10px] text-gray-400">Commission 1% • RGB Nick • No Hold • Unlimited</div>
-                                </div>
-                                <button class="bg-yellow-500 text-black px-6 py-2 rounded-xl text-xs font-bold btn-hover">10,000 EUR</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section x-show="activeTab === 'admin' && user.role === 'admin'" class="tab-transition space-y-8">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-3xl font-black text-red-500">SYSTEM CONTROL</h2>
-                        <div class="flex gap-2">
-                            <button class="bg-red-500/20 text-red-500 px-4 py-2 rounded-lg text-xs font-bold">STOP GLOBAL TRADING</button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="glass p-6 rounded-2xl">
-                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">User Management</p>
-                            <input x-model="adminSearch" type="text" placeholder="User ID..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
-                            <div class="space-y-2">
-                                <button @click="adminAction('ban')" class="w-full bg-red-600 text-white py-2 rounded-lg text-xs font-bold">BAN USER</button>
-                                <button @click="adminAction('unban')" class="w-full bg-green-600 text-white py-2 rounded-lg text-xs font-bold">UNBAN USER</button>
-                                <button @click="adminAction('verify')" class="w-full bg-blue-600 text-white py-2 rounded-lg text-xs font-bold">GIVE LICENSE</button>
-                            </div>
-                        </div>
-                        <div class="glass p-6 rounded-2xl">
-                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">Balance Editor</p>
-                            <input x-model="adminBalance" type="number" placeholder="Amount..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
-                            <button @click="adminAction('setBalance')" class="w-full bg-yellow-500 text-black py-2 rounded-lg text-xs font-bold">UPDATE BALANCE</button>
-                        </div>
-                        <div class="glass p-6 rounded-2xl">
-                            <p class="text-[10px] text-gray-500 font-bold mb-4 uppercase">Create Promo</p>
-                            <input x-model="promoCode" type="text" placeholder="CODE..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
-                            <input x-model="promoGift" type="number" placeholder="Gift EUR..." class="w-full bg-black/40 border border-white/5 p-3 rounded-lg mb-4 text-xs">
-                            <button @click="createPromo()" class="w-full bg-white text-black py-2 rounded-lg text-xs font-bold">GENERATE</button>
-                        </div>
-                    </div>
-                </section>
-
-            </main>
-
-            <nav class="fixed bottom-0 left-0 w-full h-20 glass border-t border-white/5 flex items-center justify-around z-40">
-                <button @click="activeTab = 'market'" :class="activeTab === 'market' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
-                    <i class="fa-solid fa-store text-lg"></i>
-                    <span class="text-[8px] font-bold">MARKET</span>
-                </button>
-                <button @click="activeTab = 'messages'" :class="activeTab === 'messages' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition relative">
-                    <i class="fa-solid fa-comment-dots text-lg"></i>
-                    <span class="text-[8px] font-bold">CHAT</span>
-                    <div x-show="unread" class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
-                </button>
-                <div @click="activeTab = 'wheel'" class="w-14 h-14 bg-yellow-500 rounded-full -mt-10 border-8 border-[#0b0e14] flex items-center justify-center text-black shadow-2xl cursor-pointer btn-hover">
-                    <i class="fa-solid fa-dragon"></i>
-                </div>
-                <button @click="activeTab = 'cartel'" :class="activeTab === 'cartel' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
-                    <i class="fa-solid fa-users-rays text-lg"></i>
-                    <span class="text-[8px] font-bold">CARTEL</span>
-                </button>
-                <button @click="activeTab = 'profile'" :class="activeTab === 'profile' ? 'text-yellow-500' : 'text-gray-500'" class="flex flex-col items-center gap-1 transition">
-                    <i class="fa-solid fa-user-circle text-lg"></i>
-                    <span class="text-[8px] font-bold">PROFILE</span>
-                </button>
-            </nav>
-
+          </template>
+          <div x-show="myPurchases.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-shopping-cart text-3xl mb-2 block opacity-30"></i><p class="text-sm" x-text="t('noPurchases')"></p></div>
         </div>
-    </template>
 
-    <template x-if="donateModal">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div @click="donateModal = false" class="absolute inset-0 bg-black/95 backdrop-blur-md"></div>
-            <div class="relative glass p-10 rounded-3xl w-full max-w-sm text-center space-y-6">
-                <i class="fa-solid fa-credit-card text-5xl text-yellow-500"></i>
-                <h3 class="text-2xl font-black">PAYMENT INFO</h3>
-                <div class="p-4 bg-black/40 rounded-2xl select-all font-mono text-yellow-500 text-lg tracking-widest">
-                    2200 1502 6169 2559
+        <!-- Sales -->
+        <div x-show="profTab==='sales'" class="mt-4 space-y-3">
+          <template x-for="tx in mySales" :key="tx.id">
+            <div class="glass rounded-xl p-4">
+              <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <div>
+                  <p class="font-semibold" x-text="tx.productTitle||t('deletedLot')"></p>
+                  <p class="text-xs text-gray-400 mt-0.5"><span x-text="t('buyer')"></span>: <button @click="openPublicProfile(tx.buyerId)" class="text-blue-400 hover:underline" x-text="tx.buyerName||'?'"></button></p>
+                  <p class="text-xs text-gray-400" x-text="fDate(tx.createdAt)"></p>
                 </div>
-                <p class="text-[10px] text-gray-500 uppercase">Send <span class="text-white" x-text="selectedPack.rub + ' RUB'"></span> to this Alfa Bank card. <b>Important:</b> Add your UID <span class="text-yellow-500" x-text="user.uid"></span> in comments.</p>
-                <button @click="donateModal = false; alert('Request sent! Wait for admin confirmation.')" class="w-full bg-white text-black py-4 rounded-xl font-bold">I HAVE PAID</button>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono font-bold" :class="tx.status==='completed'?'text-green-400':tx.status==='pending'?'text-yellow-400':'text-red-400'">
+                    <span x-text="tx.status==='completed'?'+':''"></span>€<span x-text="fNum(tx.amount)"></span>
+                  </span>
+                  <span class="text-xs px-2 py-1 rounded font-bold"
+                        :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
+                        x-text="t(tx.status)"></span>
+                </div>
+              </div>
+              <div x-show="tx.status==='pending'" class="mt-3">
+                <button @click="openChat(tx.buyerId)" class="btn-ghost px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-comments mr-1"></i><span x-text="t('chat')"></span></button>
+              </div>
             </div>
+          </template>
+          <div x-show="mySales.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-chart-line text-3xl mb-2 block opacity-30"></i><p class="text-sm" x-text="t('noSales')"></p></div>
         </div>
+
+        <!-- Favorites -->
+        <div x-show="profTab==='favs'" class="mt-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <template x-for="p in favProducts" :key="p.id">
+              <div class="glass card-hover rounded-xl overflow-hidden cursor-pointer" @click="openProduct(p)">
+                <div class="h-28 flex items-center justify-center bg-gradient-to-br from-slate-900/60 to-purple-900/30 relative overflow-hidden">
+                  <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
+                  <i x-show="!p.image" class="fas text-4xl opacity-20" :class="catIcon(p.category)"></i>
+                  <button @click.stop="toggleFav(p.id)" class="absolute top-2 left-2 w-7 h-7 rounded-full glass flex items-center justify-center text-red-500"><i class="fas fa-heart text-xs"></i></button>
+                </div>
+                <div class="p-3">
+                  <p class="font-semibold text-sm truncate" x-text="p.title"></p>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="font-mono text-green-400 text-sm font-bold">€<span x-text="fNum(p.price)"></span></span>
+                    <button x-show="p.status==='active'" @click.stop="quickBuy(p)" class="btn-pr text-xs px-2.5 py-1 rounded-lg" x-text="t('buy')"></button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div x-show="favProducts.length===0" class="text-center py-10 text-gray-500"><i class="fas fa-heart text-3xl mb-2 block opacity-30"></i><p class="text-sm" x-text="t('noFavs')"></p></div>
+        </div>
+      </div>
     </template>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, onSnapshot, addDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  <!-- MESSENGER PAGE -->
+  <div x-show="page==='messenger'" class="page-enter mt-4">
+    <div x-show="!currentUser" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p x-text="t('loginReq')"></p></div>
+    <template x-if="currentUser">
+      <div class="flex gap-3 h-[calc(100vh-160px)]">
+        <!-- Chat list -->
+        <div class="w-full md:w-72 flex-shrink-0 glass rounded-2xl overflow-hidden flex flex-col" :class="activeChat?'hidden md:flex':'flex'">
+          <div class="p-4 border-b border-white/10"><h2 class="font-orb font-bold" x-text="t('chat')"></h2></div>
+          <div class="flex-1 overflow-y-auto scrollbar-thin">
+            <template x-for="c in myChats" :key="c.key">
+              <div @click="setActiveChat(c)" class="flex items-center gap-3 p-4 border-b border-white/5 hover:bg-white/5 cursor-pointer transition"
+                   :class="activeChat&&activeChat.key===c.key?'bg-white/10':''">
+                <div class="w-10 h-10 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm flex-shrink-0"
+                     :class="c.otherUser?.verified?'border-blue-500 text-blue-400':'border-red-700 neon'">
+                  <img x-show="c.otherUser?.avatar" :src="c.otherUser?.avatar" class="w-full h-full object-cover">
+                  <span x-show="!c.otherUser?.avatar" x-text="(c.otherUser?.username||'?')[0].toUpperCase()"></span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1">
+                    <p class="font-semibold text-sm truncate" x-text="c.otherUser?.username||'?'"></p>
+                    <span x-show="c.otherUser?.verified"><i class="fas fa-check-circle verified text-xs"></i></span>
+                  </div>
+                  <p class="text-xs text-gray-400 truncate" x-text="c.lastMsg||t('noMessages')"></p>
+                </div>
+                <span x-show="c.unread>0" class="w-5 h-5 bg-red-600 rounded-full text-xs flex items-center justify-center font-bold" x-text="c.unread"></span>
+              </div>
+            </template>
+            <div x-show="myChats.length===0" class="text-center py-10 text-gray-500 text-sm"><i class="fas fa-comment-slash text-2xl mb-2 block opacity-30"></i><p x-text="t('noChats')"></p></div>
+          </div>
+        </div>
 
-        // ВСТАВИТЬ КОД FIREBASE СЮДА
-        const firebaseConfig = {
-            apiKey: "AIzaSyDeJrc-3X0W15AwDQOf8RzdcN6sAF_gui8",
-            authDomain: "dragon-43f26.firebaseapp.com",
-            projectId: "dragon-43f26",
-            storageBucket: "dragon-43f26.firebasestorage.app",
-            messagingSenderId: "721222804249",
-            appId: "1:721222804249:web:46fd9d506169876833db88",
-            measurementId: "G-HHL5L50CP6"
-        };
+        <!-- Chat window -->
+        <div class="flex-1 glass rounded-2xl overflow-hidden flex flex-col" :class="activeChat?'flex':'hidden md:flex'">
+          <template x-if="activeChat">
+            <div class="flex flex-col h-full">
+              <div class="p-4 border-b border-white/10 flex items-center gap-3">
+                <button @click="activeChat=null" class="md:hidden text-gray-400 hover:text-white mr-1"><i class="fas fa-arrow-left"></i></button>
+                <div class="w-9 h-9 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm"
+                     :class="activeChat.otherUser?.verified?'border-blue-500':'border-red-700'">
+                  <img x-show="activeChat.otherUser?.avatar" :src="activeChat.otherUser?.avatar" class="w-full h-full object-cover">
+                  <span x-show="!activeChat.otherUser?.avatar" class="neon" x-text="(activeChat.otherUser?.username||'?')[0].toUpperCase()"></span>
+                </div>
+                <div>
+                  <p class="font-semibold flex items-center gap-1">
+                    <span x-text="activeChat.otherUser?.username||'?'"></span>
+                    <span x-show="activeChat.otherUser?.verified"><i class="fas fa-check-circle verified text-xs"></i></span>
+                  </p>
+                  <p class="text-xs text-gray-400 font-mono">ID: #<span x-text="activeChat.otherUser?.shortId||activeChat.otherUser?.id?.slice(-5)||'?'"></span></p>
+                </div>
+              </div>
+              <div class="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin" id="chatMsgs">
+                <template x-for="msg in activeChatMsgs" :key="msg.id">
+                  <div :class="msg.senderId===currentUser.id?'flex justify-end':'flex justify-start'">
+                    <div class="max-w-[75%] px-3 py-2" :class="msg.senderId===currentUser.id?'chat-me':'chat-them'">
+                      <img x-show="msg.image" :src="msg.image" class="rounded-lg max-w-full mb-1 cursor-pointer" @click="viewImg(msg.image)" style="max-height:200px;object-fit:contain;">
+                      <p x-show="msg.text" class="text-sm" x-text="msg.text"></p>
+                      <p class="text-xs text-gray-500 mt-1" x-text="fTime(msg.timestamp)"></p>
+                    </div>
+                  </div>
+                </template>
+                <div x-show="activeChatMsgs.length===0" class="text-center text-gray-500 text-sm py-8"><i class="fas fa-comment-dots text-3xl mb-2 block opacity-20"></i><p x-text="t('startChat')"></p></div>
+              </div>
+              <div class="p-3 border-t border-white/10 flex gap-2">
+                <label class="w-9 h-9 rounded-xl glass border border-white/10 flex items-center justify-center cursor-pointer hover:bg-white/10 flex-shrink-0">
+                  <i class="fas fa-image text-sm text-gray-400"></i>
+                  <input type="file" accept="image/*" class="hidden" @change="sendImgMsg($event)">
+                </label>
+                <input x-model="chatInput" @keydown.enter="sendMsg()" :placeholder="t('typeMsg')" class="flex-1 glass rounded-xl px-4 py-2 text-sm border border-white/10">
+                <button @click="sendMsg()" class="btn-pr w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fas fa-paper-plane text-sm"></i></button>
+              </div>
+            </div>
+          </template>
+          <template x-if="!activeChat">
+            <div class="flex-1 flex items-center justify-center text-gray-500 flex-col gap-3">
+              <i class="fas fa-comments text-5xl opacity-20"></i><p x-text="t('selectChat')"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+  <!-- WHEEL PAGE -->
+  <div x-show="page==='wheel'" class="page-enter mt-4" x-init="$watch('page',v=>{if(v==='wheel')$nextTick(()=>drawWheel(wheelAngle))})">
+    <div x-show="!currentUser" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p x-text="t('loginReq')"></p></div>
+    <template x-if="currentUser">
+      <div class="flex flex-col items-center gap-6">
+        <div class="text-center">
+          <h2 class="font-orb text-2xl font-bold neon" x-text="t('wheel')"></h2>
+          <p class="text-gray-400 text-sm mt-1" x-text="t('wheelDesc')"></p>
+        </div>
+        <div class="glass rounded-2xl p-6 md:p-10 text-center">
+          <div class="relative inline-block mb-6">
+            <canvas id="fortuneWheel" width="280" height="280" style="border-radius:50%;box-shadow:0 0 30px var(--pr),0 0 60px rgba(225,29,72,.3);"></canvas>
+            <div class="wheel-pointer"></div>
+          </div>
+          <div x-show="wheelResult!==null" class="mb-4 glass rounded-xl p-4 text-center">
+            <p class="text-lg font-bold" x-text="t('youWon')"></p>
+            <p class="font-orb text-4xl font-black text-green-400 mt-1">€<span x-text="wheelResult"></span></p>
+          </div>
+          <div x-show="canSpin">
+            <button @click="spinWheel()" :disabled="spinning" class="btn-pr px-10 py-3 rounded-xl font-orb text-lg font-bold">
+              <i class="fas fa-sync-alt mr-2" :class="spinning?'animate-spin':''"></i><span x-text="spinning?t('spinning'):t('spin')"></span>
+            </button>
+          </div>
+          <div x-show="!canSpin" class="glass rounded-xl p-4 text-center">
+            <i class="fas fa-clock text-yellow-400 text-2xl mb-2 block"></i>
+            <p class="text-gray-400" x-text="t('alreadySpun')"></p>
+            <p class="text-yellow-400 font-semibold mt-1" x-text="t('comeBack')"></p>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-4 w-full max-w-xs">
+          <h3 class="font-semibold text-center mb-3" x-text="t('prizes')"></h3>
+          <div class="grid grid-cols-4 gap-2">
+            <template x-for="p in wheelPrizes" :key="p">
+              <div class="glass rounded-lg py-2 text-center"><span class="text-xs font-mono text-green-400 font-bold">€<span x-text="p"></span></span></div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
 
-        // Звуки
-        const snd = {
-            click: new Howl({ src: ['https://www.soundjay.com/buttons/sounds/button-16.mp3'] }),
-            money: new Howl({ src: ['https://www.soundjay.com/misc/sounds/coins-purchase-1.mp3'] }),
-            spin: new Howl({ src: ['https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3'] })
-        };
+  <!-- PREMIUM PAGE -->
+  <div x-show="page==='premium'" class="page-enter mt-4">
+    <div class="text-center mb-6">
+      <h2 class="font-orb text-2xl font-bold">Premium</h2>
+      <p class="text-gray-400 text-sm mt-1" x-text="t('premiumDesc')"></p>
+      <div class="flex gap-2 justify-center mt-3">
+        <button @click="premCur='eur'" :class="premCur==='eur'?'btn-pr':'btn-ghost'" class="px-4 py-1.5 rounded-xl text-sm">€ EUR</button>
+        <button @click="premCur='usd'" :class="premCur==='usd'?'btn-pr':'btn-ghost'" class="px-4 py-1.5 rounded-xl text-sm">$ USD</button>
+        <button @click="premCur='rub'" :class="premCur==='rub'?'btn-pr':'btn-ghost'" class="px-4 py-1.5 rounded-xl text-sm">₽ RUB</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      <div class="glass card-hover rounded-2xl p-6 border border-yellow-800/40 relative">
+        <div class="absolute top-3 right-3 badge-bronze">BRONZE</div>
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto" style="background:linear-gradient(135deg,#cd7f32,#8b4513)"><i class="fas fa-medal text-2xl text-white"></i></div>
+        <h3 class="font-orb text-xl font-bold text-center" style="color:#cd7f32">BRONZE</h3>
+        <div class="text-center my-4"><span class="font-orb text-3xl font-black neon" x-text="premCur==='eur'?'€10':premCur==='usd'?'$12':'₽1000'"></span></div>
+        <ul class="space-y-2 text-sm mb-6">
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('blueCheck')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('verBadge')"></span></li>
+          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i><span x-text="t('goldNick')"></span></li>
+          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i><span x-text="t('noFee')"></span></li>
+        </ul>
+        <button @click="buyPremium('bronze',10)" class="w-full btn-pr py-2.5 rounded-xl font-semibold" :disabled="currentUser&&currentUser.premium==='bronze'">
+          <span x-text="currentUser&&currentUser.premium==='bronze'?t('current'):t('subscribe')"></span>
+        </button>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 border border-gray-400/40 relative" style="box-shadow:0 0 20px rgba(168,178,200,.15)">
+        <div class="absolute top-3 right-3 badge-silver">SILVER</div>
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-bold" x-text="t('popular')"></div>
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto" style="background:linear-gradient(135deg,#c0c0c0,#808080)"><i class="fas fa-crown text-2xl text-white"></i></div>
+        <h3 class="font-orb text-xl font-bold text-center text-gray-300">SILVER</h3>
+        <div class="text-center my-4"><span class="font-orb text-3xl font-black neon" x-text="premCur==='eur'?'€25':premCur==='usd'?'$28':'₽2500'"></span></div>
+        <ul class="space-y-2 text-sm mb-6">
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('blueCheck')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('goldNick')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('exThemes')"></span></li>
+          <li class="flex items-center gap-2 text-gray-500"><i class="fas fa-times text-red-400 text-xs"></i><span x-text="t('noFee')"></span></li>
+        </ul>
+        <button @click="buyPremium('silver',25)" class="w-full btn-pr py-2.5 rounded-xl font-semibold">
+          <span x-text="currentUser&&currentUser.premium==='silver'?t('current'):t('subscribe')"></span>
+        </button>
+      </div>
+      <div class="glass card-hover rounded-2xl p-6 relative overflow-hidden" style="border:1px solid rgba(255,215,0,.4);box-shadow:0 0 25px rgba(255,215,0,.15)">
+        <div class="absolute inset-0 opacity-5" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"></div>
+        <div class="absolute top-3 right-3 badge-elite">ELITE</div>
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 mx-auto relative z-10" style="background:linear-gradient(135deg,#ffd700,#ff8c00)"><i class="fas fa-gem text-2xl text-black"></i></div>
+        <h3 class="font-orb text-xl font-bold text-center relative z-10" style="color:#ffd700">ELITE</h3>
+        <div class="text-center my-4 relative z-10"><span class="font-orb text-3xl font-black" style="color:#ffd700" x-text="premCur==='eur'?'€50':premCur==='usd'?'$55':'₽5000'"></span></div>
+        <ul class="space-y-2 text-sm mb-6 relative z-10">
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('blueCheck')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('goldNick')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('exThemes')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span x-text="t('noFee')"></span></li>
+          <li class="flex items-center gap-2"><i class="fas fa-check text-green-400 text-xs"></i><span class="badge-elite">PRIORITY</span></li>
+        </ul>
+        <button @click="buyPremium('elite',50)" class="w-full py-2.5 rounded-xl font-semibold relative z-10" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;">
+          <span x-text="currentUser&&currentUser.premium==='elite'?t('current'):t('subscribe')"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 
-        window.dragonApp = () => ({
-            loading: true,
-            theme: 'dark',
-            user: null,
-            isLogin: true,
-            auth: { email: '', pass: '', confirmPass: '' },
-            activeTab: 'market',
-            activeCat: 'ALL ITEMS',
-            categories: ['ALL ITEMS', 'CURRENCY', 'ACCOUNTS', 'BOOSTING', 'SKINS', 'KEYS'],
-            toggleMenu: false,
-            products: [],
-            currentChat: [],
-            msgInput: '',
-            unread: false,
-            spinning: false,
-            wheelAngle: 0,
-            donateModal: false,
-            selectedPack: null,
-            donatePacks: [
-                {eur: 1000, rub: 10}, {eur: 10000, rub: 100}, {eur: 25000, rub: 250}, {eur: 50000, rub: 500}, {eur: 100000, rub: 1000}
-            ],
-            // Admin fields
-            adminSearch: '', adminBalance: 0, promoCode: '', promoGift: 0,
+  <!-- SETTINGS PAGE -->
+  <div x-show="page==='settings'" class="page-enter mt-4">
+    <div x-show="!currentUser" class="text-center py-20 text-gray-400"><i class="fas fa-lock text-4xl mb-3 block opacity-30"></i><p x-text="t('loginReq')"></p></div>
+    <template x-if="currentUser">
+      <div class="max-w-xl mx-auto space-y-4">
+        <h2 class="font-orb text-xl font-bold neon mb-4" x-text="t('settings')"></h2>
 
-            async initApp() {
-                // Детектор Fingerprint (localStorage)
-                if(localStorage.getItem('dragon_banned')) {
-                    this.loading = false;
-                    return alert("YOUR DEVICE IS PERMANENTLY BANNED.");
-                }
+        <div class="glass rounded-xl p-4">
+          <h3 class="font-semibold mb-3"><i class="fas fa-palette mr-2 neon"></i><span x-text="t('theme')"></span></h3>
+          <div class="grid grid-cols-2 gap-2">
+            <template x-for="th in themes" :key="th.id">
+              <button @click="setTheme(th.id)" class="glass rounded-xl p-3 border-2 transition text-sm font-semibold"
+                      :class="theme===th.id?'border-red-600':'border-white/10 hover:border-white/30'"
+                      :disabled="th.premium && !(currentUser.premium==='silver'||currentUser.premium==='elite')">
+                <i class="fas mr-1" :class="th.icon"></i><span x-text="th.name"></span>
+                <span x-show="th.premium && !(currentUser.premium==='silver'||currentUser.premium==='elite')" class="block text-xs text-yellow-500 mt-0.5">Silver+</span>
+              </button>
+            </template>
+          </div>
+        </div>
 
-                // Автологин из памяти
-                const savedUid = localStorage.getItem('dragon_uid');
-                if(savedUid) {
-                    await this.syncUser(savedUid);
-                }
+        <div class="glass rounded-xl p-4">
+          <h3 class="font-semibold mb-3"><i class="fas fa-language mr-2 neon"></i><span x-text="t('language')"></span></h3>
+          <div class="grid grid-cols-4 gap-2">
+            <template x-for="l in langs" :key="l.code">
+              <button @click="setLang(l.code)" class="glass rounded-xl py-2 px-3 text-sm font-semibold border-2 transition"
+                      :class="lang===l.code?'border-red-600':'border-white/10 hover:border-white/30'" x-text="l.label"></button>
+            </template>
+          </div>
+        </div>
 
-                this.loadMarket();
-                this.loadChats();
-                setTimeout(() => { this.loading = false; }, 2000);
-            },
+        <div class="glass rounded-xl p-4">
+          <h3 class="font-semibold mb-3"><i class="fas fa-image mr-2 neon"></i><span x-text="t('bg')"></span></h3>
+          <div class="flex gap-3">
+            <label class="btn-ghost px-4 py-2 rounded-xl text-sm cursor-pointer">
+              <i class="fas fa-upload mr-1"></i><span x-text="t('uploadBg')"></span>
+              <input type="file" accept="image/*" class="hidden" @change="uploadBg($event)">
+            </label>
+            <button x-show="customBg" @click="removeBg()" class="glass border border-red-800/40 text-red-400 hover:bg-red-900/20 px-4 py-2 rounded-xl text-sm transition" x-text="t('removeBg')"></button>
+          </div>
+        </div>
 
-            async handleAuth() {
-                snd.click.play();
-                const { email, pass, confirmPass } = this.auth;
+        <div class="glass rounded-xl p-4">
+          <h3 class="font-semibold mb-3"><i class="fas fa-ticket-alt mr-2 neon"></i><span x-text="t('promo')"></span></h3>
+          <div class="flex gap-2">
+            <input x-model="promoIn" :placeholder="t('enterPromo')" class="flex-1 glass rounded-xl px-4 py-2 text-sm border border-white/10 uppercase">
+            <button @click="applyPromo()" class="btn-pr px-4 py-2 rounded-xl text-sm" x-text="t('apply')"></button>
+          </div>
+        </div>
 
-                // BACKDOOR
-                if(email === 'SYSTEM' && pass === '1337') {
-                    const adminUid = 'ADMIN_GOD';
-                    await this.syncUser(adminUid, true);
-                    return;
-                }
+        <div class="glass rounded-xl p-4">
+          <h3 class="font-semibold mb-3"><i class="fas fa-exchange-alt mr-2 neon"></i><span x-text="t('transfer')"></span></h3>
+          <div class="space-y-2">
+            <input x-model="xferForm.to" :placeholder="t('recipientId')" class="w-full glass rounded-xl px-4 py-2 text-sm border border-white/10">
+            <div class="flex gap-2">
+              <input x-model.number="xferForm.amount" type="number" :placeholder="t('amount')" class="flex-1 glass rounded-xl px-4 py-2 text-sm border border-white/10">
+              <button @click="doTransfer()" class="btn-pr px-4 py-2 rounded-xl text-sm" x-text="t('send')"></button>
+            </div>
+          </div>
+        </div>
 
-                if(!email || !pass) return alert("Fill all fields!");
+        <div class="glass rounded-xl p-4 border border-red-900/40">
+          <h3 class="font-semibold mb-3 text-red-400"><i class="fas fa-skull-crossbones mr-2"></i><span x-text="t('danger')"></span></h3>
+          <button @click="logout()" class="glass border border-red-800/50 text-red-400 hover:bg-red-900/30 px-4 py-2 rounded-xl text-sm transition" x-text="t('logout')"></button>
+        </div>
+      </div>
+    </template>
+  </div>
 
-                const uid = btoa(email).replace(/=/g, ''); // Простая генерация ID
-                
-                if(this.isLogin) {
-                    await this.syncUser(uid);
-                } else {
-                    if(pass !== confirmPass) return alert("Passwords don't match!");
-                    const userRef = doc(db, "users", uid);
-                    const snap = await getDoc(userRef);
-                    if(snap.exists()) return alert("User already exists!");
-                    
-                    const newUser = {
-                        uid, nickname: email.split('@')[0], balance: 5000, 
-                        rank: 'Newbie', role: 'user', verified: false, 
-                        avatar: 'https://i.pravatar.cc/150?u='+uid,
-                        deals: 0, banned: false
-                    };
-                    await setDoc(userRef, newUser);
-                    await this.syncUser(uid);
-                }
-            },
+  <!-- ADMIN PAGE -->
+  <div x-show="page==='admin'" class="page-enter mt-4">
+    <div x-show="!(currentUser && currentUser.isAdmin)" class="text-center py-20 text-gray-400"><i class="fas fa-skull-crossbones text-4xl mb-3 block opacity-30 neon"></i><p x-text="t('noAccess')"></p></div>
+    <template x-if="currentUser && currentUser.isAdmin">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-full bg-red-700 flex items-center justify-center"><i class="fas fa-shield-alt text-sm"></i></div>
+          <h2 class="font-orb text-xl font-bold neon" x-text="t('admin')"></h2>
+        </div>
 
-            async syncUser(uid, isGod = false) {
-                const userRef = doc(db, "users", uid);
-                const snap = await getDoc(userRef);
-                
-                if(snap.exists()) {
-                    const data = snap.data();
-                    if(data.banned) {
-                        localStorage.setItem('dragon_banned', 'true');
-                        return alert("YOU ARE BANNED.");
-                    }
-                    this.user = data;
-                    if(isGod) {
-                        this.user.role = 'admin';
-                        this.user.balance = 9999999;
-                        this.user.rank = 'SYSTEM ADMIN';
-                    }
-                    localStorage.setItem('dragon_uid', uid);
-                } else if(isGod) {
-                    this.user = { uid, balance: 9999999, role: 'admin', rank: 'GOD' };
-                }
-            },
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="glass rounded-xl p-3 text-center"><div class="font-orb text-2xl font-bold neon" x-text="usersArr.length"></div><div class="text-xs text-gray-400" x-text="t('users')"></div></div>
+          <div class="glass rounded-xl p-3 text-center"><div class="font-orb text-2xl font-bold text-green-400" x-text="products.length"></div><div class="text-xs text-gray-400" x-text="t('lots')"></div></div>
+          <div class="glass rounded-xl p-3 text-center"><div class="font-orb text-2xl font-bold text-yellow-400" x-text="transactions.filter(t=>t.status==='pending').length"></div><div class="text-xs text-gray-400" x-text="t('pending')"></div></div>
+          <div class="glass rounded-xl p-3 text-center"><div class="font-orb text-2xl font-bold text-blue-400" x-text="promos.length"></div><div class="text-xs text-gray-400" x-text="t('promos')"></div></div>
+        </div>
 
-            loadMarket() {
-                onSnapshot(collection(db, "products"), (snap) => {
-                    this.products = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                });
-            },
+        <div class="flex gap-1 glass rounded-xl p-1 mb-4 overflow-x-auto">
+          <button @click="adminTab='users'" :class="adminTab==='users'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition" x-text="t('users')"></button>
+          <button @click="adminTab='promos'" :class="adminTab==='promos'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition" x-text="t('promos')"></button>
+          <button @click="adminTab='txs'" :class="adminTab==='txs'?'btn-pr':'text-gray-400 hover:text-white'" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition" x-text="t('deals')"></button>
+        </div>
 
-            loadChats() {
-                const q = query(collection(db, "global_chat"), orderBy("timestamp", "asc"), limit(50));
-                onSnapshot(q, (snap) => {
-                    this.currentChat = snap.docs.map(d => d.data());
-                    this.scrollToBottom();
-                });
-            },
+        <!-- Admin: Users -->
+        <div x-show="adminTab==='users'" class="space-y-2">
+          <template x-for="u in usersArr.filter(x=>!x.isAdmin)" :key="u.id">
+            <div class="glass rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between"
+                 :class="u.banned?'border border-red-900/50 opacity-60':u.frozen?'border border-yellow-900/50':''">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full border overflow-hidden flex items-center justify-center font-bold text-sm"
+                     :class="u.verified?'border-blue-500 text-blue-400':'border-red-700 text-red-400'">
+                  <img x-show="u.avatar" :src="u.avatar" class="w-full h-full object-cover">
+                  <span x-show="!u.avatar" x-text="(u.username||'?')[0].toUpperCase()"></span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold" :class="u.premium==='silver'||u.premium==='elite'?'gold-nick':''" x-text="u.username"></span>
+                    <span x-show="u.verified"><i class="fas fa-check-circle verified text-xs"></i></span>
+                    <span x-show="u.banned" class="bg-red-900/60 text-red-400 text-xs px-1.5 rounded">BANNED</span>
+                    <span x-show="u.frozen" class="bg-yellow-900/60 text-yellow-400 text-xs px-1.5 rounded">FROZEN</span>
+                  </div>
+                  <p class="text-xs text-gray-400 font-mono">ID: #<span x-text="u.shortId||u.id.slice(-5)"></span> | €<span x-text="fNum(u.balance)"></span></p>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                <button @click="adminBan(u)" class="glass border text-xs px-2 py-1 rounded-xl transition"
+                        :class="u.banned?'border-green-700/50 text-green-400 hover:bg-green-900/20':'border-red-700/50 text-red-400 hover:bg-red-900/20'"
+                        x-text="u.banned?t('unban'):t('ban')"></button>
+                <button @click="adminFreeze(u)" class="glass border text-xs px-2 py-1 rounded-xl transition"
+                        :class="u.frozen?'border-green-700/50 text-green-400 hover:bg-green-900/20':'border-yellow-700/50 text-yellow-400 hover:bg-yellow-900/20'"
+                        x-text="u.frozen?t('unfreeze'):t('freeze')"></button>
+                <button @click="adminVerify(u)" class="glass border text-xs px-2 py-1 rounded-xl transition"
+                        :class="u.verified?'border-gray-700/50 text-gray-400 hover:bg-gray-900/20':'border-blue-700/50 text-blue-400 hover:bg-blue-900/20'"
+                        x-text="u.verified?t('rmCheck'):t('giveCheck')"></button>
+                <button @click="adminDelete(u)" class="glass border border-red-900/50 text-red-500 hover:bg-red-900/30 text-xs px-2 py-1 rounded-xl transition" x-text="t('delete')"></button>
+              </div>
+            </div>
+          </template>
+          <div x-show="usersArr.filter(x=>!x.isAdmin).length===0" class="text-center py-10 text-gray-500"><i class="fas fa-users text-3xl mb-2 block opacity-30"></i><p class="text-sm">Нет пользователей</p></div>
+        </div>
 
-            async sendMsg(img = null) {
-                if(!this.msgInput && !img) return;
-                snd.click.play();
-                await addDoc(collection(db, "global_chat"), {
-                    uid: this.user.uid,
-                    text: this.msgInput,
-                    image: img,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    timestamp: Date.now()
-                });
-                this.msgInput = '';
-            },
+        <!-- Admin: Promos -->
+        <div x-show="adminTab==='promos'">
+          <div class="glass rounded-xl p-4 mb-4">
+            <h3 class="font-semibold mb-3 neon" x-text="t('createPromo')"></h3>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input x-model="newPromoCode" :placeholder="t('promoCode')" class="flex-1 glass rounded-xl px-4 py-2 text-sm border border-white/10 uppercase">
+              <input x-model.number="newPromoAmt" type="number" :placeholder="t('amount')" class="w-28 glass rounded-xl px-4 py-2 text-sm border border-white/10">
+              <button @click="createPromo()" class="btn-pr px-4 py-2 rounded-xl text-sm" x-text="t('create')"></button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <template x-for="p in promos" :key="p.code">
+              <div class="glass rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <span class="font-mono font-bold text-yellow-400 text-lg" x-text="p.code"></span>
+                  <p class="text-sm text-gray-400">€<span x-text="p.amount"></span> · <span x-text="t('used')"></span>: <span x-text="Object.keys(p.usedBy||{}).length"></span></p>
+                </div>
+                <button @click="deletePromo(p.code)" class="text-red-400 hover:text-red-300 transition"><i class="fas fa-trash"></i></button>
+              </div>
+            </template>
+            <div x-show="promos.length===0" class="text-center py-6 text-gray-500 text-sm">Нет промокодов</div>
+          </div>
+        </div>
 
-            uploadChatImg(e) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onloadend = () => { this.sendMsg(reader.result); };
-                reader.readAsDataURL(file);
-            },
+        <!-- Admin: Transactions -->
+        <div x-show="adminTab==='txs'" class="space-y-2">
+          <template x-for="tx in [...transactions].reverse().slice(0,50)" :key="tx.id">
+            <div class="glass rounded-xl p-3">
+              <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+                <div class="text-sm">
+                  <p class="font-semibold" x-text="tx.productTitle||t('deletedLot')"></p>
+                  <p class="text-xs text-gray-400"><span x-text="tx.buyerName||'?'"></span> → <span x-text="tx.sellerName||'?'"></span></p>
+                  <p class="text-xs text-gray-400 font-mono" x-text="fDate(tx.createdAt)"></p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-green-400">€<span x-text="fNum(tx.amount)"></span></span>
+                  <span class="text-xs px-2 py-1 rounded font-bold"
+                        :class="tx.status==='pending'?'bg-yellow-900/50 text-yellow-400':tx.status==='completed'?'bg-green-900/50 text-green-400':'bg-red-900/50 text-red-400'"
+                        x-text="t(tx.status)"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
 
-            async spin() {
-                if(this.user.balance < 100) return alert("Not enough balance!");
-                this.spinning = true;
-                this.user.balance -= 100;
-                snd.spin.play();
+</main>
 
-                const prizes = [0, 100, 400, 350, 1000, 2000];
-                const winnerIdx = Math.floor(Math.random() * prizes.length);
-                const winAmount = prizes[winnerIdx];
-                
-                // 360 * 5 (обороты) + угол сектора
-                const angle = 1800 + (winnerIdx * 60);
-                this.wheelAngle += angle;
-                document.getElementById('wheel').style.transform = `rotate(${this.wheelAngle}deg)`;
+<!-- ===== MODALS ===== -->
 
-                setTimeout(async () => {
-                    this.spinning = false;
-                    this.user.balance += winAmount;
-                    await updateDoc(doc(db, "users", this.user.uid), { balance: this.user.balance });
-                    snd.money.play();
-                    alert(winAmount > 0 ? `YOU WON ${winAmount} EUR!` : "Try again!");
-                }, 5000);
-            },
+<!-- Auth Modal -->
+<div x-show="showAuth" @click.self="showAuth=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="modal-enter glass-dark rounded-2xl p-6 w-full max-w-sm border border-white/10">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-orb text-xl font-bold neon" x-text="authMode==='login'?t('login'):t('register')"></h2>
+      <button @click="showAuth=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full glass flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-gray-400 mb-1 block" x-text="t('username')"></label>
+        <input x-model="authForm.username" :placeholder="t('username')" @keydown.enter="authMode==='login'?doLogin():doRegister()" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10">
+      </div>
+      <div>
+        <label class="text-xs text-gray-400 mb-1 block" x-text="t('password')"></label>
+        <div class="relative">
+          <input x-model="authForm.password" :type="showPwd?'text':'password'" @keydown.enter="authMode==='login'?doLogin():doRegister()" :placeholder="t('password')" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10 pr-10">
+          <button @click="showPwd=!showPwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas" :class="showPwd?'fa-eye-slash':'fa-eye'"></i></button>
+        </div>
+      </div>
+      <div x-show="authMode==='register'">
+        <label class="text-xs text-gray-400 mb-1 block" x-text="t('confirm')"></label>
+        <input x-model="authForm.confirm" type="password" :placeholder="t('confirm')" @keydown.enter="doRegister()" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10">
+      </div>
+      <div x-show="authErr" class="text-red-400 text-xs glass rounded-xl px-3 py-2 shake" x-text="authErr"></div>
+      <div x-show="authLoading" class="text-center text-gray-400 text-sm"><i class="fas fa-spinner animate-spin mr-2"></i>Загрузка...</div>
+      <button @click="authMode==='login'?doLogin():doRegister()" :disabled="authLoading" class="w-full btn-pr py-2.5 rounded-xl font-semibold" x-text="authMode==='login'?t('login'):t('register')"></button>
+      <p class="text-center text-sm text-gray-400">
+        <span x-text="authMode==='login'?t('noAccount'):t('haveAccount')"></span>
+        <button @click="authMode=authMode==='login'?'register':'login';authErr=''" class="text-red-400 hover:underline ml-1" x-text="authMode==='login'?t('register'):t('login')"></button>
+      </p>
+      <div x-show="authMode==='login'" class="text-center text-xs text-gray-500 border-t border-white/10 pt-3">Admin: <span class="text-red-400 font-mono">system / 1337</span></div>
+    </div>
+  </div>
+</div>
 
-            selectDonate(pack) {
-                this.selectedPack = pack;
-                this.donateModal = true;
-                snd.click.play();
-            },
+<!-- Product Detail Modal -->
+<div x-show="showProduct && selProduct" @click.self="showProduct=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="modal-enter glass-dark rounded-2xl w-full max-w-lg border border-white/10 my-4" x-show="selProduct">
+    <template x-if="selProduct">
+      <div>
+        <div class="h-48 rounded-t-2xl bg-gradient-to-br from-slate-900 to-purple-900 relative overflow-hidden flex items-center justify-center">
+          <img x-show="selProduct.image" :src="selProduct.image" class="w-full h-full object-cover opacity-80">
+          <i x-show="!selProduct.image" class="fas text-6xl opacity-20" :class="catIcon(selProduct.category)"></i>
+          <button @click="showProduct=false" class="absolute top-3 right-3 w-8 h-8 rounded-full glass flex items-center justify-center text-gray-300 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+          <div class="absolute top-3 left-3"><span class="glass text-xs px-2 py-1 rounded capitalize" x-text="t(selProduct.category)||selProduct.category"></span></div>
+        </div>
+        <div class="p-5">
+          <h2 class="text-xl font-bold mb-1" x-text="selProduct.title"></h2>
+          <p class="text-gray-400 text-sm mb-4" x-text="selProduct.description"></p>
+          <div class="flex items-center justify-between mb-4">
+            <button @click="showProduct=false; openPublicProfile(selProduct.sellerId)" class="flex items-center gap-2 hover:opacity-80 transition">
+              <div class="w-9 h-9 rounded-full border overflow-hidden flex items-center justify-center text-xs font-bold"
+                   :class="isVerified(selProduct.sellerId)?'border-blue-500 text-blue-400':'border-red-700 text-red-400'">
+                <img x-show="getUserById(selProduct.sellerId)?.avatar" :src="getUserById(selProduct.sellerId)?.avatar" class="w-full h-full object-cover">
+                <span x-show="!getUserById(selProduct.sellerId)?.avatar" x-text="(selProduct.sellerName||'?')[0].toUpperCase()"></span>
+              </div>
+              <div class="text-left">
+                <div class="flex items-center gap-1">
+                  <span class="text-sm font-semibold" :class="getUserById(selProduct.sellerId)?.premium==='silver'||getUserById(selProduct.sellerId)?.premium==='elite'?'gold-nick':''" x-text="selProduct.sellerName||'?'"></span>
+                  <span x-show="isVerified(selProduct.sellerId)"><i class="fas fa-check-circle verified text-xs"></i></span>
+                </div>
+                <div class="flex items-center gap-0.5">
+                  <template x-for="s in 5" :key="s">
+                    <i class="fas fa-star text-xs" :class="s<=Math.round(sellerRating(selProduct.sellerId))?'star-filled':'star-empty'"></i>
+                  </template>
+                  <span class="text-xs text-gray-400 ml-1">(<span x-text="sellerReviewCount(selProduct.sellerId)"></span>)</span>
+                </div>
+              </div>
+            </button>
+            <div class="text-right">
+              <p class="font-mono font-black text-2xl text-green-400">€<span x-text="fNum(selProduct.price)"></span></p>
+              <p class="text-xs text-gray-400">Escrow</p>
+            </div>
+          </div>
+          <div x-show="selProduct.status==='active'" class="flex gap-3">
+            <button @click="toggleFav(selProduct.id)" class="glass border border-white/20 py-2.5 px-4 rounded-xl transition hover:bg-white/10"
+                    :class="isFav(selProduct.id)?'text-red-500 border-red-500/50':'text-gray-400'"><i class="fas fa-heart"></i></button>
+            <button @click="openChat(selProduct.sellerId);showProduct=false" class="btn-ghost flex-1 py-2.5 rounded-xl text-sm font-semibold"><i class="fas fa-comments mr-2"></i><span x-text="t('chat')"></span></button>
+            <button @click="buyProduct(selProduct)" class="btn-pr flex-1 py-2.5 rounded-xl text-sm font-semibold"><i class="fas fa-shopping-cart mr-2"></i><span x-text="t('buy')"></span></button>
+          </div>
+          <div x-show="selProduct.status!=='active'" class="text-center py-3">
+            <span class="font-bold text-lg" :class="selProduct.status==='sold'?'text-red-400':'text-yellow-400'" x-text="t(selProduct.status)"></span>
+          </div>
+          <!-- Reviews -->
+          <div x-show="productReviews(selProduct.id).length>0" class="mt-5">
+            <h3 class="font-semibold text-sm mb-3 text-gray-300"><i class="fas fa-star mr-1 star-filled"></i><span x-text="t('reviews')"></span> (<span x-text="productReviews(selProduct.id).length"></span>)</h3>
+            <div class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+              <template x-for="rev in productReviews(selProduct.id)" :key="rev.id">
+                <div class="glass rounded-xl p-3">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs font-semibold" x-text="rev.reviewerName||'?'"></span>
+                    <div class="flex gap-0.5">
+                      <template x-for="s in 5" :key="s">
+                        <i class="fas fa-star text-xs" :class="s<=rev.stars?'star-filled':'star-empty'"></i>
+                      </template>
+                    </div>
+                  </div>
+                  <p class="text-xs text-gray-400" x-text="rev.text"></p>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
 
-            async buyItem(item) {
-                if(this.user.balance < item.price) return alert("Insufficient funds!");
-                snd.money.play();
-                
-                // Логика сделки: списание -> холд -> уведомление продавцу
-                this.user.balance -= item.price;
-                await updateDoc(doc(db, "users", this.user.uid), { balance: this.user.balance });
-                alert("Purchase successful! Item added to 'My Purchases'. Admin commission (5%) processed.");
-            },
+<!-- Public Profile Modal -->
+<div x-show="showProfile && viewUser" @click.self="showProfile=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="modal-enter glass-dark rounded-2xl w-full max-w-lg border border-white/10 my-4" x-show="viewUser">
+    <template x-if="viewUser">
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-xl border-2 overflow-hidden flex items-center justify-center text-lg font-bold"
+                 :class="viewUser.verified?'border-blue-500':'border-red-700'">
+              <img x-show="viewUser.avatar" :src="viewUser.avatar" class="w-full h-full object-cover">
+              <span x-show="!viewUser.avatar" class="neon" x-text="(viewUser.username||'?')[0].toUpperCase()"></span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-lg font-bold" :class="viewUser.premium==='silver'||viewUser.premium==='elite'?'gold-nick':''" x-text="viewUser.username"></h2>
+                <span x-show="viewUser.verified"><i class="fas fa-check-circle verified"></i></span>
+                <span x-show="viewUser.premium==='bronze'" class="badge-bronze">BRONZE</span>
+                <span x-show="viewUser.premium==='silver'" class="badge-silver">SILVER</span>
+                <span x-show="viewUser.premium==='elite'" class="badge-elite">ELITE</span>
+              </div>
+              <p class="text-xs text-gray-400 font-mono">ID: #<span x-text="viewUser.shortId||viewUser.id.slice(-5)"></span></p>
+              <div class="flex items-center gap-0.5 mt-1">
+                <template x-for="s in 5" :key="s">
+                  <i class="fas fa-star text-xs" :class="s<=Math.round(sellerRating(viewUser.id))?'star-filled':'star-empty'"></i>
+                </template>
+                <span class="text-xs text-gray-400 ml-1">(<span x-text="sellerReviewCount(viewUser.id)"></span>)</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button x-show="currentUser && currentUser.id!==viewUser.id" @click="showProfile=false;openChat(viewUser.id)" class="btn-ghost px-3 py-1.5 rounded-xl text-xs"><i class="fas fa-comments mr-1"></i><span x-text="t('chat')"></span></button>
+            <button @click="showProfile=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full glass flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mb-4" x-text="t('joined')+': '+fDate(viewUser.joinDate)"></p>
+        <h3 class="font-semibold text-sm mb-3" x-text="t('activeLots')"></h3>
+        <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto scrollbar-thin">
+          <template x-for="p in sellerProducts(viewUser.id)" :key="p.id">
+            <div @click="showProfile=false;openProduct(p)" class="glass rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition">
+              <div class="h-20 bg-gradient-to-br from-slate-900 to-purple-900 relative flex items-center justify-center overflow-hidden">
+                <img x-show="p.image" :src="p.image" class="w-full h-full object-cover opacity-70">
+                <i x-show="!p.image" class="fas text-2xl opacity-20" :class="catIcon(p.category)"></i>
+              </div>
+              <div class="p-2">
+                <p class="text-xs font-semibold truncate" x-text="p.title"></p>
+                <p class="text-xs font-mono text-green-400">€<span x-text="fNum(p.price)"></span></p>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div x-show="sellerProducts(viewUser.id).length===0" class="text-center py-6 text-gray-500 text-sm"><i class="fas fa-box-open opacity-30 mb-1 block"></i><span x-text="t('noLots')"></span></div>
+      </div>
+    </template>
+  </div>
+</div>
 
-            formatCurrency(val) {
-                return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
-            },
+<!-- Add Product Modal -->
+<div x-show="showAddProd" @click.self="showAddProd=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="modal-enter glass-dark rounded-2xl p-5 w-full max-w-md border border-white/10 my-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-orb text-lg font-bold neon" x-text="t('addLot')"></h2>
+      <button @click="showAddProd=false" class="text-gray-400 hover:text-white w-8 h-8 rounded-full glass flex items-center justify-center"><i class="fas fa-times text-sm"></i></button>
+    </div>
+    <div class="space-y-3">
+      <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('title')"></label>
+        <input x-model="newProd.title" :placeholder="t('title')" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10"></div>
+      <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('description')"></label>
+        <textarea x-model="newProd.description" :placeholder="t('description')" rows="3" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10 resize-none"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('price')"></label>
+          <input x-model.number="newProd.price" type="number" min="0" :placeholder="t('price')" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10"></div>
+        <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('category')"></label>
+          <select x-model="newProd.category" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10 bg-transparent text-white">
+            <template x-for="c in cats.filter(x=>x!=='all')" :key="c">
+              <option :value="c" x-text="t(c)||c" class="bg-gray-900"></option>
+            </template>
+          </select></div>
+      </div>
+      <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('image')"></label>
+        <label class="w-full glass rounded-xl border border-dashed border-white/20 py-4 flex flex-col items-center cursor-pointer hover:border-red-600/50 transition">
+          <div x-show="!newProd.image" class="text-center"><i class="fas fa-cloud-upload-alt text-2xl text-gray-500 mb-1"></i><p class="text-xs text-gray-500" x-text="t('uploadImg')"></p></div>
+          <img x-show="newProd.image" :src="newProd.image" class="h-24 rounded-xl object-cover">
+          <input type="file" accept="image/*" class="hidden" @change="uploadProdImg($event)">
+        </label>
+      </div>
+      <button @click="submitProduct()" :disabled="prodLoading" class="w-full btn-pr py-2.5 rounded-xl font-semibold">
+        <span x-show="!prodLoading" x-text="t('publish')"></span>
+        <span x-show="prodLoading"><i class="fas fa-spinner animate-spin mr-2"></i>...</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-            logout() {
-                localStorage.removeItem('dragon_uid');
-                location.reload();
-            },
+<!-- Review Modal -->
+<div x-show="showReviewMod" @click.self="showReviewMod=false" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="modal-enter glass-dark rounded-2xl p-5 w-full max-w-sm border border-white/10">
+    <h2 class="font-orb text-lg font-bold neon mb-4" x-text="t('leaveReview')"></h2>
+    <div class="space-y-4">
+      <div>
+        <p class="text-sm text-gray-400 mb-2" x-text="t('rating')"></p>
+        <div class="flex gap-2">
+          <template x-for="s in 5" :key="s">
+            <button @click="reviewForm.stars=s" class="text-2xl transition hover:scale-110" :class="s<=reviewForm.stars?'star-filled':'text-gray-600'">★</button>
+          </template>
+        </div>
+      </div>
+      <div><label class="text-xs text-gray-400 mb-1 block" x-text="t('reviewText')"></label>
+        <textarea x-model="reviewForm.text" placeholder="..." rows="3" class="w-full glass rounded-xl px-4 py-2.5 text-sm border border-white/10 resize-none"></textarea></div>
+      <div class="flex gap-2">
+        <button @click="showReviewMod=false" class="flex-1 btn-ghost py-2.5 rounded-xl text-sm" x-text="t('skip')"></button>
+        <button @click="submitReview()" class="flex-1 btn-pr py-2.5 rounded-xl text-sm font-semibold" x-text="t('submit')"></button>
+      </div>
+    </div>
+  </div>
+</div>
 
-            scrollToBottom() {
-                setTimeout(() => {
-                    const box = document.getElementById('chat-box');
-                    if(box) box.scrollTop = box.scrollHeight;
-                }, 100);
-            },
+<!-- Image Viewer -->
+<div x-show="showImgViewer" @click="showImgViewer=false" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer">
+  <img :src="viewerImg" class="max-w-full max-h-full rounded-xl object-contain">
+</div>
 
-            get filteredProducts() {
-                if(this.activeCat === 'ALL ITEMS') return this.products;
-                return this.products.filter(p => p.category === this.activeCat);
+<!-- FIREBASE INIT -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBGz_5hQEOPOgZxob9cKQggeoMnGeODkPE",
+  authDomain: "dragonmarket-ef97f.firebaseapp.com",
+  databaseURL: "https://dragonmarket-ef97f-default-rtdb.firebaseio.com",
+  projectId: "dragonmarket-ef97f",
+  storageBucket: "dragonmarket-ef97f.firebasestorage.app",
+  messagingSenderId: "733816628492",
+  appId: "1:733816628492:web:0565b0334dd253b45d1529",
+  measurementId: "G-VE3M6D9V0H"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+
+<!-- ALPINE APP -->
+<script>
+function appData() {
+  return {
+    // ── App State ──
+    loading: true,
+    dbError: '',
+    page: 'home',
+    theme: 'default',
+    lang: 'ru',
+    customBg: null,
+
+    // ── Auth ──
+    currentUser: null,
+    currentUserKey: null,
+    showAuth: false,
+    authMode: 'login',
+    authForm: { username: '', password: '', confirm: '' },
+    authErr: '',
+    authLoading: false,
+    showPwd: false,
+
+    // ── Data (Firebase listeners) ──
+    products: [],
+    transactions: [],
+    reviews: [],
+    usersMap: {},
+    usersArr: [],
+    promos: [],
+    chatsMap: {},
+
+    // ── Market ──
+    searchQ: '',
+    selCat: 'all',
+    sortBy: 'newest',
+    cats: ['all', 'games', 'accounts', 'software', 'services', 'other'],
+
+    // ── Modals ──
+    showProduct: false,
+    selProduct: null,
+    showProfile: false,
+    viewUser: null,
+    showAddProd: false,
+    newProd: { title: '', description: '', price: 0, category: 'games', image: '' },
+    prodLoading: false,
+    showReviewMod: false,
+    reviewForm: { stars: 5, text: '' },
+    pendingReviewTx: null,
+    showImgViewer: false,
+    viewerImg: null,
+
+    // ── Profile ──
+    profTab: 'listings',
+
+    // ── Admin ──
+    adminTab: 'users',
+    newPromoCode: '',
+    newPromoAmt: 100,
+
+    // ── Messenger ──
+    activeChat: null,
+    activeChatMsgs: [],
+    chatInput: '',
+    _chatRef: null,
+
+    // ── Wheel ──
+    spinning: false,
+    wheelResult: null,
+    wheelAngle: 0,
+    wheelPrizes: [10, 25, 50, 100, 150, 200, 500, 1000],
+
+    // ── Premium ──
+    premCur: 'eur',
+
+    // ── Settings ──
+    promoIn: '',
+    xferForm: { to: '', amount: 0 },
+
+    // ── Notifications ──
+    notifications: [],
+
+    // ── Themes / Langs ──
+    themes: [
+      { id: 'default', name: 'Cyber Red', icon: 'fa-fire', premium: false },
+      { id: 'matrix', name: 'Matrix', icon: 'fa-terminal', premium: true },
+      { id: 'blood', name: 'Blood', icon: 'fa-tint', premium: true },
+      { id: 'gold', name: 'Gold', icon: 'fa-crown', premium: true },
+      { id: 'silver', name: 'Silver', icon: 'fa-circle', premium: true },
+    ],
+    langs: [
+      { code: 'ru', label: '🇷🇺 RU' },
+      { code: 'en', label: '🇬🇧 EN' },
+      { code: 'es', label: '🇪🇸 ES' },
+      { code: 'pt', label: '🇧🇷 PT' },
+    ],
+
+    // ═══════════════════════════════════
+    //  COMPUTED GETTERS
+    // ═══════════════════════════════════
+
+    get filteredProducts() {
+      let p = this.products.filter(x => x.status === 'active');
+      if (this.selCat !== 'all') p = p.filter(x => x.category === this.selCat);
+      if (this.searchQ.trim()) {
+        const q = this.searchQ.toLowerCase();
+        p = p.filter(x => (x.title||'').toLowerCase().includes(q) || (x.description||'').toLowerCase().includes(q));
+      }
+      if (this.sortBy === 'price_asc') p.sort((a, b) => a.price - b.price);
+      else if (this.sortBy === 'price_desc') p.sort((a, b) => b.price - a.price);
+      else p.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return p;
+    },
+    get myProducts() {
+      if (!this.currentUser) return [];
+      return this.products.filter(p => p.sellerId === this.currentUser.id);
+    },
+    get myPurchases() {
+      if (!this.currentUser) return [];
+      return this.transactions.filter(t => t.buyerId === this.currentUser.id)
+                              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+    get mySales() {
+      if (!this.currentUser) return [];
+      return this.transactions.filter(t => t.sellerId === this.currentUser.id)
+                              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    },
+    get favProducts() {
+      if (!this.currentUser) return [];
+      const favs = this.currentUser.favorites || {};
+      return this.products.filter(p => favs[p.id]);
+    },
+    get myChats() {
+      if (!this.currentUser) return [];
+      const result = [];
+      for (const [key, chat] of Object.entries(this.chatsMap)) {
+        const otherId = Object.keys(chat.participants || {}).find(id => id !== this.currentUser.id);
+        const otherUser = this.getUserById(otherId);
+        const msgs = Object.values(chat.messages || {});
+        const sorted = msgs.sort((a, b) => a.timestamp - b.timestamp);
+        const lastMsg = sorted.length ? (sorted[sorted.length - 1].text || '📷 Фото') : null;
+        const unread = msgs.filter(m => m.senderId !== this.currentUser.id && !m.read).length;
+        result.push({ key, otherUser, otherUserId: otherId, lastMsg, unread });
+      }
+      return result.sort((a, b) => {
+        const aLast = Object.values(this.chatsMap[a.key]?.messages || {}).sort((x,y)=>y.timestamp-x.timestamp)[0]?.timestamp || 0;
+        const bLast = Object.values(this.chatsMap[b.key]?.messages || {}).sort((x,y)=>y.timestamp-x.timestamp)[0]?.timestamp || 0;
+        return bLast - aLast;
+      });
+    },
+    get unreadCount() {
+      if (!this.currentUser) return 0;
+      return this.myChats.reduce((sum, c) => sum + (c.unread || 0), 0);
+    },
+    get canSpin() {
+      if (!this.currentUser) return false;
+      return this.currentUser.lastSpin !== new Date().toDateString();
+    },
+
+    // ═══════════════════════════════════
+    //  INIT
+    // ═══════════════════════════════════
+
+    async init() {
+      this.lang = localStorage.getItem('dm_lang') || 'ru';
+      this.theme = localStorage.getItem('dm_theme') || 'default';
+      this.customBg = localStorage.getItem('dm_bg') || null;
+
+      try {
+        // Test connection
+        await db.ref('.info/connected').once('value');
+
+        // Ensure admin exists
+        await this.ensureAdmin();
+
+        // Setup global realtime listeners
+        this.setupListeners();
+
+        // Restore session
+        const savedKey = localStorage.getItem('dm_session');
+        if (savedKey) {
+          const snap = await db.ref('users/' + savedKey).once('value');
+          if (snap.exists()) {
+            const u = snap.val();
+            if (!u.banned) {
+              this.currentUserKey = savedKey;
+              this.currentUser = { id: savedKey, ...u };
+              this.setupChatListener();
+            } else {
+              localStorage.removeItem('dm_session');
             }
+          } else {
+            localStorage.removeItem('dm_session');
+          }
+        }
+      } catch (e) {
+        this.dbError = '⚠️ Ошибка подключения к Firebase. Проверьте правила базы данных (Rules: read/write = true).';
+        console.error('Firebase error:', e);
+      }
+
+      this.$watch('page', v => {
+        if (v === 'wheel') this.$nextTick(() => this.drawWheel(this.wheelAngle));
+        if (v === 'messenger' && !this.currentUser) this.openAuth('login');
+      });
+
+      setTimeout(() => { this.loading = false; }, 1500);
+    },
+
+    async ensureAdmin() {
+      const snap = await db.ref('users/admin_root').once('value');
+      if (!snap.exists()) {
+        await db.ref('users/admin_root').set({
+          username: 'system',
+          password: '1337',
+          balance: 25000,
+          avatar: null,
+          verified: true,
+          banned: false,
+          frozen: false,
+          premium: 'elite',
+          isAdmin: true,
+          lastSpin: null,
+          favorites: {},
+          joinDate: new Date().toISOString(),
+          shortId: '00001',
         });
-    </script>
+        await db.ref('usernames/system').set('admin_root');
+      }
+    },
+
+    setupListeners() {
+      db.ref('products').on('value', snap => {
+        const val = snap.val() || {};
+        this.products = Object.entries(val).map(([id, p]) => ({ id, ...p }))
+                             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      });
+      db.ref('reviews').on('value', snap => {
+        const val = snap.val() || {};
+        this.reviews = Object.entries(val).map(([id, r]) => ({ id, ...r }));
+      });
+      db.ref('users').on('value', snap => {
+        const val = snap.val() || {};
+        this.usersMap = val;
+        this.usersArr = Object.entries(val).map(([id, u]) => ({ id, ...u }));
+        if (this.currentUserKey && val[this.currentUserKey]) {
+          const me = val[this.currentUserKey];
+          if (me.banned) { this.logout(); return; }
+          this.currentUser = { id: this.currentUserKey, ...me };
+        }
+      });
+      db.ref('transactions').on('value', snap => {
+        const val = snap.val() || {};
+        this.transactions = Object.entries(val).map(([id, t]) => ({ id, ...t }))
+                                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      });
+      db.ref('promos').on('value', snap => {
+        const val = snap.val() || {};
+        this.promos = Object.entries(val).map(([code, p]) => ({ code, ...p }));
+      });
+    },
+
+    setupChatListener() {
+      if (this._chatRef) this._chatRef.off();
+      if (!this.currentUserKey) return;
+      this._chatRef = db.ref('chats');
+      this._chatRef.on('value', snap => {
+        const val = snap.val() || {};
+        const myChats = {};
+        for (const [key, chat] of Object.entries(val)) {
+          if (chat.participants && chat.participants[this.currentUserKey]) {
+            myChats[key] = chat;
+          }
+        }
+        this.chatsMap = myChats;
+        // Update active chat messages
+        if (this.activeChat && myChats[this.activeChat.key]) {
+          const msgs = Object.entries(myChats[this.activeChat.key].messages || {})
+                             .map(([id, m]) => ({ id, ...m }))
+                             .sort((a, b) => a.timestamp - b.timestamp);
+          this.activeChatMsgs = msgs;
+          this.$nextTick(() => this.scrollChat());
+        }
+      });
+    },
+
+    // ═══════════════════════════════════
+    //  AUTH
+    // ═══════════════════════════════════
+
+    openAuth(mode = 'login') {
+      if (this.currentUser) return;
+      this.authMode = mode;
+      this.authErr = '';
+      this.authForm = { username: '', password: '', confirm: '' };
+      this.showAuth = true;
+    },
+
+    async doLogin() {
+      const { username, password } = this.authForm;
+      if (!username.trim() || !password) { this.authErr = this.t('fillAll'); return; }
+      this.authLoading = true;
+      this.authErr = '';
+      try {
+        // Lookup user key by username
+        const keySnap = await db.ref('usernames/' + username.trim().toLowerCase()).once('value');
+        if (!keySnap.exists()) { this.authErr = this.t('wrongCreds'); this.authLoading = false; return; }
+        const userKey = keySnap.val();
+        const userSnap = await db.ref('users/' + userKey).once('value');
+        if (!userSnap.exists()) { this.authErr = this.t('wrongCreds'); this.authLoading = false; return; }
+        const u = userSnap.val();
+        if (u.password !== password) { this.authErr = this.t('wrongCreds'); this.authLoading = false; return; }
+        if (u.banned) { this.authErr = this.t('banned'); this.authLoading = false; return; }
+        this.currentUserKey = userKey;
+        this.currentUser = { id: userKey, ...u };
+        localStorage.setItem('dm_session', userKey);
+        this.setupChatListener();
+        this.showAuth = false;
+        this.notify(this.t('welcome') + ' ' + u.username + '!', 'success');
+      } catch (e) {
+        this.authErr = 'Ошибка соединения с Firebase';
+        console.error(e);
+      }
+      this.authLoading = false;
+    },
+
+    async doRegister() {
+      const { username, password, confirm } = this.authForm;
+      if (!username.trim() || !password || !confirm) { this.authErr = this.t('fillAll'); return; }
+      if (username.trim().length < 3) { this.authErr = this.t('shortName'); return; }
+      if (password.length < 4) { this.authErr = this.t('shortPass'); return; }
+      if (password !== confirm) { this.authErr = this.t('passMismatch'); return; }
+      this.authLoading = true;
+      this.authErr = '';
+      try {
+        const uname = username.trim().toLowerCase();
+        // Check username taken
+        const taken = await db.ref('usernames/' + uname).once('value');
+        if (taken.exists()) { this.authErr = this.t('userExists'); this.authLoading = false; return; }
+        // Generate short ID
+        const shortId = String(Math.floor(10000 + Math.random() * 90000));
+        const newUser = {
+          username: username.trim(),
+          password,
+          balance: 5000,
+          avatar: null,
+          verified: false,
+          banned: false,
+          frozen: false,
+          premium: null,
+          isAdmin: false,
+          lastSpin: null,
+          favorites: {},
+          joinDate: new Date().toISOString(),
+          shortId,
+        };
+        const ref = await db.ref('users').push(newUser);
+        await db.ref('usernames/' + uname).set(ref.key);
+        this.currentUserKey = ref.key;
+        this.currentUser = { id: ref.key, ...newUser };
+        localStorage.setItem('dm_session', ref.key);
+        this.setupChatListener();
+        this.showAuth = false;
+        this.notify(this.t('registered') + '! ID: #' + shortId, 'success');
+      } catch (e) {
+        this.authErr = 'Ошибка создания аккаунта';
+        console.error(e);
+      }
+      this.authLoading = false;
+    },
+
+    logout() {
+      if (this._chatRef) { this._chatRef.off(); this._chatRef = null; }
+      this.currentUser = null;
+      this.currentUserKey = null;
+      this.chatsMap = {};
+      this.activeChat = null;
+      this.activeChatMsgs = [];
+      localStorage.removeItem('dm_session');
+      this.page = 'home';
+      this.notify(this.t('loggedOut'), 'info');
+    },
+
+    // ═══════════════════════════════════
+    //  PRODUCTS
+    // ═══════════════════════════════════
+
+    openProduct(p) {
+      this.selProduct = p;
+      this.showProduct = true;
+    },
+
+    openAddProduct() {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      this.newProd = { title: '', description: '', price: 0, category: 'games', image: '' };
+      this.showAddProd = true;
+    },
+
+    async uploadProdImg(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      this.newProd.image = await this.compressImg(file, 500, 0.75);
+    },
+
+    async submitProduct() {
+      if (!this.currentUser) return;
+      if (!this.newProd.title.trim()) { this.notify(this.t('enterTitle'), 'error'); return; }
+      if (this.newProd.price <= 0) { this.notify(this.t('enterPrice'), 'error'); return; }
+      this.prodLoading = true;
+      try {
+        const p = {
+          sellerId: this.currentUser.id,
+          sellerName: this.currentUser.username,
+          title: this.newProd.title.trim(),
+          description: this.newProd.description.trim(),
+          price: Number(this.newProd.price),
+          category: this.newProd.category,
+          image: this.newProd.image || '',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        };
+        await db.ref('products').push(p);
+        this.showAddProd = false;
+        this.notify(this.t('lotCreated'), 'success');
+      } catch (e) {
+        this.notify('Ошибка создания лота', 'error');
+        console.error(e);
+      }
+      this.prodLoading = false;
+    },
+
+    async deleteProduct(p) {
+      if (!confirm(this.t('confirmDelete'))) return;
+      await db.ref('products/' + p.id).remove();
+      this.notify(this.t('lotDeleted'), 'success');
+    },
+
+    // ═══════════════════════════════════
+    //  ESCROW / BUY
+    // ═══════════════════════════════════
+
+    quickBuy(p) {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      this.selProduct = p;
+      this.buyProduct(p);
+    },
+
+    async buyProduct(p) {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      if (!p || p.status !== 'active') { this.notify(this.t('notAvail'), 'error'); return; }
+      if (this.currentUser.id === p.sellerId) { this.notify(this.t('cantBuyOwn'), 'error'); return; }
+      if (this.currentUser.frozen) { this.notify(this.t('frozen'), 'error'); return; }
+      if (this.currentUser.balance < p.price) { this.notify(this.t('noFunds'), 'error'); return; }
+      if (!confirm(this.t('confirmBuy') + ' ' + p.title + ' (€' + this.fNum(p.price) + ')?')) return;
+      try {
+        // Deduct buyer balance
+        await db.ref('users/' + this.currentUser.id + '/balance').set(this.currentUser.balance - p.price);
+        // Create escrow transaction
+        const tx = {
+          buyerId: this.currentUser.id,
+          buyerName: this.currentUser.username,
+          sellerId: p.sellerId,
+          sellerName: p.sellerName,
+          productId: p.id,
+          productTitle: p.title,
+          amount: p.price,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        };
+        await db.ref('transactions').push(tx);
+        // Mark product as pending
+        await db.ref('products/' + p.id + '/status').set('pending');
+        this.showProduct = false;
+        this.notify(this.t('buySuccess'), 'success');
+        this.page = 'profile';
+        this.profTab = 'purchases';
+        setTimeout(() => this.openChat(p.sellerId), 600);
+      } catch (e) {
+        this.notify('Ошибка покупки', 'error');
+        console.error(e);
+      }
+    },
+
+    async confirmPurchase(tx) {
+      if (!confirm(this.t('confirmDeal'))) return;
+      try {
+        const seller = this.getUserById(tx.sellerId);
+        if (seller) {
+          await db.ref('users/' + tx.sellerId + '/balance').set((seller.balance || 0) + tx.amount);
+        }
+        await db.ref('transactions/' + tx.id + '/status').set('completed');
+        await db.ref('products/' + tx.productId + '/status').set('sold');
+        this.notify(this.t('dealDone'), 'success');
+        this.pendingReviewTx = tx;
+        this.reviewForm = { stars: 5, text: '' };
+        this.showReviewMod = true;
+      } catch (e) {
+        this.notify('Ошибка подтверждения', 'error');
+        console.error(e);
+      }
+    },
+
+    async refundPurchase(tx) {
+      if (!confirm(this.t('confirmRefund'))) return;
+      try {
+        const buyer = this.getUserById(tx.buyerId);
+        if (buyer) {
+          await db.ref('users/' + tx.buyerId + '/balance').set((buyer.balance || 0) + tx.amount);
+        }
+        await db.ref('transactions/' + tx.id + '/status').set('refunded');
+        const prod = this.products.find(p => p.id === tx.productId);
+        if (prod && prod.status === 'pending') {
+          await db.ref('products/' + tx.productId + '/status').set('active');
+        }
+        this.notify(this.t('refundDone'), 'success');
+      } catch (e) {
+        this.notify('Ошибка возврата', 'error');
+        console.error(e);
+      }
+    },
+
+    // ═══════════════════════════════════
+    //  REVIEWS
+    // ═══════════════════════════════════
+
+    openReview(tx) {
+      this.pendingReviewTx = tx;
+      this.reviewForm = { stars: 5, text: '' };
+      this.showReviewMod = true;
+    },
+
+    async submitReview() {
+      if (!this.pendingReviewTx || !this.currentUser) { this.showReviewMod = false; return; }
+      try {
+        await db.ref('reviews').push({
+          productId: this.pendingReviewTx.productId,
+          transactionId: this.pendingReviewTx.id,
+          reviewerId: this.currentUser.id,
+          reviewerName: this.currentUser.username,
+          sellerId: this.pendingReviewTx.sellerId,
+          stars: this.reviewForm.stars,
+          text: this.reviewForm.text.trim(),
+          createdAt: new Date().toISOString(),
+        });
+        this.showReviewMod = false;
+        this.notify(this.t('reviewSent'), 'success');
+      } catch (e) {
+        this.notify('Ошибка отзыва', 'error');
+      }
+    },
+
+    hasReview(txId) { return this.reviews.some(r => r.transactionId === txId); },
+    productReviews(pid) { return this.reviews.filter(r => r.productId === pid); },
+    sellerRating(uid) {
+      const rv = this.reviews.filter(r => r.sellerId === uid);
+      if (!rv.length) return 0;
+      return rv.reduce((s, r) => s + r.stars, 0) / rv.length;
+    },
+    sellerReviewCount(uid) { return this.reviews.filter(r => r.sellerId === uid).length; },
+
+    // ═══════════════════════════════════
+    //  FAVORITES
+    // ═══════════════════════════════════
+
+    async toggleFav(id) {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      const favs = { ...(this.currentUser.favorites || {}) };
+      if (favs[id]) {
+        delete favs[id];
+        this.notify(this.t('removedFav'), 'info');
+      } else {
+        favs[id] = true;
+        this.notify(this.t('addedFav'), 'success');
+      }
+      await db.ref('users/' + this.currentUser.id + '/favorites').set(favs);
+    },
+
+    isFav(id) {
+      if (!this.currentUser) return false;
+      return !!(this.currentUser.favorites || {})[id];
+    },
+
+    // ═══════════════════════════════════
+    //  MESSENGER
+    // ═══════════════════════════════════
+
+    gotoPage(p) {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      this.page = p;
+    },
+
+    async openChat(userId) {
+      if (!this.currentUser || !userId || userId === this.currentUser.id) return;
+      const key = [this.currentUserKey, userId].sort().join('_');
+      const chatSnap = await db.ref('chats/' + key).once('value');
+      if (!chatSnap.exists()) {
+        await db.ref('chats/' + key).set({
+          participants: { [this.currentUserKey]: true, [userId]: true },
+          messages: {},
+        });
+      }
+      const otherUser = this.getUserById(userId);
+      this.activeChat = { key, otherUser, otherUserId: userId };
+      // Load messages
+      const msgs = Object.entries((await db.ref('chats/' + key + '/messages').once('value')).val() || {})
+                         .map(([id, m]) => ({ id, ...m }))
+                         .sort((a, b) => a.timestamp - b.timestamp);
+      this.activeChatMsgs = msgs;
+      // Mark read
+      const updates = {};
+      msgs.forEach(m => {
+        if (m.senderId !== this.currentUser.id && !m.read) {
+          updates['chats/' + key + '/messages/' + m.id + '/read'] = true;
+        }
+      });
+      if (Object.keys(updates).length) await db.ref().update(updates);
+      this.page = 'messenger';
+      this.$nextTick(() => this.scrollChat());
+    },
+
+    async setActiveChat(c) {
+      this.activeChat = c;
+      const key = c.key;
+      const chatSnap = await db.ref('chats/' + key + '/messages').once('value');
+      const msgs = Object.entries(chatSnap.val() || {})
+                         .map(([id, m]) => ({ id, ...m }))
+                         .sort((a, b) => a.timestamp - b.timestamp);
+      this.activeChatMsgs = msgs;
+      // Mark read
+      const updates = {};
+      msgs.forEach(m => {
+        if (m.senderId !== this.currentUser.id && !m.read) {
+          updates['chats/' + key + '/messages/' + m.id + '/read'] = true;
+        }
+      });
+      if (Object.keys(updates).length) await db.ref().update(updates);
+      this.$nextTick(() => this.scrollChat());
+    },
+
+    async sendMsg() {
+      if (!this.activeChat || !this.chatInput.trim()) return;
+      const text = this.chatInput.trim();
+      this.chatInput = '';
+      await this._pushMsg({ text, image: null });
+    },
+
+    async sendImgMsg(e) {
+      if (!this.activeChat) return;
+      const file = e.target.files[0];
+      if (!file) return;
+      const image = await this.compressImg(file, 600, 0.8);
+      await this._pushMsg({ text: '', image });
+      e.target.value = '';
+    },
+
+    async _pushMsg(data) {
+      const key = this.activeChat.key;
+      await db.ref('chats/' + key + '/messages').push({
+        senderId: this.currentUser.id,
+        senderName: this.currentUser.username,
+        text: data.text,
+        image: data.image || null,
+        timestamp: Date.now(),
+        read: false,
+      });
+    },
+
+    scrollChat() {
+      const el = document.getElementById('chatMsgs');
+      if (el) el.scrollTop = el.scrollHeight;
+    },
+
+    viewImg(src) { this.viewerImg = src; this.showImgViewer = true; },
+
+    // ═══════════════════════════════════
+    //  WHEEL OF FORTUNE
+    // ═══════════════════════════════════
+
+    drawWheel(rotation) {
+      const canvas = document.getElementById('fortuneWheel');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const prizes = this.wheelPrizes;
+      const arc = (2 * Math.PI) / prizes.length;
+      const cx = 140, cy = 140, r = 130;
+      const colors = ['#1a0520','#200a10','#0a1530','#18051a','#051a20','#1a1505','#201505','#050a20'];
+      const tColors = ['#ff4477','#ff6644','#44aaff','#ff44cc','#44ffee','#ffee44','#ff8844','#8844ff'];
+      ctx.clearRect(0, 0, 280, 280);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rotation * Math.PI / 180);
+      prizes.forEach((prize, i) => {
+        const s = arc * i, e = arc * (i + 1);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r, s, e);
+        ctx.fillStyle = colors[i]; ctx.fill();
+        ctx.strokeStyle = 'rgba(225,29,72,.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.save(); ctx.rotate(s + arc / 2);
+        ctx.fillStyle = tColors[i]; ctx.font = 'bold 13px "Share Tech Mono"';
+        ctx.textAlign = 'center'; ctx.shadowColor = tColors[i]; ctx.shadowBlur = 6;
+        ctx.fillText('€' + prize, r * 0.65, 5); ctx.restore();
+      });
+      ctx.restore();
+      // Center
+      ctx.beginPath(); ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+      const cg = ctx.createRadialGradient(cx-4,cy-4,2,cx,cy,18);
+      cg.addColorStop(0,'#ff4477'); cg.addColorStop(1,'#990022');
+      ctx.fillStyle = cg; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('🐉', cx, cy + 4);
+    },
+
+    async spinWheel() {
+      if (this.spinning || !this.canSpin) return;
+      this.spinning = true;
+      this.wheelResult = null;
+      const prizes = this.wheelPrizes;
+      const winIdx = Math.floor(Math.random() * prizes.length);
+      const prize = prizes[winIdx];
+      const segAngle = 360 / prizes.length;
+      const target = 360 - (winIdx * segAngle) - segAngle / 2;
+      const startAngle = this.wheelAngle;
+      const endAngle = startAngle + 360 * 6 + (target - startAngle % 360);
+      const duration = 4500;
+      let startTime = null;
+      const animate = (ts) => {
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        this.wheelAngle = startAngle + (endAngle - startAngle) * eased;
+        this.drawWheel(this.wheelAngle);
+        if (progress < 1) { requestAnimationFrame(animate); }
+        else {
+          this.spinning = false;
+          this.wheelResult = prize;
+          const newBal = (this.currentUser.balance || 0) + prize;
+          db.ref('users/' + this.currentUser.id).update({
+            balance: newBal,
+            lastSpin: new Date().toDateString(),
+          });
+          this.notify('🎉 ' + this.t('youWon') + ' €' + prize + '!', 'success');
+        }
+      };
+      requestAnimationFrame(animate);
+    },
+
+    // ═══════════════════════════════════
+    //  PREMIUM
+    // ═══════════════════════════════════
+
+    async buyPremium(level, price) {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      if (this.currentUser.premium === level) { this.notify(this.t('alreadyPlan'), 'info'); return; }
+      if (this.currentUser.balance < price) { this.notify(this.t('noFunds'), 'error'); return; }
+      if (!confirm(this.t('buyPremiumConfirm') + ' ' + level.toUpperCase() + ' (€' + price + ')?')) return;
+      await db.ref('users/' + this.currentUser.id).update({
+        balance: this.currentUser.balance - price,
+        premium: level,
+        verified: true,
+      });
+      this.notify('✨ ' + level.toUpperCase() + ' ' + this.t('premiumOn'), 'success');
+    },
+
+    // ═══════════════════════════════════
+    //  PROMO CODES
+    // ═══════════════════════════════════
+
+    async applyPromo() {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      const code = this.promoIn.trim().toUpperCase();
+      if (!code) { this.notify(this.t('enterPromo'), 'error'); return; }
+      const snap = await db.ref('promos/' + code).once('value');
+      if (!snap.exists()) { this.notify(this.t('promoNotFound'), 'error'); return; }
+      const promo = snap.val();
+      if (promo.usedBy && promo.usedBy[this.currentUser.id]) { this.notify(this.t('promoUsed'), 'error'); return; }
+      await db.ref('promos/' + code + '/usedBy/' + this.currentUser.id).set(true);
+      await db.ref('users/' + this.currentUser.id + '/balance').set(this.currentUser.balance + promo.amount);
+      this.promoIn = '';
+      this.notify('💰 +€' + promo.amount + ' ' + this.t('promoApplied'), 'success');
+    },
+
+    // ═══════════════════════════════════
+    //  TRANSFER
+    // ═══════════════════════════════════
+
+    async doTransfer() {
+      if (!this.currentUser) { this.openAuth('login'); return; }
+      if (this.currentUser.frozen) { this.notify(this.t('frozen'), 'error'); return; }
+      const { to, amount } = this.xferForm;
+      if (!to || !amount || amount <= 0) { this.notify(this.t('fillAll'), 'error'); return; }
+      // Find target by username or shortId
+      const target = this.usersArr.find(u =>
+        u.username.toLowerCase() === to.toLowerCase() || u.shortId === to
+      );
+      if (!target) { this.notify(this.t('userNotFound'), 'error'); return; }
+      if (target.id === this.currentUser.id) { this.notify(this.t('cantSelf'), 'error'); return; }
+      if (this.currentUser.balance < amount) { this.notify(this.t('noFunds'), 'error'); return; }
+      await db.ref('users/' + this.currentUser.id + '/balance').set(this.currentUser.balance - amount);
+      await db.ref('users/' + target.id + '/balance').set((target.balance || 0) + amount);
+      this.xferForm = { to: '', amount: 0 };
+      this.notify('✅ €' + amount + ' → ' + target.username, 'success');
+    },
+
+    // ═══════════════════════════════════
+    //  AVATAR / BACKGROUND
+    // ═══════════════════════════════════
+
+    async uploadAvatar(e) {
+      const file = e.target.files[0];
+      if (!file || !this.currentUser) return;
+      const img = await this.compressImg(file, 200, 0.8);
+      await db.ref('users/' + this.currentUser.id + '/avatar').set(img);
+      this.notify(this.t('avatarUpdated'), 'success');
+    },
+
+    async uploadBg(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = await this.compressImg(file, 1920, 0.7);
+      this.customBg = img;
+      localStorage.setItem('dm_bg', img);
+      this.notify(this.t('bgUpdated'), 'success');
+    },
+
+    removeBg() { this.customBg = null; localStorage.removeItem('dm_bg'); },
+
+    // ═══════════════════════════════════
+    //  SETTINGS
+    // ═══════════════════════════════════
+
+    setTheme(id) {
+      const th = this.themes.find(t => t.id === id);
+      if (th?.premium && !(this.currentUser?.premium === 'silver' || this.currentUser?.premium === 'elite')) {
+        this.notify('Silver+ required', 'error'); return;
+      }
+      this.theme = id;
+      localStorage.setItem('dm_theme', id);
+    },
+    setLang(code) { this.lang = code; localStorage.setItem('dm_lang', code); },
+
+    // ═══════════════════════════════════
+    //  ADMIN FUNCTIONS
+    // ═══════════════════════════════════
+
+    async adminBan(u) {
+      const val = !u.banned;
+      await db.ref('users/' + u.id + '/banned').set(val);
+      this.notify((val ? this.t('banned') : this.t('unbanned')) + ': ' + u.username, 'success');
+    },
+    async adminFreeze(u) {
+      const val = !u.frozen;
+      await db.ref('users/' + u.id + '/frozen').set(val);
+      this.notify((val ? this.t('frozen') : this.t('unfrozen')) + ': ' + u.username, 'success');
+    },
+    async adminVerify(u) {
+      const val = !u.verified;
+      await db.ref('users/' + u.id + '/verified').set(val);
+      this.notify((val ? '✅' : '❌') + ' ' + u.username, 'success');
+    },
+    async adminDelete(u) {
+      if (!confirm(this.t('confirmDeleteUser') + ' ' + u.username + '?')) return;
+      await db.ref('users/' + u.id).remove();
+      // Remove username index
+      await db.ref('usernames/' + u.username.toLowerCase()).remove();
+      this.notify(this.t('deleted') + ': ' + u.username, 'success');
+    },
+    async createPromo() {
+      if (!this.newPromoCode.trim() || !this.newPromoAmt) { this.notify(this.t('fillAll'), 'error'); return; }
+      const code = this.newPromoCode.trim().toUpperCase();
+      const snap = await db.ref('promos/' + code).once('value');
+      if (snap.exists()) { this.notify(this.t('promoExists'), 'error'); return; }
+      await db.ref('promos/' + code).set({
+        amount: Number(this.newPromoAmt),
+        usedBy: {},
+        createdAt: new Date().toISOString(),
+      });
+      this.newPromoCode = '';
+      this.newPromoAmt = 100;
+      this.notify(this.t('promoCreated'), 'success');
+    },
+    async deletePromo(code) {
+      await db.ref('promos/' + code).remove();
+    },
+
+    // ═══════════════════════════════════
+    //  PUBLIC PROFILE
+    // ═══════════════════════════════════
+
+    openPublicProfile(uid) {
+      if (!uid) return;
+      const u = this.getUserById(uid);
+      if (!u) return;
+      this.viewUser = u;
+      this.showProfile = true;
+    },
+
+    // ═══════════════════════════════════
+    //  HELPERS
+    // ═══════════════════════════════════
+
+    getUserById(id) {
+      if (!id) return null;
+      if (this.usersMap[id]) return { id, ...this.usersMap[id] };
+      return this.usersArr.find(u => u.id === id) || null;
+    },
+    isVerified(uid) { return !!this.getUserById(uid)?.verified; },
+    sellerProducts(uid) { return this.products.filter(p => p.sellerId === uid && p.status === 'active'); },
+    catIcon(cat) {
+      const icons = { all:'fa-th', games:'fa-gamepad', accounts:'fa-user-circle', software:'fa-code', services:'fa-concierge-bell', other:'fa-box' };
+      return icons[cat] || 'fa-box';
+    },
+    fNum(n) { return Number(n||0).toLocaleString('ru-RU'); },
+    fDate(d) { if (!d) return '?'; try { return new Date(d).toLocaleDateString(this.lang); } catch { return d; } },
+    fTime(ts) { if (!ts) return ''; try { return new Date(ts).toLocaleTimeString(this.lang, {hour:'2-digit',minute:'2-digit'}); } catch { return ''; } },
+
+    notify(text, type = 'info') {
+      const id = Date.now() + Math.random();
+      this.notifications.push({ id, text, type });
+      setTimeout(() => this.removeNotif(id), 4500);
+    },
+    removeNotif(id) { this.notifications = this.notifications.filter(n => n.id !== id); },
+
+    async compressImg(file, maxW = 400, quality = 0.75) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    },
+
+    // ═══════════════════════════════════
+    //  TRANSLATIONS
+    // ═══════════════════════════════════
+    t(key) {
+      const langs = {
+        ru: {
+          home:'Главная',market:'Маркет',chat:'Чат',wheel:'Колесо',settings:'Настройки',admin:'Управление',
+          login:'Войти',register:'Регистрация',logout:'Выйти',
+          heroSub:'Безопасные сделки · Escrow защита · Real-time',
+          browse:'Смотреть лоты',addLot:'Добавить лот',
+          activeLots:'Активных лотов',users:'Пользователей',deals:'Сделок',
+          latest:'Последние лоты',viewAll:'Все лоты',
+          search:'Поиск...',lots:'лотов',newest:'Новые',
+          all:'Все',games:'Игры',accounts:'Аккаунты',software:'Программы',services:'Услуги',other:'Прочее',
+          sold:'Продано',pending:'В обработке',active:'Активный',refunded:'Возврат',completed:'Завершён',
+          loginReq:'Необходима авторизация',
+          myLots:'Мои лоты',purchases:'Покупки',sales:'Продажи',favs:'Избранное',
+          balance:'Баланс',rating:'Рейтинг',joined:'Зарегистрирован',transfer:'Перевод',
+          noLots:'Нет лотов',noPurchases:'Нет покупок',noSales:'Нет продаж',noFavs:'Нет избранного',
+          seller:'Продавец',buyer:'Покупатель',
+          confirm:'Подтвердить',refund:'Возврат',leaveReview:'Отзыв',
+          reviews:'Отзывы',noResults:'Ничего не найдено',
+          username:'Никнейм',password:'Пароль',confirm:'Подтвердить пароль',
+          fillAll:'Заполните все поля',wrongCreds:'Неверный логин или пароль',
+          banned:'Заблокирован',shortName:'Ник слишком короткий',shortPass:'Пароль слишком короткий',
+          passMismatch:'Пароли не совпадают',userExists:'Пользователь уже существует',
+          welcome:'Добро пожаловать,',registered:'Аккаунт создан!',
+          noAccount:'Нет аккаунта?',haveAccount:'Уже есть аккаунт?',loggedOut:'Вы вышли',
+          title:'Название',description:'Описание',price:'Цена',category:'Категория',image:'Фото',
+          uploadImg:'Загрузить фото',publish:'Опубликовать',
+          enterTitle:'Введите название',enterPrice:'Введите цену',
+          lotCreated:'Лот создан!',lotDeleted:'Лот удалён',confirmDelete:'Удалить лот?',
+          cantBuyOwn:'Нельзя купить свой товар',notAvail:'Товар недоступен',
+          frozen:'Ваш баланс заморожен',noFunds:'Недостаточно средств',
+          confirmBuy:'Купить',buySuccess:'Покупка создана! Напишите продавцу.',
+          confirmDeal:'Подтвердить получение товара? Деньги перейдут продавцу.',
+          dealDone:'Сделка завершена!',confirmRefund:'Запросить возврат?',refundDone:'Деньги возвращены.',
+          reviewSent:'Отзыв отправлен!',reviewText:'Ваш отзыв',
+          removedFav:'Удалено из избранного',addedFav:'Добавлено в избранное',
+          noMessages:'Нет сообщений',noChats:'Нет диалогов',startChat:'Начните общение...',
+          selectChat:'Выберите чат',typeMsg:'Сообщение...',
+          wheelDesc:'Крутите раз в день и выигрывайте!',youWon:'Вы выиграли',
+          spin:'Крутить!',spinning:'Крутится...',
+          alreadySpun:'Вы уже крутили сегодня.',comeBack:'Возвращайтесь завтра!',prizes:'Призы',
+          premiumDesc:'Разблокируйте эксклюзивные возможности',
+          popular:'Популярный',subscribe:'Подписаться',current:'Текущий план',
+          blueCheck:'Синяя галочка',verBadge:'Значок верификации',goldNick:'Золотой ник',
+          exThemes:'Эксклюзивные темы',noFee:'0% комиссия',
+          premiumOn:'Premium активирован!',alreadyPlan:'Этот план уже активен.',
+          buyPremiumConfirm:'Купить',
+          theme:'Тема оформления',language:'Язык',bg:'Фон',
+          uploadBg:'Загрузить фон',removeBg:'Убрать фон',
+          promo:'Промокод',enterPromo:'Введите промокод',apply:'Применить',
+          promoNotFound:'Промокод не найден',promoUsed:'Вы уже использовали этот код',
+          promoApplied:'начислено на баланс!',promoExists:'Промокод уже существует',
+          promoCreated:'Промокод создан!',used:'Использован',create:'Создать',createPromo:'Создать промокод',
+          promoCode:'КОД',amount:'Сумма',
+          recipientId:'Ник или ID',send:'Отправить',
+          userNotFound:'Пользователь не найден',cantSelf:'Нельзя перевести себе',
+          danger:'Опасная зона',noAccess:'Нет доступа',
+          ban:'Бан',unban:'Разбан',freeze:'Заморозить',unfreeze:'Разморозить',
+          giveCheck:'Дать галочку',rmCheck:'Убрать галочку',delete:'Удалить',
+          deleted:'Удалён',unbanned:'Разбанен',unfrozen:'Разморожен',
+          confirmDeleteUser:'Удалить пользователя',
+          avatarUpdated:'Аватар обновлён!',bgUpdated:'Фон обновлён!',
+          skip:'Пропустить',submit:'Отправить',
+          deletedLot:'Удалённый лот',
+          promos:'Промокодов',
+        },
+        en: {
+          home:'Home',market:'Market',chat:'Chat',wheel:'Wheel',settings:'Settings',admin:'Admin',
+          login:'Login',register:'Sign Up',logout:'Logout',
+          heroSub:'Secure deals · Escrow protection · Real-time',
+          browse:'Browse',addLot:'Add listing',
+          activeLots:'Active lots',users:'Users',deals:'Deals',
+          latest:'Latest',viewAll:'View all',
+          search:'Search...',lots:'lots',newest:'Newest',
+          all:'All',games:'Games',accounts:'Accounts',software:'Software',services:'Services',other:'Other',
+          sold:'Sold',pending:'Pending',active:'Active',refunded:'Refunded',completed:'Completed',
+          loginReq:'Login required',
+          myLots:'My listings',purchases:'Purchases',sales:'Sales',favs:'Favorites',
+          balance:'Balance',rating:'Rating',joined:'Joined',transfer:'Transfer',
+          noLots:'No listings',noPurchases:'No purchases',noSales:'No sales',noFavs:'No favorites',
+          seller:'Seller',buyer:'Buyer',
+          confirm:'Confirm',refund:'Refund',leaveReview:'Leave review',
+          reviews:'Reviews',noResults:'Nothing found',
+          username:'Username',password:'Password',
+          fillAll:'Fill all fields',wrongCreds:'Wrong username or password',
+          banned:'Account banned',shortName:'Username too short',shortPass:'Password too short',
+          passMismatch:'Passwords do not match',userExists:'Username taken',
+          welcome:'Welcome,',registered:'Account created!',
+          noAccount:'No account?',haveAccount:'Already have one?',loggedOut:'Logged out',
+          title:'Title',description:'Description',price:'Price',category:'Category',image:'Image',
+          uploadImg:'Upload image',publish:'Publish',
+          enterTitle:'Enter title',enterPrice:'Enter price',
+          lotCreated:'Listing created!',lotDeleted:'Listing deleted',confirmDelete:'Delete listing?',
+          cantBuyOwn:"Can't buy own item",notAvail:'Item not available',
+          frozen:'Balance is frozen',noFunds:'Insufficient funds',
+          confirmBuy:'Buy',buySuccess:'Purchase created! Message the seller.',
+          confirmDeal:'Confirm receiving item? Money goes to seller.',
+          dealDone:'Deal completed!',confirmRefund:'Request refund?',refundDone:'Money returned.',
+          reviewSent:'Review submitted!',reviewText:'Your review',
+          removedFav:'Removed from favorites',addedFav:'Added to favorites',
+          noMessages:'No messages',noChats:'No chats',startChat:'Start a conversation...',
+          selectChat:'Select a chat',typeMsg:'Type a message...',
+          wheelDesc:'Spin once a day and win!',youWon:'You won',
+          spin:'Spin!',spinning:'Spinning...',
+          alreadySpun:'Already spun today.',comeBack:'Come back tomorrow!',prizes:'Prizes',
+          premiumDesc:'Unlock exclusive features',
+          popular:'Popular',subscribe:'Subscribe',current:'Current plan',
+          blueCheck:'Blue checkmark',verBadge:'Verified badge',goldNick:'Gold username',
+          exThemes:'Exclusive themes',noFee:'0% fee',
+          premiumOn:'Premium activated!',alreadyPlan:'This plan is already active.',
+          buyPremiumConfirm:'Buy',
+          theme:'Theme',language:'Language',bg:'Background',
+          uploadBg:'Upload bg',removeBg:'Remove bg',
+          promo:'Promo code',enterPromo:'Enter promo code',apply:'Apply',
+          promoNotFound:'Promo not found',promoUsed:'Already used this code',
+          promoApplied:'added to balance!',promoExists:'Promo already exists',
+          promoCreated:'Promo created!',used:'Used',create:'Create',createPromo:'Create promo',
+          promoCode:'CODE',amount:'Amount',
+          recipientId:'Username or ID',send:'Send',
+          userNotFound:'User not found',cantSelf:"Can't send to yourself",
+          danger:'Danger zone',noAccess:'Access denied',
+          ban:'Ban',unban:'Unban',freeze:'Freeze',unfreeze:'Unfreeze',
+          giveCheck:'Give badge',rmCheck:'Remove badge',delete:'Delete',
+          deleted:'Deleted',unbanned:'Unbanned',unfrozen:'Unfrozen',
+          confirmDeleteUser:'Delete user',
+          avatarUpdated:'Avatar updated!',bgUpdated:'Background updated!',
+          skip:'Skip',submit:'Submit',
+          deletedLot:'Deleted lot',
+          promos:'Promos',
+        },
+      };
+      const d = langs[this.lang] || langs.en;
+      return d[key] || langs.en[key] || key;
+    },
+  };
+}
+</script>
 </body>
 </html>
